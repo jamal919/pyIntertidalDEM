@@ -261,44 +261,41 @@ def main():
     
     B2_band_data_array=B2_band_data['data_array']
 
-    B2_GeoTransform_data=B2_band_data['data_Xfrom']
+   # B2_GeoTransform_data=B2_band_data['data_Xfrom']
+    
+    
     '''
     ##test--truncate data
     Coloum_truncate=np.amax(np.where(B2_band_data_array==-10000),axis=1)[1]
     '''
-    row_base,col_base=np.shape(B2_band_data_array)         #original size of the data of band B2,B4 and B8
+    
+    #row_base,col_base=np.shape(B2_band_data_array)         #original size of the data of band B2,B4 and B8
 
 
+    
+    
     #B4
     B4_band_data=file_data_validation(band_files[1])
     
     B4_band_data_array=B4_band_data['data_array']
     
-    B4_GeoTransform_data=B4_band_data['data_Xfrom']
+    #B4_GeoTransform_data=B4_band_data['data_Xfrom']
     #B8
     B8_band_data=file_data_validation(band_files[2])
     
     B8_band_data_array=B8_band_data['data_array']
     
-    B8_GeoTransform_data=B8_band_data['data_Xfrom']
+    #B8_GeoTransform_data=B8_band_data['data_Xfrom']
     
     #B11
     B11_band_data=file_data_validation(band_files[3])
     
     B11_band_data_array=B11_band_data['data_array']
     
-    B11_GeoTransform_data=B11_band_data['data_Xfrom']
+    #B11_GeoTransform_data=B11_band_data['data_Xfrom']
     
 
-    row_org,col_org=np.shape(B11_band_data_array)   #original B11 data size
-
-    interpolation_functional_relation=scipy.interpolate.interp2d(np.array(range(row_org)),np.array(range(col_org)),B11_band_data_array,kind='cubic') #linear interpolation function
-
-    B11_interpolated=interpolation_functional_relation(np.array(range(row_base)),np.array(range(col_base)))                           #interpolated array
-
-    debug_print_value(B11_band_data_array,'Original Band data:B11')
-
-    debug_print_value(B11_interpolated,'Interpolated Band data:B11')
+    
     
     
     #CLM
@@ -306,14 +303,14 @@ def main():
     
     Cloud_mask_data_array=Cloud_mask_data['data_array']
     
-    Cloud_mask_GeoTransform_data=Cloud_mask_data['data_Xfrom']
+    #Cloud_mask_GeoTransform_data=Cloud_mask_data['data_Xfrom']
 
     #CLM_R2
     Cloud_mask_data_20m=file_data_validation(mask_files[2])
     
     Cloud_mask_data_array_20m=Cloud_mask_data_20m['data_array']
     
-    Cloud_mask_GeoTransform_data_20m=Cloud_mask_data_20m['data_Xfrom']
+    #Cloud_mask_GeoTransform_data_20m=Cloud_mask_data_20m['data_Xfrom']
 
     
     
@@ -329,9 +326,36 @@ def main():
     #cloud masking correction(bit 1)
    
     B2_band_data_array=CLOUD_MASK_CORRECTION(Cloud_mask_data_array,B2_band_data_array,'Edge_corrected_B2')
+    
     B4_band_data_array=CLOUD_MASK_CORRECTION(Cloud_mask_data_array,B4_band_data_array,'Edge_corrected_B4')
+    
     B8_band_data_array=CLOUD_MASK_CORRECTION(Cloud_mask_data_array,B8_band_data_array,'Edge_corrected_B8')
+    
     B11_band_data_array=CLOUD_MASK_CORRECTION(Cloud_mask_data_array_20m,B11_band_data_array,'Edge_corrected_B11')
+
+    # Repeating rows and coloumns to increase data points(discuss)
+    B11_interpolated=np.array(B11_band_data_array.repeat(2,axis=0).repeat(2,axis=1))
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #Interpolation with scipy
+    '''
+    row_org,col_org=np.shape(B11_band_data_array)   #original B11 data size
+
+    interpolation_functional_relation=scipy.interpolate.interp2d(np.array(range(row_org)),np.array(range(col_org)),B11_band_data_array,kind='cubic') #linear interpolation function
+
+    B11_interpolated=interpolation_functional_relation(np.array(range(row_base)),np.array(range(col_base)))                           #interpolated array
+
+   
+    '''
     '''
     ##trunc
     debug_print_value(Coloum_truncate,'Truncate coloum number')
@@ -352,15 +376,14 @@ def main():
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
-    Plot_with_Geo_ref(B2_band_data_array,'Band2 Band')
-    Plot_with_Geo_ref(B4_band_data_array,'Band4 Band')
-    Plot_with_Geo_ref(B8_band_data_array,'Band8 Band')
+    #Plot_with_Geo_ref(B2_band_data_array,'Band2 Band')
+    #Plot_with_Geo_ref(B4_band_data_array,'Band4 Band')
+    #Plot_with_Geo_ref(B8_band_data_array,'Band8 Band')
     
     
 
     Plot_with_Geo_ref(B11_band_data_array,'Band11')
     Plot_with_Geo_ref(B11_interpolated,'Band11_interpolated')
-#    Plot_with_Geo_ref(B8_band_data_array/255,B8_GeoTransform_data,'Band8')
     
     plt.show()
     
