@@ -143,18 +143,28 @@ def CLOUD_MASK_CORRECTION(Cloud_mask_data,Band_data,Data_Identifier):
 
 
     value_decimals=Decimals_with_end_Bit_detection(np.amax(Cloud_mask_data))
-    X_val_indice=[]
-    Y_val_indice=[]
+#    X_val_indice=[]
+#    Y_val_indice=[]
 
     #Index extraction
     print(colored('Extracting Indices!','red'))
     for v in range(0,len(value_decimals)):
+        Band_data[Cloud_mask_data==value_decimals[v]]=255
+        
+        
+        
+        
+        
+        
+        
+        '''
         indices_of_value_bit=np.where(Cloud_mask_data==value_decimals[v])
         if np.size(indices_of_value_bit) !=0:
             X_val_indice=X_val_indice+indices_of_value_bit[0].tolist()
             Y_val_indice=Y_val_indice+indices_of_value_bit[1].tolist()
     #band data processing
     Band_data[X_val_indice,Y_val_indice]=255
+        '''
 
 
 
@@ -341,11 +351,11 @@ def main():
 
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-    '''
-    Plot_with_Geo_ref(B2_trn,B2_GeoTransform_data,'Band2trn')
-    Plot_with_Geo_ref(B4_trn,B4_GeoTransform_data,'Band4trn')
-    Plot_with_Geo_ref(B8_trn,B8_GeoTransform_data,'Band8trn')
-    '''
+    
+    Plot_with_Geo_ref(B2_band_data_array,'Band2 Band')
+    Plot_with_Geo_ref(B4_band_data_array,'Band4 Band')
+    Plot_with_Geo_ref(B8_band_data_array,'Band8 Band')
+    
     
 
     Plot_with_Geo_ref(B11_band_data_array,'Band11')
