@@ -19,6 +19,8 @@ import time                            #Time profiling
 import gc                              #Garbage Collection
 
 import matplotlib                      #HSV
+
+import scipy.signal                            #Convulation
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -426,23 +428,41 @@ def module_run():
 
     debug_print_value(IsWater_hue,'IsWater_hue')
     debug_print_value(IsWater_val,'IsWater_val')
-    Plot_with_Geo_ref(IsWater_hue,'IsWater_hue')
-    Plot_with_Geo_ref(IsWater_val,'IsWater_val')
+    
+    #Water Map
+    IsWater=np.zeros([row,col])
+    IsWater[(IsWater_hue==1) & (IsWater_val==1)]=1
+    
+    
+    #processing filters-- after discussion
+
+    Map_water=IsWater                       #without filters
+
+    kernel_shore= np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
+
+
+    #Issue to raise
+    '''
+    print('')
+    print(colored('*Performing Convolution ','cyan'))
+    
+    Map_shore=scipy.signal.convolve2d(kernel_shore,Map_water)
+    
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    Plot_with_Geo_ref(Map_shore,'Shore_plot')
+    
+    
+    
     plt.show()
+    '''
     
-
-
-    
-
-
-
-
 
 
 #Main 
 if __name__=='__main__':
     module_run()    
-    
 
 
 
