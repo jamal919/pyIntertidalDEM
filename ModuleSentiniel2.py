@@ -16,7 +16,7 @@ import numpy as np                     #Array manupulation ease
 
 import time                            #Time profiling
 
-
+import gc                              #Garbage Collection
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -72,7 +72,9 @@ def list_files_sentiniel(unzipped_directory):
     Cloud_mask_file=str(unzipped_directory)+'/MASKS/'+directory_strings[-1]+'_CLM_R1.tif'
     Cloud_mask_file_20m=str(unzipped_directory)+'/MASKS/'+directory_strings[-1]+'_CLM_R2.tif'
 
-    list_of_file_to_read=[Band_file_no_1,Band_file_no_2,Band_file_no_3,Band_file_no_4,Cloud_mask_file,Cloud_mask_file_20m]
+    Edge_mask_file=str(unzipped_directory)+'/MASKS/'+directory_strings[-1]+'_EDG_R1.tif'
+
+    list_of_file_to_read=[Band_file_no_1,Band_file_no_2,Band_file_no_3,Band_file_no_4,Cloud_mask_file,Cloud_mask_file_20m,Edge_mask_file]
 
     print('')
     print(colored('***Files to be used for processing***','cyan'))
@@ -109,7 +111,7 @@ def CLOUD_MASK_CORRECTION(Cloud_mask_data,Band_data,Data_Identifier):
     value_decimals=Decimals_with_end_Bit_detection(np.amax(Cloud_mask_data))
 
     for v in range(0,len(value_decimals)):
-        Band_data[Cloud_mask_data==value_decimals[v]]=-10000
+        Band_data[Cloud_mask_data==value_decimals[v]]=-10000            #Exclude data point Identifier= - Reflectance value
 
     print(colored("Elapsed Time: %s seconds " % (time.time() - start_time),'yellow'))
     
@@ -203,16 +205,16 @@ def main():
     
     
     #File data extraction
-    #B2
+    #B2==Blue band
     B2_band_data=file_data_validation(band_files[0])
     
-    #B4
+    #B4==Red band
     B4_band_data=file_data_validation(band_files[1])
     
-    #B8
+    #B8=NIR band
     B8_band_data=file_data_validation(band_files[2])
     
-    #B11
+    #B11=SWIR band
     B11_band_data=file_data_validation(band_files[3])
     
     #CLM
@@ -220,6 +222,9 @@ def main():
     
     #CLM_R2
     Cloud_mask_data_20m=file_data_validation(mask_files[1])
+
+    #EDG
+    Edge_mask_data=file_data_validation(mask_files[2])
     
     #cloud masking correction(bit 1)
    
@@ -249,30 +254,102 @@ def main():
     B11_band_data[B11_band_data== -10000]=mask_corr_val
     
     
-    #data normalization
-    B2_band_data=((B2_band_data/np.amax(B2_band_data))*255).astype(np.uint8)
-
-    B4_band_data=((B4_band_data/np.amax(B4_band_data))*255).astype(np.uint8)
-
-    B8_band_data=((B8_band_data/np.amax(B8_band_data))*255).astype(np.uint8)
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
-    B11_band_data=((B11_band_data/np.amax(B11_band_data))*255).astype(np.uint8)
+    
+    
+
+    #data normalization
+    
+    Blue_norm=B2_band_data/np.amax(B2_band_data)
+    
+    Red_norm =B4_band_data/np.amax(B4_band_data)
+
+    NIR_norm =B8_band_data/np.amax(B8_band_data)
+
+    SWIR_norm=B11_band_data/np.amax(B11_band_data)
+
+    
+    #RGB Image construction from RGBa ---Equation 1
+    Red_new  =(1- SWIR_norm)+(SWIR_norm*Red_norm)
+    
+    Green_new=(1- SWIR_norm)+(SWIR_norm*NIR_norm)
+    
+    Blue_new=(1- SWIR_norm)+(SWIR_norm*Blue_norm)
+
+
+    
+    
+    
+    [row,col]=np.shape(SWIR_norm)               #Row Col of the image
+    
+    dim=3                                       #RGB 
+    
+    RGB_data=np.zeros([row,col,dim])            #Black Background
+    
+    #RGB Data
+    RGB_data[:,:,0]=Red_new
+    RGB_data[:,:,1]=Green_new
+    RGB_data[:,:,2]=Blue_new
+
+    #EDGE_correction
+    RGB_data[Edge_mask_data==1]=np.array([0,0,0])
+
+    print(colored('Ploting RGB IMAGE','green'))
+    
+    #Plot RGB Image
+    plt.figure('RGB Image')
+    
+    plt.imshow(RGB_data)
+    
+    #RGB construction Done ------------------------------------------------------------------------------------------------
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+    
+    #Memory Cleanup
+    print('')
+    print(colored('Cleanning Unnecessary Data','yellow'))
+    
+    #Data variables
+    data_files=None
+    band_files=None
+    mask_files=None
+
+    B2_band_data=None
+    B4_band_data=None
+    B8_band_data=None
+    B11_band_data=None
+
+    Cloud_mask_data=None
+    Cloud_mask_data_20m=None
+
+    Edge_mask_data=None
+
+    Blue_norm=None
+    Red_norm=None
+    NIR_norm=None
+    SWIR_norm=None
+
+    Red_new=None
+    Blue_new=None
+    Green_new=None
+
+    gc.collect()    
+    
+    print(colored('Done Cleaning','blue'))
     
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
-    '''
-    #ploting Check
-    
-    Plot_with_Geo_ref(B2_band_data,'Band2 Band')
-    Plot_with_Geo_ref(B4_band_data,'Band4 Band')
-    Plot_with_Geo_ref(B8_band_data,'Band8 Band')
-    Plot_with_Geo_ref(B11_band_data,'Band11 Band')
-    '''
-    #plt.show()
+    plt.show()
+
+
     
 
-    #RGBA Construction
+
+
+
     
 
     
