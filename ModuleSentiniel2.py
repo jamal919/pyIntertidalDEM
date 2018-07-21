@@ -17,6 +17,8 @@ import numpy as np                     #Array manupulation ease
 import time                            #Time profiling
 
 import gc                              #Garbage Collection
+
+import matplotlib                      #HSV
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -188,15 +190,16 @@ def Plot_with_Geo_ref(data_array,Data_Identifier):
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 
-#____MAIN_____
-def main():
+#Section--RGBConstruction 
+
+def RGB_Construction(unzipped_directory):
 
     gdal.UseExceptions()                                     #Throw any exception while processing with GDAL  
 
 
     start_time = time.time()
 
-    data_files=list_files_sentiniel(args.unzipped_directory) #Getting proper file paths
+    data_files=list_files_sentiniel(unzipped_directory) #Getting proper file paths
     
     band_files=data_files[0:4]                               #B2,B4,B8
     
@@ -255,11 +258,7 @@ def main():
     
     
     print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-    
-    
-    
-
+    print(colored('*Normalizing data ','cyan'))
     #data normalization
     
     Blue_norm=B2_band_data/np.amax(B2_band_data)
@@ -270,6 +269,11 @@ def main():
 
     SWIR_norm=B11_band_data/np.amax(B11_band_data)
 
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+    
+    print('')
+    print(colored('*Constructing RGB ','cyan'))
     
     #RGB Image construction from RGBa ---Equation 1
     Red_new  =(1- SWIR_norm)+(SWIR_norm*Red_norm)
@@ -295,18 +299,11 @@ def main():
 
     #EDGE_correction
     RGB_data[Edge_mask_data==1]=np.array([0,0,0])
-
-    print(colored('Ploting RGB IMAGE','green'))
     
-    #Plot RGB Image
-    plt.figure('RGB Image')
-    
-    plt.imshow(RGB_data)
-    
-    #RGB construction Done ------------------------------------------------------------------------------------------------
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
+    #RGB construction Done ------------------------------------------------------------------------------------------------
     #Memory Cleanup
     print('')
     print(colored('Cleanning Unnecessary Data','yellow'))
@@ -337,14 +334,114 @@ def main():
 
     gc.collect()    
     
+    
     print(colored('Done Cleaning','blue'))
     
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    return RGB_data    
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------
+
+def module_run():
+    start_time = time.time()
+
+    #RGB
     
+    
+    rgb_data=RGB_Construction(args.unzipped_directory)  
+    print('')
+    print(colored('*Reading RGB data ','cyan'))
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+ 
+    [row,col,dim]=np.shape(rgb_data)
+
+    #hsv conversion
+    print('')
+    print(colored('*Converting RGB to HSV ','cyan'))
+    
+    hsv_data=matplotlib.colors.rgb_to_hsv(rgb_data)
+    
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    #hue,Saturation and value channel separation
+    print('')
+    print(colored('*Extracting Hue and Val data ','cyan'))
+    
+    
+    hue_data=hsv_data[:,:,0]
+    val_data=hsv_data[:,:,2]
+
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    
+    print('')
+    print(colored('*Calculating Constraints ','cyan'))
+    
+    #hue channel constants
+    n_hue=0.5                     #scaling factor(question)
+    T_hue=np.median(hue_data)     #Median
+    sig_hue=np.std(hue_data)      #standard deviation
+    
+    #value channel constants
+    n_val=0.5                     #scaling factor(question)
+    T_val=np.median(val_data)     #Median 
+    sig_val=np.std(val_data)      #standard deviation
+
+    #HUE channel conditional constant 
+    c1_hue=T_hue+n_hue*sig_hue
+    c2_hue=T_hue-n_hue*sig_hue
+
+    #Value channel conditional constant 
+    c1_val=T_val+n_val*sig_val
+    c2_val=T_val-n_val*sig_val
+
+
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    
+    #binary mapping as per equation 2 & 3
+    print('')
+    print(colored('*Mapping Water hue binary Data ','cyan'))
+
+    IsWater_hue=np.ones([row,col])
+    IsWater_hue[(hue_data<c1_hue) & (hue_data>c2_hue)]=0
+    
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    print('')
+    print(colored('*Mapping Water val binary Data ','cyan'))
+    
+    IsWater_val=np.zeros([row,col])
+    IsWater_val[(hue_data<c1_val) & (hue_data>c2_val)]=1
+    
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    debug_print_value(IsWater_hue,'IsWater_hue')
+    debug_print_value(IsWater_val,'IsWater_val')
+    Plot_with_Geo_ref(IsWater_hue,'IsWater_hue')
+    Plot_with_Geo_ref(IsWater_val,'IsWater_val')
     plt.show()
+    
 
 
+    
+
+
+
+
+
+
+#Main 
+if __name__=='__main__':
+    module_run()    
     
 
 
@@ -353,5 +450,4 @@ def main():
     
 
     
-main()
 
