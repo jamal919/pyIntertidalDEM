@@ -16,9 +16,12 @@ import numpy as np                     #Array manupulation ease
 
 import time                            #Time profiling
 
-import subprocess                      #For GDALinfo
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
+
+#global mask byte
+mask_corr_val=0
+
 
 #Section--Structre
 #Passing Arguments
@@ -82,7 +85,7 @@ def list_files_sentiniel(unzipped_directory):
     return list_of_file_to_read 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
   
-#Section--Processing 
+#Section--Mask Processing 
       
 def Decimals_with_end_Bit_detection(max_value):
     result=[]
@@ -99,21 +102,23 @@ def CLOUD_MASK_CORRECTION(Cloud_mask_data,Band_data,Data_Identifier):
     start_time = time.time()
     #process 
         #detect max value of array(<=255)
-        #get vaules whose binary ends with 1
+        #get vaules whose binary ends with 1 and change band_data
     print('')
     print(colored('processing cloud mask with:'+colored(Data_Identifier,'blue'),'green'))
 
     value_decimals=Decimals_with_end_Bit_detection(np.amax(Cloud_mask_data))
 
     for v in range(0,len(value_decimals)):
-        Band_data[Cloud_mask_data==value_decimals[v]]=255
+        Band_data[Cloud_mask_data==value_decimals[v]]=-10000
 
     print(colored("Elapsed Time: %s seconds " % (time.time() - start_time),'yellow'))
     
     return Band_data
 
+#-----------------------------------------------------------------------------------------------------------------------------------------------
 
-  
+#Section--Data gathering
+
 #extracting band data 
 def file_data_validation(given_file):
     start_time = time.time()
@@ -185,7 +190,8 @@ def Plot_with_Geo_ref(data_array,Data_Identifier):
 def main():
 
     gdal.UseExceptions()                                     #Throw any exception while processing with GDAL  
-    
+
+
     start_time = time.time()
 
     data_files=list_files_sentiniel(args.unzipped_directory) #Getting proper file paths
@@ -215,16 +221,6 @@ def main():
     #CLM_R2
     Cloud_mask_data_20m=file_data_validation(mask_files[1])
     
-    
-    #No data correction(-10000(REFLECTANCE_QUANTIFICATION_VALUE) value removal)
-    B2_band_data[B2_band_data== -10000]=255
-
-    B4_band_data[B4_band_data== -10000]=255
-
-    B8_band_data[B8_band_data== -10000]=255
-    
-    B11_band_data[B11_band_data== -10000]=255
-    
     #cloud masking correction(bit 1)
    
     B2_band_data=CLOUD_MASK_CORRECTION(Cloud_mask_data,B2_band_data,'Edge_corrected_B2')
@@ -232,24 +228,53 @@ def main():
     B4_band_data=CLOUD_MASK_CORRECTION(Cloud_mask_data,B4_band_data,'Edge_corrected_B4')
     
     B8_band_data=CLOUD_MASK_CORRECTION(Cloud_mask_data,B8_band_data,'Edge_corrected_B8')
-    
+
+
     #B11 with 20m CLM
     B11_band_data=CLOUD_MASK_CORRECTION(Cloud_mask_data_20m,B11_band_data,'Edge_corrected_B11')
 
+
     # Repeating rows and coloumns to increase data points(discuss)
-    B11_interpolated=np.array(B11_band_data.repeat(2,axis=0).repeat(2,axis=1))
+    B11_band_data=np.array(B11_band_data.repeat(2,axis=0).repeat(2,axis=1))
+
+
+    
+    #No data correction(-10000(REFLECTANCE_QUANTIFICATION_VALUE) value removal)
+    B2_band_data[B2_band_data== -10000]=mask_corr_val
+
+    B4_band_data[B4_band_data== -10000]=mask_corr_val
+
+    B8_band_data[B8_band_data== -10000]=mask_corr_val
+    
+    B11_band_data[B11_band_data== -10000]=mask_corr_val
+    
+    
+    #data normalization
+    B2_band_data=((B2_band_data/np.amax(B2_band_data))*255).astype(np.uint8)
+
+    B4_band_data=((B4_band_data/np.amax(B4_band_data))*255).astype(np.uint8)
+
+    B8_band_data=((B8_band_data/np.amax(B8_band_data))*255).astype(np.uint8)
+    
+    B11_band_data=((B11_band_data/np.amax(B11_band_data))*255).astype(np.uint8)
     
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
-    #Plot_with_Geo_ref(B2_band_data,'Band2 Band')
-    #Plot_with_Geo_ref(B4_band_data,'Band4 Band')
-    #Plot_with_Geo_ref(B8_band_data,'Band8 Band')
-    Plot_with_Geo_ref(B11_band_data,'Band11')
-    Plot_with_Geo_ref(B11_interpolated,'Band11_interpolated')
+    '''
+    #ploting Check
     
-    plt.show()
-        
+    Plot_with_Geo_ref(B2_band_data,'Band2 Band')
+    Plot_with_Geo_ref(B4_band_data,'Band4 Band')
+    Plot_with_Geo_ref(B8_band_data,'Band8 Band')
+    Plot_with_Geo_ref(B11_band_data,'Band11 Band')
+    '''
+    #plt.show()
+    
+
+    #RGBA Construction
+    
+
     
 main()
 
