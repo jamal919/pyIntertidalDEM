@@ -285,9 +285,6 @@ def RGB_Construction(unzipped_directory):
     Blue_new=(1- SWIR_norm)+(SWIR_norm*Blue_norm)
 
 
-    
-    
-    
     [row,col]=np.shape(SWIR_norm)               #Row Col of the image
     
     dim=3                                       #RGB 
@@ -302,6 +299,8 @@ def RGB_Construction(unzipped_directory):
     #EDGE_correction
     RGB_data[Edge_mask_data==1]=np.array([0,0,0])
     
+    Plot_with_Geo_ref(RGB_data,'RGB IMAGE')
+    plt.show()
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
