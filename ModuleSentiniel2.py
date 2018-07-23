@@ -20,7 +20,11 @@ import gc                              #Garbage Collection
 
 import matplotlib                      #HSV
 
-import scipy.signal                            #Convulation
+import scipy.signal                    #Convulation
+
+import scipy.ndimage                   #Hole filter
+
+from numpy.fft import fft2,ifft2       #2D fourier and inverse fourier
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -300,7 +304,6 @@ def RGB_Construction(unzipped_directory):
     RGB_data[Edge_mask_data==1]=np.array([0,0,0])
     
     Plot_with_Geo_ref(RGB_data,'RGB IMAGE')
-    plt.show()
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
@@ -344,6 +347,76 @@ def RGB_Construction(unzipped_directory):
     return RGB_data    
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
+def kernel_convolution_fourier(Data_array):
+
+    #This isn't technically convolution. 
+    #For real 'y', this is equivalent to correlation 
+    #and only for real symmetric 'y' kernels is this equivalent to convolution.
+    #Which satisfies our case
+    
+    start_time=time.time()
+    
+    #kernel_shore_base= np.array([[0,-1,0],[-1,4,-1],[0,-1,0]]) 
+
+    fourier_fft_data_array=fft2(Data_array)
+
+    [row,col]=np.shape(fourier_fft_data_array)
+
+    zero_paded_kernel=np.zeros([row,col])
+
+    x_m=int(row/2 - 1)  #even rows       
+    y_m=int(col/2 - 1)  #even cols  
+
+    debug_print_value(x_m,'x_m')
+
+    debug_print_value(y_m,'y_m')
+    
+
+    #further even odd check needed
+
+    zero_paded_kernel[x_m-1,y_m-1]=0
+
+    zero_paded_kernel[x_m-1,y_m] =-1
+
+    zero_paded_kernel[x_m-1,y_m+1]=0
+
+    #1st row
+
+    zero_paded_kernel[x_m,y_m-1]=-1
+
+    zero_paded_kernel[x_m,y_m] =4
+
+    zero_paded_kernel[x_m,y_m+1]=-1
+
+    #second row
+
+    zero_paded_kernel[x_m+1,y_m-1]=0
+
+    zero_paded_kernel[x_m+1,y_m] =-1
+
+    zero_paded_kernel[x_m+1,y_m+1]=0
+
+    #third row
+    
+    fourier_fft_kernel=fft2(np.flipud(np.fliplr(zero_paded_kernel)))  #kernel flipped
+
+    convoluted_data=np.real(ifft2(fourier_fft_data_array*fourier_fft_kernel))  #not properly placed
+
+    convoluted_data=np.roll(convoluted_data, -row/2+1,axis='0')
+
+    convoluted_data=np.roll(convoluted_data, -col/2+1,axis='1')
+
+    debug_print_value(convoluted_data,'convoluted_data')
+
+    Plot_with_Geo_ref(convoluted_data,'convoluted_data')
+
+    
+
+    print('')
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------
+
 
 def module_run():
     start_time = time.time()
@@ -364,6 +437,9 @@ def module_run():
     print(colored('*Converting RGB to HSV ','cyan'))
     
     hsv_data=matplotlib.colors.rgb_to_hsv(rgb_data)
+
+    #--1
+    rgb_data=None    
     
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
@@ -375,6 +451,10 @@ def module_run():
     
     hue_data=hsv_data[:,:,0]
     val_data=hsv_data[:,:,2]
+
+
+    #--1
+    hsv_data=None 
 
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
@@ -410,63 +490,32 @@ def module_run():
     print('')
     print(colored('*Mapping Water hue binary Data ','cyan'))
 
-    IsWater_hue=np.ones([row,col])
-    IsWater_hue[(hue_data<c1_hue) & (hue_data>c2_hue)]=0
-    
+    IsWater_hue=np.ones([row,col])                              
+    IsWater_hue[(hue_data<c1_hue) & (hue_data>c2_hue)]=0        
+
+    Plot_with_Geo_ref(IsWater_hue,'Water hue Channel')
+
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
 
+   
     print('')
     print(colored('*Mapping Water val binary Data ','cyan'))
     
     IsWater_val=np.zeros([row,col])
-    IsWater_val[(hue_data<c1_val) & (hue_data>c2_val)]=1
+    IsWater_val[(val_data<c1_val) & (val_data>c2_val)]=1            #not so clear
+
     
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
 
-    debug_print_value(IsWater_hue,'IsWater_hue')
-    debug_print_value(IsWater_val,'IsWater_val')
-    
-    #Water Map
-    IsWater=np.zeros([row,col])
-    IsWater[(IsWater_hue==1) & (IsWater_val==1)]=1
-    
-    
-    #processing filters-- after discussion
+    Plot_with_Geo_ref(IsWater_val,'Water val Channel')
 
-    Map_water=IsWater                       #without filters
+    kernel_convolution_fourier(IsWater_hue)
 
-    kernel_shore= np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
-
-
-    #Issue to raise
-    '''
-    print('')
-    print(colored('*Performing Convolution ','cyan'))
-    
-    Map_shore=scipy.signal.convolve2d(kernel_shore,Map_water)
-    
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-
-    Plot_with_Geo_ref(Map_shore,'Shore_plot')
-    
-    
-    
     plt.show()
-    '''
-    
 
 
 #Main 
 if __name__=='__main__':
     module_run()    
-
-
-
-
-    
-
-    
-
