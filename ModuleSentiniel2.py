@@ -301,7 +301,7 @@ def RGB_Construction(unzipped_directory):
     RGB_data[:,:,2]=Blue_new
 
     #EDGE_correction
-    RGB_data[Edge_mask_data==1]=np.array([0,0,0])
+    #RGB_data[Edge_mask_data==1]=np.array([0,0,0])
     
     Plot_with_Geo_ref(RGB_data,'RGB IMAGE')
     print('')
@@ -398,13 +398,17 @@ def kernel_convolution_fourier(Data_array):
 
     #third row
     
-    fourier_fft_kernel=fft2(np.flipud(np.fliplr(zero_paded_kernel)))  #kernel flipped
+    gc.collect()
 
+    fourier_fft_kernel=fft2(np.flipud(np.fliplr(zero_paded_kernel)))           #kernel flipped
+    
     convoluted_data=np.real(ifft2(fourier_fft_data_array*fourier_fft_kernel))  #not properly placed
 
-    convoluted_data=np.roll(convoluted_data, -row/2+1,axis='0')
+    convoluted_data=np.roll(convoluted_data, -x_m+1,axis=0)
 
-    convoluted_data=np.roll(convoluted_data, -col/2+1,axis='1')
+    convoluted_data=np.roll(convoluted_data, -y_m+1,axis=1)
+
+    convoluted_data[convoluted_data<1]=0
 
     debug_print_value(convoluted_data,'convoluted_data')
 
@@ -503,7 +507,7 @@ def module_run():
     print(colored('*Mapping Water val binary Data ','cyan'))
     
     IsWater_val=np.zeros([row,col])
-    IsWater_val[(val_data<c1_val) & (val_data>c2_val)]=1            #not so clear
+    IsWater_val[(val_data<c1_val) & (val_data>c2_val)]=1            
 
     
     print('')
