@@ -347,86 +347,12 @@ def RGB_Construction(unzipped_directory):
     return RGB_data    
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
-def kernel_convolution_fourier(Data_array):
-
-    #This isn't technically convolution. 
-    #For real 'y', this is equivalent to correlation 
-    #and only for real symmetric 'y' kernels is this equivalent to convolution.
-    #Which satisfies our case
-    
-    start_time=time.time()
-    
-    #kernel_shore_base= np.array([[0,-1,0],[-1,4,-1],[0,-1,0]]) 
-
-    fourier_fft_data_array=fft2(Data_array)
-
-    [row,col]=np.shape(fourier_fft_data_array)
-
-    zero_paded_kernel=np.zeros([row,col])
-
-    x_m=int(row/2 - 1)  #even rows       
-    y_m=int(col/2 - 1)  #even cols  
-
-    debug_print_value(x_m,'x_m')
-
-    debug_print_value(y_m,'y_m')
-    
-
-    #further even odd check needed
-
-    zero_paded_kernel[x_m-1,y_m-1]=0
-
-    zero_paded_kernel[x_m-1,y_m] =-1
-
-    zero_paded_kernel[x_m-1,y_m+1]=0
-
-    #1st row
-
-    zero_paded_kernel[x_m,y_m-1]=-1
-
-    zero_paded_kernel[x_m,y_m] =4
-
-    zero_paded_kernel[x_m,y_m+1]=-1
-
-    #second row
-
-    zero_paded_kernel[x_m+1,y_m-1]=0
-
-    zero_paded_kernel[x_m+1,y_m] =-1
-
-    zero_paded_kernel[x_m+1,y_m+1]=0
-
-    #third row
-    
-    gc.collect()
-
-    fourier_fft_kernel=fft2(np.flipud(np.fliplr(zero_paded_kernel)))           #kernel flipped
-    
-    convoluted_data=np.real(ifft2(fourier_fft_data_array*fourier_fft_kernel))  #not properly placed
-
-    convoluted_data=np.roll(convoluted_data, -x_m+1,axis=0)
-
-    convoluted_data=np.roll(convoluted_data, -y_m+1,axis=1)
-
-    convoluted_data[convoluted_data<1]=0
-
-    debug_print_value(convoluted_data,'convoluted_data')
-
-    Plot_with_Geo_ref(convoluted_data,'convoluted_data')
-
-    
-
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-
-#-----------------------------------------------------------------------------------------------------------------------------------------------
-
 
 def module_run():
     start_time = time.time()
 
     #RGB
-    
+    kernel_shore_base= np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
     
     rgb_data=RGB_Construction(args.unzipped_directory)  
     print('')
@@ -515,7 +441,24 @@ def module_run():
 
     Plot_with_Geo_ref(IsWater_val,'Water val Channel')
 
-    kernel_convolution_fourier(IsWater_hue)
+    print('')
+    print(colored('*Calculating Convoluted Data ','cyan'))
+
+    convoluted_data=scipy.signal.convolve2d(IsWater_hue,kernel_shore_base)
+    
+    print('')    
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    Plot_with_Geo_ref(convoluted_data,'convoluted_data')
+
+    debug_print_value(convoluted_data,'convoluted_data')
+
+    debug_print_value(np.shape(convoluted_data),'Shape convoluted_data')
+
+    debug_print_value(np.amax(convoluted_data),'max convoluted_data')
+
+    debug_print_value(np.amin(convoluted_data),'min convoluted_data')
+    
 
     plt.show()
 
