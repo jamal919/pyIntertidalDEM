@@ -22,9 +22,6 @@ import matplotlib                      #HSV
 
 import scipy.signal                    #Convulation
 
-import scipy.ndimage                   #Hole filter
-
-from numpy.fft import fft2,ifft2       #2D fourier and inverse fourier
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -184,7 +181,7 @@ def Plot_with_Geo_ref(data_array,Data_Identifier):
     
     plt.figure(Data_Identifier)
     
-    plt.imshow(data_array,cmap=plt.get_cmap('gray'))
+    plt.imshow(data_array)
     
     plt.title(Data_Identifier)
     
@@ -274,9 +271,6 @@ def RGB_Construction(unzipped_directory):
     NIR_norm =B8_band_data/np.amax(B8_band_data)
 
     SWIR_norm=B11_band_data/np.amax(B11_band_data)
-
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
     
     print('')
     print(colored('*Constructing RGB ','cyan'))
@@ -299,13 +293,9 @@ def RGB_Construction(unzipped_directory):
     RGB_data[:,:,0]=Red_new
     RGB_data[:,:,1]=Green_new
     RGB_data[:,:,2]=Blue_new
-
-    #EDGE_correction
-    #RGB_data[Edge_mask_data==1]=np.array([0,0,0])
     
     Plot_with_Geo_ref(RGB_data,'RGB IMAGE')
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+    
     
     #RGB construction Done ------------------------------------------------------------------------------------------------
     #Memory Cleanup
@@ -339,7 +329,7 @@ def RGB_Construction(unzipped_directory):
     gc.collect()    
     
     
-    print(colored('Done Cleaning','blue'))
+   
     
     print('')
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
@@ -357,9 +347,7 @@ def module_run():
     rgb_data=RGB_Construction(args.unzipped_directory)  
     print('')
     print(colored('*Reading RGB data ','cyan'))
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
- 
+    
     [row,col,dim]=np.shape(rgb_data)
 
     #hsv conversion
@@ -386,9 +374,6 @@ def module_run():
     #--1
     hsv_data=None 
 
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-
     
     print('')
     print(colored('*Calculating Constraints ','cyan'))
@@ -412,9 +397,6 @@ def module_run():
     c2_val=T_val-n_val*sig_val
 
 
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-
     
     #binary mapping as per equation 2 & 3
     print('')
@@ -423,12 +405,6 @@ def module_run():
     IsWater_hue=np.ones([row,col])                              
     IsWater_hue[(hue_data<c1_hue) & (hue_data>c2_hue)]=0        
 
-    Plot_with_Geo_ref(IsWater_hue,'Water hue Channel')
-
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-
-   
     print('')
     print(colored('*Mapping Water val binary Data ','cyan'))
     
@@ -436,31 +412,38 @@ def module_run():
     IsWater_val[(val_data<c1_val) & (val_data>c2_val)]=1            
 
     
-    print('')
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+    #MapWater data
+    Map_Water=np.zeros([row,col])
+    Map_Water[(IsWater_val==1) & (IsWater_hue==1) ]=1
+    
+    #--1
+    IsWater_hue=None
+    IsWater_val=None
+    #--1
+    hue_data=None
+    val_data=None
 
-    Plot_with_Geo_ref(IsWater_val,'Water val Channel')
+    Plot_with_Geo_ref(Map_Water,'Water val Channel')
 
     print('')
     print(colored('*Calculating Convoluted Data ','cyan'))
 
-    convoluted_data=scipy.signal.convolve2d(IsWater_hue,kernel_shore_base)
+    convoluted_data=scipy.signal.convolve2d(Map_Water[1:row-1,1:col-1],kernel_shore_base)
     
     print('')    
     print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
 
     Plot_with_Geo_ref(convoluted_data,'convoluted_data')
 
-    debug_print_value(convoluted_data,'convoluted_data')
-
-    debug_print_value(np.shape(convoluted_data),'Shape convoluted_data')
-
-    debug_print_value(np.amax(convoluted_data),'max convoluted_data')
-
-    debug_print_value(np.amin(convoluted_data),'min convoluted_data')
+    Map_Shore=np.argwhere(convoluted_data>0)
     
+    #--1
+    convoluted_data=None
+    Map_Water=None
 
-    plt.show()
+
+
+    #plt.show()
 
 
 #Main 
