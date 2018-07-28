@@ -22,6 +22,9 @@ import matplotlib                      #HSV
 
 import scipy.signal                    #Convulation
 
+import simplekml                       #kml output
+
+import os                              #Directory Access 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -407,6 +410,31 @@ def pixel_Coordinate_to_latitude_longitude(data_array):
     
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
+def kml_output(latitude_longitude):
+    
+    start_time = time.time()
+
+    directory_strings=str(args.unzipped_directory).split('/')
+
+    outputfile=str(os.getcwd())+'/Output_log/'+str(directory_strings[-1])+'.kml'
+
+    kml=simplekml.Kml()
+
+    for index in range(0,np.shape(latitude_longitude)[0]):
+        lat=latitude_longitude[index,0]
+        lon=latitude_longitude[index,1]
+        kml.newpoint(coords=[(lat,lon)])
+    
+    kml.save(outputfile)
+
+    print('')
+    print(colored('*Saved to kml file ','cyan'))
+    
+    print('')
+    print(colored("Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------
 
 def module_run():
     start_time = time.time()
@@ -513,9 +541,9 @@ def module_run():
 
     latitude_longitude=pixel_Coordinate_to_latitude_longitude(Map_Shore)
     
-    debug_print_value(latitude_longitude,'latitude_longitude')
+    kml_output(latitude_longitude)
 
-    plt.show()
+    #plt.show()
 
 
 #Main 
