@@ -25,6 +25,8 @@ import scipy.signal                    #Convulation
 import simplekml                       #kml output
 
 import os                              #Directory Access 
+
+import shapefile                       #shapefile output 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 #global mask byte
@@ -434,6 +436,34 @@ def kml_output(latitude_longitude):
     print(colored("Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
 
 
+
+
+def shape_point_output(latitude_longitude):
+    
+    start_time=time.time()
+
+    directory_strings=str(args.unzipped_directory).split('/')
+
+    outputfile=str(os.getcwd())+'/Output_log/'+str(directory_strings[-1])+'__point.shp'
+
+    lat=latitude_longitude[:,0]
+    lon=latitude_longitude[:,1]
+
+    Writer_SHP=shapefile.Writer(shapefile.POINT)
+    
+    Writer_SHP.field('Latitude')
+    Writer_SHP.field('Longitude')
+
+    Writer_SHP.record(lat,lon)
+    Writer_SHP.save(outputfile)
+
+    print('')
+    print(colored('*Saved to .shp file ','cyan'))
+    
+    print('')
+    print(colored("Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 
 def module_run():
@@ -541,8 +571,8 @@ def module_run():
 
     latitude_longitude=pixel_Coordinate_to_latitude_longitude(Map_Shore)
     
-    kml_output(latitude_longitude)
-
+    #---------->>>>kml_output(latitude_longitude)
+    #---------->>>>shape_point_output(latitude_longitude)
     #plt.show()
 
 
