@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import time,matplotlib,numpy as np,scipy.signal,gc
+import time,matplotlib,numpy as np,gc
 from Sentiniel2Logger import Log
 from termcolor import colored
 

@@ -4,7 +4,7 @@ from Sentiniel2Info import displayInfo
 from Sentiniel2Logger import Log,DebugLog
 from Sentiniel2Preprocessor import Preprocessor
 from Sentiniel2RGBProcessor import RGBProcessor
-
+from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np
 
 
@@ -27,7 +27,7 @@ def ModuleRun():
     Logger=Log(directory)            #Logger Object
 
     Files=ModuleInfoSentiniel(directory)
-
+    '''
     preprocess=Preprocessor(Files,directory)      #Preprocessor Object
 
     RGBData=preprocess.GetRGBData()
@@ -41,17 +41,22 @@ def ModuleRun():
     Logger.SaveArrayToGeotiff(MapWater,'WaterMap')
     
     plt.show()
-
+    '''
 def DebugRun():
     Logger=Log(directory)
     DebugLogger=DebugLog(directory) 
     DataFile=Logger.OutputDir+'WaterMap.tiff'
+    
     Data=DebugLogger.GetFileData(DataFile)
-    Logger.DebugPrint(Data,'MapWater')
-    Logger.DebugPlot(Data,'MapWater')
-    plt.show()
+    
+    GeoObj=GeoData(directory,Data)
+    
+    LatLon=GeoObj.GetShoreLineGeoData()
+    
+    Logger.DebugPrint(LatLon,'LatLon')
+    
 
 
 if __name__=='__main__':
     DebugRun()    
-    
+   
