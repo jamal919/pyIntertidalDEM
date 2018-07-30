@@ -5,9 +5,9 @@ from termcolor import colored
 
 class RGBProcessor(object):
     
-    def __init__(self,RGBData):
+    def __init__(self,RGBData,Directory):
         self.RGBData=RGBData
-        self.Logger=Log('RGBPreprocessor')
+        self.Logger=Log(Directory)
 
     def __HSVConversion(self):
         start_time=time.time()
@@ -51,23 +51,7 @@ class RGBProcessor(object):
         self.__HueData=None
         self.__ValData=None
 
-    def __MapShoreLine(self):
-        self.Logger.PrintLogStatus('Mapping ShoreLine')
-        start_time = time.time()
-        __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
-        __ConvolutedData=scipy.signal.convolve2d(self.__Map_Water[1:self.__row-1,1:self.__col-1],__Kernel)
-        self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing
-        self.Logger.DebugPrint(__ConvolutedData,'__ConvolutedData')
-        self.Logger.DebugPrint(self.__Map_ShoreLine,'self.__Map_ShoreLine')
-        #Cleanup
-        self.__ConvolutedData=None
-        gc.collect()
-        print('')    
-        print(colored("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time),'green'))
-
-    def GetShoreLine(self):
+    def GetWaterMap(self):
         self.__HSVConversion()
         self.__MapWater()
-        #save Map_water as tiff
-        self.__MapShoreLine()
-        return self.__Map_ShoreLine
+        return self.__Map_Water

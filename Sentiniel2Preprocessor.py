@@ -10,10 +10,10 @@ from Sentiniel2Logger import Log
 
 class Preprocessor(object):
 
-    def __init__(self,Files):
+    def __init__(self,Files,Directory):
 
         self.Files=Files
-        self.Logger=Log('Preprocessor')
+        self.Logger=Log(Directory)
 
     def __ReadDataFromFile(self):
         try:

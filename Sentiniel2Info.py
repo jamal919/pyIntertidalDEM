@@ -57,9 +57,9 @@ class displayInfo(object):
 
     def __PrintFileList(self):
         
-        __Logger=Log('InfoLog')
+        self.__Logger=Log(self.directory)
 
-        __Logger.PrintLogStatus('Listing Files To Be used')
+        self.__Logger.PrintLogStatus('Listing Files To Be used')
         
         for f in self.__Files:
             print('')
