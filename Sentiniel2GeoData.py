@@ -1,85 +1,96 @@
+#!/usr/bin/env python3
+from Sentiniel2Logger import Log,DebugLog
+import time,numpy as np,gc,scipy.signal
+from termcolor import colored
+from osgeo import gdal,osr
+
+class GeoData(object):
+
+    def __init__(self,Directory,MapWater):
+        self.Directory=Directory
+        self.__Logger=Log(self.Directory)
+        self.__DebugLogger=DebugLog(self.Directory)
+        self.MapWater=MapWater
+
+    def __ConvolutedMap(self):
+        self.__Logger.PrintLogStatus('Mapping ShoreLine')
+        [self.__row,self.__col]=np.shape(self.MapWater)
+        start_time = time.time()
+        __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
+        __ConvolutedData=scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
+        
+        __ConvolutedData[1]=0
+        __ConvolutedData[:,1]=0
+        __ConvolutedData[self.__row-2]=0
+        __ConvolutedData[:,self.__col-2]=0
+        
+        __ConvolutedData[__ConvolutedData<1]=0
+        __ConvolutedData[__ConvolutedData>0]=1
+        self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing
+        self.__TotalDataPoints=np.shape(self.__Map_ShoreLine)[0]
+        #Cleanup
+        __ConvolutedData=None
+        gc.collect()
+        print(colored("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time),'green'))
+    
+    def __PixelToSpaceCoordinate(self):
+        [__x_offset,__pixel_width,__rotation_1,__y_offset,__pixel_height,__rotation_2]=self.__Logger.GetGeoTransformData()
+        __pixel_Coordinate_X=self.__Map_ShoreLine[:,0]
+        __pixel_Coordinate_y=self.__Map_ShoreLine[:,1]
+        self.__Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
+        self.__Space_coordinate_Y= __pixel_height* __pixel_Coordinate_X +   __rotation_2 * __pixel_Coordinate_y + __y_offset
+        #shift to the center of the pixel
+        self.__Space_coordinate_X += __pixel_width  / 2.0
+        self.__Space_coordinate_Y += __pixel_height / 2.0
+    
+    def __SpaceCoordinateToLatLon(self):
+        start_time=time.time()
+        ##get CRS from dataset
+        __Coordinate_Reference_System=osr.SpatialReference()                     #Get Co-ordinate reference
+        __Coordinate_Reference_System.ImportFromWkt(self.__Logger.GetProjectionData()) #projection reference
+
+        ## create lat/long CRS with WGS84 datum<GDALINFO for details>
+        __Coordinate_Reference_System_GEO=osr.SpatialReference()
+        __Coordinate_Reference_System_GEO.ImportFromEPSG(4326)                   # 4326 is the EPSG id of lat/long CRS
+
+        __Transform_term = osr.CoordinateTransformation(__Coordinate_Reference_System, __Coordinate_Reference_System_GEO)
+        self.__LatitudeData=np.zeros(self.__TotalDataPoints)
+        self.__LongitudeData=np.zeros(self.__TotalDataPoints)
+        for indice in range(0,self.__TotalDataPoints):
+            (__latitude_point, __longitude_point, _ ) = __Transform_term.TransformPoint(self.__Space_coordinate_X[indice], self.__Space_coordinate_Y[indice])
+            
+            self.__LatitudeData[indice]=__latitude_point
+            self.__LongitudeData[indice]=__longitude_point
+        print('')
+        print(colored("Total Elapsed Time(SpaceCoords to Lat Lon): %s seconds " % (time.time() - start_time),'green'))
+
+    def GetShoreLineGeoData(self):
+        self.__ConvolutedMap()
+        self.__PixelToSpaceCoordinate()
+        self.__SpaceCoordinateToLatLon()
+        return np.column_stack((self.__LatitudeData,self.__LongitudeData))
+
+
+
+
+
+
+
+
+
+
+
+
+
 '''    
 class Shoreline_data_extractor(object):
 
 
     def pixel_Coordinate_to_latitude_longitude(self,data_array,unzipped_directory):
-        print('')
-        print(colored('*Latitude Longitude Determination ','cyan'))
-        
-        start_time=time.time()
-
-        Total_data_points=np.shape(data_array)[0]
-        #Read Geo Transform data from Geotiff
-
-        directory_strings=str(unzipped_directory).split('/')
-        
-        GeoTiff_file=str(unzipped_directory)+'/MASKS/'+directory_strings[-1]+'_EDG_R1.tif'
-
-        try:
-            data_set=gdal.Open(GeoTiff_file,gdal.GA_ReadOnly)   #taking readonly data
-        
-        except RuntimeError as e_Read:                       #Error handling
-            print(colored('Error while opening file!','red'))
-            print(colored('Error Details:','blue'))
-            print(e_Read)
-            sys.exit(1)
-
-        [x_offset,pixel_width,rotation_1,y_offset,pixel_height,rotation_2]=data_set.GetGeoTransform()
-
-        #pixel-coordinate to space-coordinate
-
-        pixel_Coordinate_X=data_array[:,0]
-        pixel_Coordinate_y=data_array[:,1]
-
-        Space_coordinate_X= pixel_width * pixel_Coordinate_X +   rotation_1 * pixel_Coordinate_y + x_offset
-        Space_coordinate_Y= rotation_2  * pixel_Coordinate_X + pixel_height * pixel_Coordinate_y + y_offset
-
-
-        #shift to the center of the pixel
-        Space_coordinate_X += pixel_width  / 2.0
-        Space_coordinate_Y += pixel_height / 2.0
-
-        ##get CRS from dataset
-        Coordinate_Reference_System=osr.SpatialReference()                     #Get Co-ordinate reference
-        Coordinate_Reference_System.ImportFromWkt(data_set.GetProjectionRef()) #projection reference
-
-        ## create lat/long CRS with WGS84 datum<GDALINFO for details>
-        Coordinate_Reference_System_GEO=osr.SpatialReference()
-        Coordinate_Reference_System_GEO.ImportFromEPSG(4326)                   # 4326 is the EPSG id of lat/long CRS
-
-        Transform_term = osr.CoordinateTransformation(Coordinate_Reference_System, Coordinate_Reference_System_GEO)
-
-        
-        
-        latitude_data=np.zeros(Total_data_points)
-        longitude_data=np.zeros(Total_data_points)
         
         
 
-        for indice in range(0,Total_data_points):
-            (latitude_point, longitude_point, _ ) = Transform_term.TransformPoint(Space_coordinate_X[indice], Space_coordinate_Y[indice])
-            
-            latitude_data[indice]=latitude_point
-            longitude_data[indice]=longitude_point
-            
-
-
-        print('')
-        print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
-
-        return np.column_stack((latitude_data,longitude_data))
+        
+        
     
-    def __MapShoreLine(self):
-        self.Logger.PrintLogStatus('Mapping ShoreLine')
-        start_time = time.time()
-        __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
-        __ConvolutedData=scipy.signal.convolve2d(self.__Map_Water[1:self.__row-1,1:self.__col-1],__Kernel)
-        self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing
-        self.Logger.DebugPrint(__ConvolutedData,'__ConvolutedData')
-        self.Logger.DebugPrint(self.__Map_ShoreLine,'self.__Map_ShoreLine')
-        #Cleanup
-        self.__ConvolutedData=None
-        gc.collect()
-        print('')    
-        print(colored("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time),'green'))
     '''

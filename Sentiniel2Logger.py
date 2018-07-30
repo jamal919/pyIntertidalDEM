@@ -51,6 +51,14 @@ class Log(object):
         self.__Projection=DataSet.GetProjection()
         self.__GeoTransform=DataSet.GetGeoTransform()
         DataSet=None
+    
+    def GetGeoTransformData(self):
+        self.__ReadDataFromGTIFF()
+        return self.__GeoTransform
+    
+    def GetProjectionData(self):
+        self.__ReadDataFromGTIFF()
+        return self.__Projection
 
     def SaveArrayToGeotiff(self,Array,Identifier):
         self.__ReadDataFromGTIFF()
