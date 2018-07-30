@@ -2,32 +2,11 @@ import time,os,simplekml,shapefile
 import numpy as np
 from termcolor import colored
 import matplotlib.pyplot as plt 
-#Debugger
-def debug_print_value(debug_object,Debug_Identifier):
-    print('')
-    print(colored('DEBUG OBJECT:'+colored(Debug_Identifier,'blue'),'cyan'))
-    print(colored('*********************************************************************************************','red'))
-    print(colored(debug_object,'green'))
-    print(colored('*********************************************************************************************','red'))
-    print('')
+
     
 #Plotting
-def Plot_with_Geo_ref(data_array,Data_Identifier):
     
-    start_time = time.time()
     
-    print(colored('plotting data:'+Data_Identifier,'blue'))
-    
-    plt.figure(Data_Identifier)
-    
-    plt.imshow(data_array)
-    
-    plt.title(Data_Identifier)
-    
-    plt.grid(True)
-    
-    print(colored("Elapsed Time: "+Data_Identifier+ " %s seconds " % (time.time() - start_time),'yellow'))
-
 
 def kml_output(latitude_longitude,unzipped_directory):
     
@@ -79,3 +58,35 @@ def shape_point_output(latitude_longitude,unzipped_directory):
     
     print('')
     print(colored("Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+
+class Log(object):
+
+    def __init__(self,Identifier):
+        
+        self.Identifier=Identifier
+
+    def PrintLogStatus(self,Status):
+        print('')
+        print(colored('*Status:'+colored(Status,'red'),'cyan'))
+        print('')
+
+    def DebugPrint(self,Variable,VariableIdentifier):
+        print('')
+        print(colored('DEBUG OBJECT:'+colored(self.Identifier+':'+VariableIdentifier,'blue'),'cyan'))
+        print(colored('*********************************************************************************************','red'))
+        print(colored(Variable,'green'))
+        print(colored('*********************************************************************************************','red'))
+        print('')
+
+    def DebugPlot(self,Variable,VariableIdentifier):
+        
+        print(colored('plotting data:'+VariableIdentifier,'blue'))
+        
+        plt.figure(VariableIdentifier)
+        
+        plt.imshow(Variable)
+        
+        plt.title(VariableIdentifier)
+        
+        plt.grid(True)
