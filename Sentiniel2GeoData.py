@@ -68,4 +68,18 @@ class Shoreline_data_extractor(object):
         print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
 
         return np.column_stack((latitude_data,longitude_data))
+    
+    def __MapShoreLine(self):
+        self.Logger.PrintLogStatus('Mapping ShoreLine')
+        start_time = time.time()
+        __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
+        __ConvolutedData=scipy.signal.convolve2d(self.__Map_Water[1:self.__row-1,1:self.__col-1],__Kernel)
+        self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing
+        self.Logger.DebugPrint(__ConvolutedData,'__ConvolutedData')
+        self.Logger.DebugPrint(self.__Map_ShoreLine,'self.__Map_ShoreLine')
+        #Cleanup
+        self.__ConvolutedData=None
+        gc.collect()
+        print('')    
+        print(colored("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time),'green'))
     '''
