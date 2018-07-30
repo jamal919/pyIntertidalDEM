@@ -44,7 +44,9 @@ def ModuleRun():
     '''
 def DebugRun():
     Logger=Log(directory)
+    
     DebugLogger=DebugLog(directory) 
+    
     DataFile=Logger.OutputDir+'WaterMap.tiff'
     
     Data=DebugLogger.GetFileData(DataFile)
@@ -53,7 +55,11 @@ def DebugRun():
     
     LatLon=GeoObj.GetShoreLineGeoData()
     
-    Logger.DebugPrint(LatLon,'LatLon')
+    Identifier='ShoreLine_LatLon'
+    
+    Logger.SaveDataAsCSV(Identifier,LatLon)
+    Logger.SaveDataAsKML(Identifier,LatLon)
+    Logger.SaveDataAsSHPPoint(Identifier,LatLon)
     
 
 
