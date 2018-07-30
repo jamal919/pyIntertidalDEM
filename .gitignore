@@ -105,4 +105,5 @@ venv.bak/
 
 #folder_log
 /Output_log/*
+/Extracode/*
 .vscode/
