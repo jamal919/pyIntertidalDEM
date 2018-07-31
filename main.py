@@ -56,18 +56,18 @@ def DebugRun():
     DataFile=Logger.OutputDir+'WaterMap.tiff'
     
     Data=DebugLogger.GetFileData(DataFile)
-    
+
     GeoObj=GeoData(directory,Data)
     
     LatLon=GeoObj.GetShoreLineGeoData()
     
     Logger.DebugPrint(LatLon,'Latitude Longitude')
 
-    #Identifier='ShoreLine_LatLon'
+    Identifier='ShoreLine_LatLon'
     
     #Logger.SaveDataAsCSV(Identifier,LatLon)
     
-    #Logger.SaveDataAsKML(Identifier,LatLon)
+    Logger.SaveDataAsKML(Identifier,LatLon)
     
     #Logger.SaveDataAsSHPPoint(Identifier,LatLon)
     
