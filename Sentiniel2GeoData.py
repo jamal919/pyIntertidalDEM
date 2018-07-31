@@ -19,11 +19,6 @@ class GeoData(object):
         __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
         __ConvolutedData=scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
         
-        __ConvolutedData[1]=0
-        __ConvolutedData[:,1]=0
-        __ConvolutedData[self.__row-2]=0
-        __ConvolutedData[:,self.__col-2]=0
-        
         __ConvolutedData[__ConvolutedData<1]=0
         __ConvolutedData[__ConvolutedData>0]=1
         self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing
@@ -35,8 +30,8 @@ class GeoData(object):
     
     def __PixelToSpaceCoordinate(self):
         [__x_offset,__pixel_width,__rotation_1,__y_offset,__pixel_height,__rotation_2]=self.__Logger.GetGeoTransformData()
-        __pixel_Coordinate_X=self.__Map_ShoreLine[:,0]
-        __pixel_Coordinate_y=self.__Map_ShoreLine[:,1]
+        __pixel_Coordinate_X=self.__Map_ShoreLine[:,1]
+        __pixel_Coordinate_y=self.__Map_ShoreLine[:,0]
         self.__Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
         self.__Space_coordinate_Y= __pixel_height* __pixel_Coordinate_X +   __rotation_2 * __pixel_Coordinate_y + __y_offset
         #shift to the center of the pixel
@@ -69,28 +64,3 @@ class GeoData(object):
         self.__PixelToSpaceCoordinate()
         self.__SpaceCoordinateToLatLon()
         return np.column_stack((self.__LatitudeData,self.__LongitudeData))
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''    
-class Shoreline_data_extractor(object):
-
-
-    def pixel_Coordinate_to_latitude_longitude(self,data_array,unzipped_directory):
-        
-        
-
-        
-        
-    
-    '''
