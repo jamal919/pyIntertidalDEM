@@ -1,4 +1,4 @@
-import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv 
+import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc 
 from termcolor import colored
 from osgeo import gdal
     
@@ -50,8 +50,31 @@ class Log(object):
     
         self.__Projection=DataSet.GetProjection()
         self.__GeoTransform=DataSet.GetGeoTransform()
+        if(DataSet.RasterCount==1):                          
+            try:
+                self.__RasterBandData=DataSet.GetRasterBand(1)
+                
+                self.__NoData=self.__RasterBandData.ReadAsArray()
+
+                #manual cleanup
+                self.__RasterBandData=None
+                gc.collect()
+                
+            except RuntimeError as e_arr:                                   #Error handling
+                print(colored('Error while data extraction file!','red'))
+                print(colored('Error Details:','blue'))
+                print(e_arr)
+                sys.exit(1)
+        else:
+            print('The file contains multiple bands','red')
+            sys.exit(1)
+        
         DataSet=None
     
+    def GetNoDataCorrection(self):
+        self.__ReadDataFromGTIFF()
+        return self.__NoData
+            
     def GetGeoTransformData(self):
         self.__ReadDataFromGTIFF()
         return self.__GeoTransform
@@ -118,6 +141,13 @@ class Log(object):
 
         print('')
         print(colored("Elapsed Time(shp Saving): %s seconds " % (time.time() - start_time),'green'))
+    def SaveRGBAsImage(self,Identifier,Data):
+        start_time=time.time()
+        self.PrintLogStatus('Saving RGB data As Image')
+        __RGBImageFile=self.OutputDir+str(Identifier)+'.jpg'
+        scipy.misc.imsave(__RGBImageFile,Data)
+        print('')
+        print(colored("Elapsed Time(JPG Saving): %s seconds " % (time.time() - start_time),'green'))
    
 class DebugLog(object):
     def __init__(self,Directory):
