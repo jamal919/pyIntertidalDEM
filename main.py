@@ -7,14 +7,18 @@ from Sentiniel2RGBProcessor import RGBProcessor
 from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 from termcolor import colored
+import scipy.ndimage
+
 testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
 testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
+
 directory=testCase1
 
 def ModuleInfoSentiniel(directory):
     info=displayInfo(directory)
     info.Banner()
     return info.DisplayFileList()
+
 '''
 def GetDirectory():
     parser = argparse.ArgumentParser()
