@@ -29,14 +29,14 @@ class GeoData(object):
         print(colored("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time),'green'))
     
     def __PixelToSpaceCoordinate(self):
-        [__x_offset,__pixel_width,__rotation_1,__y_offset,__pixel_height,__rotation_2]=self.__Logger.GetGeoTransformData()
+        [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=self.__Logger.GetGeoTransformData()
         __pixel_Coordinate_X=self.__Map_ShoreLine[:,1]
         __pixel_Coordinate_y=self.__Map_ShoreLine[:,0]
         self.__Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
-        self.__Space_coordinate_Y= __pixel_height* __pixel_Coordinate_X +   __rotation_2 * __pixel_Coordinate_y + __y_offset
+        self.__Space_coordinate_Y= __rotation_2* __pixel_Coordinate_X +    __pixel_height* __pixel_Coordinate_y + __y_offset
         #shift to the center of the pixel
-        self.__Space_coordinate_X += __pixel_width  / 2.0
-        self.__Space_coordinate_Y += __pixel_height / 2.0
+        self.__Space_coordinate_X +=__pixel_width  / 2.0
+        self.__Space_coordinate_Y +=__pixel_height / 2.0
     
     def __SpaceCoordinateToLatLon(self):
         start_time=time.time()
