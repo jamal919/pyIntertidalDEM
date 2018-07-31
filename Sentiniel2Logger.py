@@ -8,9 +8,10 @@ class Log(object):
         
         self.Directory=Directory
         self.OutputDir=str(os.getcwd())+'/Output_log/'+str(self.Directory).split('/')[-1]+'/'
-        self.GeoTiffDir=str(self.Directory)+'/MASKS/'+str(self.Directory).split('/')[-1]+'_EDG_R1.tif'
         if not os.path.exists(self.OutputDir):
             os.mkdir(self.OutputDir)
+        self.GeoTiffDir=str(self.Directory)+'/MASKS/'+str(self.Directory).split('/')[-1]+'_EDG_R1.tif'
+        
     
     def PrintLogStatus(self,Status):
         print('')
