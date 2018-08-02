@@ -81,7 +81,7 @@ def DebugRun():
 
     Test=DataTester(directory,Data)
 
-    Test.NoiseRemovalKernel()
+    Test.SegmentationWaterMap()
 
     plt.show()
     
