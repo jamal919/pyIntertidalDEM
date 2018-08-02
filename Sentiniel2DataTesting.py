@@ -1,6 +1,6 @@
-import numpy as np,scipy.signal,scipy.ndimage 
+import numpy as np,scipy.signal,scipy.ndimage,time 
 from Sentiniel2Logger import Log
-
+from termcolor import colored
 class DataTester(object):
     def __init__(self,Directory,Data):
         self.Directory=Directory
@@ -9,6 +9,7 @@ class DataTester(object):
         self.__kernel=np.ones((3,3),np.uint8)
 
     def SegmentationWaterMap(self):
+        start_time=time.time()
         __Labeled_array, _ =scipy.ndimage.measurements.label(self.Data)
         _, __CountsOfFeature = np.unique(__Labeled_array, return_counts=True)
         __SortedByFeature=np.argsort(__CountsOfFeature)
@@ -18,3 +19,4 @@ class DataTester(object):
             PointValueToConsider=__SortedByFeature[-i] #based on highest number of occuerence
             __BackGround[__Labeled_array==PointValueToConsider]=i-1+5
         self.__Logger.DebugPlot(__BackGround,'Segment:1-5 top data points')
+        print(colored("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time),'green'))
