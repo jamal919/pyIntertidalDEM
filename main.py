@@ -5,9 +5,10 @@ from Sentiniel2Logger import Log,DebugLog
 from Sentiniel2Preprocessor import Preprocessor
 from Sentiniel2RGBProcessor import RGBProcessor
 from Sentiniel2GeoData import GeoData
+from Sentiniel2DataTesting import DataTester
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 from termcolor import colored
-import scipy.ndimage
+
 
 testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
 testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
@@ -55,7 +56,7 @@ def ModuleRun():
     
     LatLon=GeoObj.GetShoreLineGeoData()
     
-    #Logger.DebugPrint(LatLon,'Latitude Longitude')
+    Logger.DebugPrint(LatLon,'Latitude Longitude')
 
     #Identifier='ShoreLine_LatLon'
     
@@ -78,17 +79,25 @@ def DebugRun():
     
     Data=DebugLogger.GetFileData(DataFile)
 
-    GeoObj=GeoData(directory,Data)
-    
-    LatLon=GeoObj.GetShoreLineGeoData()
-    
-    Logger.DebugPrint(LatLon,'Latitude Longitude')
+    Test=DataTester(directory,Data)
 
-    Identifier='ShoreLine_LatLon'
+    Test.NoiseRemovalKernel()
+
+    plt.show()
+    
+    #Logger.SaveArrayToGeotiff(Data,'Hole Filled Map')
+
+    #GeoObj=GeoData(directory,Data)
+    
+    #LatLon=GeoObj.GetShoreLineGeoData()
+    
+    #Logger.DebugPrint(LatLon,'Latitude Longitude')
+
+    #Identifier='ShoreLine_LatLon'
     
     #Logger.SaveDataAsCSV(Identifier,LatLon)
     
-    Logger.SaveDataAsKML(Identifier,LatLon)
+    #Logger.SaveDataAsKML(Identifier,LatLon)
     
     #Logger.SaveDataAsSHPPoint(Identifier,LatLon)
     
