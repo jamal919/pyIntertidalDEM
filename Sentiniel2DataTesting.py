@@ -6,14 +6,15 @@ class DataTester(object):
         self.Directory=Directory
         self.Data=Data
         self.__Logger=Log(self.Directory)
-        self.__kernel=np.ones((5,5),np.uint8)
+        self.__kernel=np.ones((3,3),np.uint8)
 
-    def __HoleFillWaterMap(self):
-        self.Data=scipy.ndimage.morphology.binary_fill_holes(self.Data)
-        self.__Logger.DebugPlot(self.Data,'HoleFillData')
-
-    def NoiseRemovalKernel(self):
-        self.__HoleFillWaterMap()
-        self.__NoiseData=scipy.signal.convolve2d(self.Data,self.__kernel)
-        self.__Logger.DebugPlot(self.__NoiseData,'Noise Data')
-        self.__Logger.DebugPrint(self.__NoiseData,'Noise Data')
+    def SegmentationWaterMap(self):
+        __Labeled_array, _ =scipy.ndimage.measurements.label(self.Data)
+        _, __CountsOfFeature = np.unique(__Labeled_array, return_counts=True)
+        __SortedByFeature=np.argsort(__CountsOfFeature)
+        __BackGround=np.zeros(np.shape(self.Data))
+        for i in range(2,7):
+            
+            PointValueToConsider=__SortedByFeature[-i] #based on highest number of occuerence
+            __BackGround[__Labeled_array==PointValueToConsider]=i-1+5
+        self.__Logger.DebugPlot(__BackGround,'Segment:1-5 top data points')
