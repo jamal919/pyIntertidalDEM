@@ -13,7 +13,7 @@ from termcolor import colored
 testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
 testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
 
-directory=testCase1
+directory=testCase2
 
 def ModuleInfoSentiniel(directory):
     info=displayInfo(directory)
@@ -38,7 +38,7 @@ def ModuleRun():
 
     RGBData=preprocess.GetRGBData()
 
-    #Logger.SaveRGBAsImage('QKL_RGB',RGBData)
+    Logger.SaveRGBAsImage('QKL_RGB',RGBData)
 
     ProcessRGB=RGBProcessor(RGBData,directory)    #RGBprocessor Object
 
@@ -48,9 +48,13 @@ def ModuleRun():
 
     MapWater[NoData==1]=0
 
-    #Logger.DebugPlot(MapWater,'MapWater')
+    Logger.DebugPlot(MapWater,'MapWater')
 
-    #Logger.SaveArrayToGeotiff(MapWater,'WaterMap')
+    Test=DataTester(directory,MapWater)           #Data tester object
+
+    Test.SegmentationWaterMap()
+
+    Logger.SaveArrayToGeotiff(MapWater,'WaterMap')
     
     GeoObj=GeoData(directory,MapWater)
     
@@ -58,11 +62,11 @@ def ModuleRun():
     
     Logger.DebugPrint(LatLon,'Latitude Longitude')
 
-    #Identifier='ShoreLine_LatLon'
+    Identifier='ShoreLine_LatLon'
     
-    #Logger.SaveDataAsCSV(Identifier,LatLon)
+    Logger.SaveDataAsCSV(Identifier,LatLon)
     
-    #Logger.SaveDataAsKML(Identifier,LatLon)
+    Logger.SaveDataAsKML(Identifier,LatLon)
     
     #Logger.SaveDataAsSHPPoint(Identifier,LatLon)
 
@@ -104,5 +108,5 @@ def DebugRun():
 
 
 if __name__=='__main__':
-    DebugRun()    
+    ModuleRun()    
    
