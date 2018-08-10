@@ -69,7 +69,7 @@ class Preprocessor(object):
         self.__CloudMask10m=self.__GetFileData(self.Files[4])
         self.__CloudMask20m=self.__GetFileData(self.Files[5])
         self.__EdgeMask=self.__GetFileData(self.Files[6])
-
+        
     def __GetDecimalsWithEndBit(self,MaxValue):
         
         __results=[]
@@ -120,13 +120,13 @@ class Preprocessor(object):
         self.Logger.PrintLogStatus('Normalizing data')
         self.__BlueNorm=self.__B2BandData/np.amax(self.__B2BandData)
         self.__RedNorm =self.__B4BandData/np.amax(self.__B4BandData)
-        self.__NIRNorm =self.__B8BandData/np.amax(self.__B8BandData)
+        self.__GreenNorm =self.__B8BandData/np.amax(self.__B8BandData)
         self.__SWIRNorm=self.__B11BandData/np.amax(self.__B11BandData)
         
     def __RGBaToRGB(self): #RGB Image construction from RGBa ---Equation 1
         self.Logger.PrintLogStatus('Converting RGBa to RGB')
         self.__RedNew  =(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__RedNorm)
-        self.__GreenNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__NIRNorm)
+        self.__GreenNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__GreenNorm)
         self.__BlueNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__BlueNorm)
 
         #Debug -------------------------------------------------------Red,Blue,Green
