@@ -8,26 +8,27 @@ from Sentiniel2GeoData import GeoData
 from Sentiniel2DataTesting import DataTester
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 from termcolor import colored
+import os
 
-
-testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
+#testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
 testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
+#testFolder="/home/ansary/Sentiniel2/Data/20180412/"
 
 directory=testCase2
+
+'''
+parser = argparse.ArgumentParser()
+parser.add_argument("unzipped_directory", help="Directory of unzipped Sentiniel2 product",type=str)
+args = parser.parse_args()
+'''
 
 def ModuleInfoSentiniel(directory):
     info=displayInfo(directory)
     info.Banner()
     return info.DisplayFileList()
 
-'''
-def GetDirectory():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("unzipped_directory", help="Directory of unzipped Sentiniel2 product",type=str)
-    args = parser.parse_args()
-    return args.unzipped_directory
-'''
-def ModuleRun():
+
+def ModuleRun(directory):
     start_time=time.time()
 
     Logger=Log(directory)            #Logger Object
@@ -54,19 +55,19 @@ def ModuleRun():
 
     Test.SegmentationWaterMap()
 
-    Logger.SaveArrayToGeotiff(MapWater,'WaterMap')
+    #Logger.SaveArrayToGeotiff(MapWater,'WaterMap')
     
     GeoObj=GeoData(directory,MapWater)
     
     LatLon=GeoObj.GetShoreLineGeoData()
     
-    Logger.DebugPrint(LatLon,'Latitude Longitude')
+    Logger.DebugPrint(LatLon,'Lat Lon')
 
-    Identifier='ShoreLine_LatLon'
+    #Identifier='ShoreLine_LatLon'
     
-    Logger.SaveDataAsCSV(Identifier,LatLon)
+    #Logger.SaveDataAsCSV(Identifier,LatLon)
     
-    Logger.SaveDataAsKML(Identifier,LatLon)
+    #Logger.SaveDataAsKML(Identifier,LatLon)
     
     #Logger.SaveDataAsSHPPoint(Identifier,LatLon)
 
@@ -74,7 +75,7 @@ def ModuleRun():
 
     plt.show()
     
-def DebugRun():
+def DebugRun(directory):
     Logger=Log(directory)
     
     DebugLogger=DebugLog(directory) 
@@ -108,5 +109,12 @@ def DebugRun():
 
 
 if __name__=='__main__':
-    ModuleRun()    
-   
+    '''
+    Dirs=os.listdir(path=testFolder)
+    Dirs.remove('20180412.meta4')
+    for d in Dirs:
+        directory=testFolder+d
+        #print(directory)
+        ModuleRun(directory) 
+    '''
+    ModuleRun(directory)

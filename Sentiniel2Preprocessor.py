@@ -101,6 +101,12 @@ class Preprocessor(object):
         self.__B8BandData=self.__CloudMaskCorrection(self.__B8BandData,self.__CloudMask10m,'EDGE Corrected B8')
         self.__B11BandData=self.__CloudMaskCorrection(self.__B11BandData,self.__CloudMask20m,'EDGE Corrected B11')
 
+        #Debug ----------------------------------------------------------------Every Segment
+        #self.Logger.SaveArrayToGeotiff(self.__B2BandData,'Cloud Mask Applied B2')
+        #self.Logger.SaveArrayToGeotiff(self.__B4BandData,'Cloud Mask Applied B4')
+        #self.Logger.SaveArrayToGeotiff(self.__B8BandData,'Cloud Mask Applied B8')
+        #self.Logger.SaveArrayToGeotiff(self.__B11BandData,'Cloud Mask Applied B11')
+
     def __B11UpSampling(self):
         self.__B11BandData=np.array(self.__B11BandData.repeat(2,axis=0).repeat(2,axis=1))
 
@@ -122,6 +128,12 @@ class Preprocessor(object):
         self.__RedNew  =(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__RedNorm)
         self.__GreenNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__NIRNorm)
         self.__BlueNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__BlueNorm)
+
+        #Debug -------------------------------------------------------Red,Blue,Green
+        #self.Logger.SaveArrayToGeotiff(self.__RedNew,'Red Channel')
+        #self.Logger.SaveArrayToGeotiff(self.__GreenNew,'Green Channel')
+        #self.Logger.SaveArrayToGeotiff(self.__BlueNew,'Blue Channel')
+        
 
     def __ConstructRGB(self):
         [__row,__col]=np.shape(self.__SWIRNorm)         #Row Col of the image
