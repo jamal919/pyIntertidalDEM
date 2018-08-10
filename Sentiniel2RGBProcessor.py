@@ -18,6 +18,12 @@ class RGBProcessor(object):
         self.__HueData=self.__HSVData[:,:,0]
         self.__ValData=self.__HSVData[:,:,2]
         self.__HSVData=None
+
+        #Debug --------------------------------------------HUE,VALUE
+        #self.Logger.SaveArrayToGeotiff(self.__HueData,'Hue Channel Data')
+        #self.Logger.SaveArrayToGeotiff(self.__ValData,'Value Channel Data')
+        
+
         print('')
         print(colored("Total Elapsed Time(HSVConversion): %s seconds " % (time.time() - start_time),'green'))
     
@@ -45,6 +51,14 @@ class RGBProcessor(object):
         #MapWater data
         self.__Map_Water=np.zeros([self.__row,self.__col])
         self.__Map_Water[(__IsWater_val==1) & (__IsWater_hue==1) ]=1
+        
+        #Debug ---------------------------------------- IsWaterHue,IsWaterVal,MapWater
+        #self.Logger.SaveArrayToGeotiff(__IsWater_hue,'Is Water Hue Data')
+        #self.Logger.SaveArrayToGeotiff(__IsWater_val,'Is Water Val Data')
+        #self.Logger.SaveArrayToGeotiff(self.__Map_Water,'Water Map Data')
+        
+        
+        
         #CleanUp
         __IsWater_hue=None
         __IsWater_val=None
