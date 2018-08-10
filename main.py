@@ -2,8 +2,9 @@
 
 from Sentiniel2Info import displayInfo
 from Sentiniel2Logger import Log,DebugLog
-from Sentiniel2Preprocessor import Preprocessor
-from Sentiniel2RGBProcessor import RGBProcessor
+#from Sentiniel2Preprocessor import Preprocessor
+#from Sentiniel2RGBProcessor import RGBProcessor
+from Sentiniel2Processor import Processor
 from Sentiniel2GeoData import GeoData
 from Sentiniel2DataTesting import DataTester
 from Sentiniel2GeoMask import MaskClass
@@ -17,7 +18,7 @@ testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_
 testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
 #testFolder="/home/ansary/Sentiniel2/Data/20180412/"
 
-directory=testCase2
+directory=testCase1
 
 '''
 parser = argparse.ArgumentParser()
@@ -30,7 +31,28 @@ def ModuleInfoSentiniel(directory):
     info.Banner()
     return info.DisplayFileList()
 
+def SingleRun(directory):
+    start_time=time.time()
 
+    Logger=Log(directory)            #Logger Object
+
+    Files=ModuleInfoSentiniel(directory)
+    
+    Process=Processor(Files,directory)  #Processor Object
+
+    MapWater=Process.GetWaterData()
+
+    NoData=Logger.GetNoDataCorrection()
+
+    MapWater[NoData==1]=0
+
+    Logger.DebugPlot(MapWater,'MapWater')
+
+
+    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+
+    plt.show()
+'''
 def ModuleRun(directory):
     start_time=time.time()
 
@@ -113,7 +135,7 @@ def DebugRun(directory):
     
     #Logger.SaveDataAsSHPPoint(Identifier,LatLon)
     
-
+'''
 
 if __name__=='__main__':
     '''
@@ -124,4 +146,4 @@ if __name__=='__main__':
         #print(directory)
         ModuleRun(directory) 
     '''
-    DebugRun(directory)
+    SingleRun(directory)
