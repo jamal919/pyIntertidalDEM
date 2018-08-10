@@ -2,13 +2,13 @@
 import time,matplotlib,numpy as np,gc
 from Sentiniel2Logger import Log
 from termcolor import colored
-
+from Sentiniel2HueVal import HueVal
 class RGBProcessor(object):
     
     def __init__(self,RGBData,Directory):
         self.RGBData=RGBData
         self.Logger=Log(Directory)
-
+        
     def __HSVConversion(self):
         start_time=time.time()
         self.Logger.PrintLogStatus('Converting RGB to HSV')
@@ -20,8 +20,8 @@ class RGBProcessor(object):
         self.__HSVData=None
 
         #Debug --------------------------------------------HUE,VALUE
-        #self.Logger.SaveArrayToGeotiff(self.__HueData,'Hue Channel Data')
-        #self.Logger.SaveArrayToGeotiff(self.__ValData,'Value Channel Data')
+        self.Logger.DebugPlot(self.__HueData,'Hue Channel Data')
+        self.Logger.DebugPlot(self.__ValData,'Value Channel Data')
         
 
         print('')
