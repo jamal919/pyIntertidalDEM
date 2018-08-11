@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from termcolor import colored
 from Sentiniel2Logger import Log 
 
@@ -53,9 +51,7 @@ class displayInfo(object):
 
         EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
 
-        WaterMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_MG2_R1.tif'
-
-        self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB11,CloudMask10m,CloudMask20m,EdgeMask,WaterMask]
+        self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB11,CloudMask10m,CloudMask20m,EdgeMask]
 
     def __PrintFileList(self):
         

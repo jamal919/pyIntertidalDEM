@@ -1,6 +1,7 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
 from Sentiniel2Logger import Log
 from termcolor import colored
+
 class DataTester(object):
     def __init__(self,Directory,Data):
         self.Directory=Directory
@@ -23,6 +24,7 @@ class DataTester(object):
         __FeatureValues=np.column_stack(np.where(self.__CountsOfFeature<=ThreshHold))
         __SignificantFeatureCount=self.__TotalFeatures - __FeatureListCount
         self.__PlotUpToSegments(__SignificantFeatureCount)
+    
     def SegmentationWaterMap(self):
         start_time=time.time()
         self.__Labeled_array, _ =scipy.ndimage.measurements.label(self.Data)

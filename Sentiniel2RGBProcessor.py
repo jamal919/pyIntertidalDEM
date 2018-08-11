@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
 import time,matplotlib,numpy as np,gc
 from Sentiniel2Logger import Log
 from termcolor import colored
-from Sentiniel2HueVal import HueVal
+
 class RGBProcessor(object):
     
     def __init__(self,RGBData,Directory):
@@ -20,8 +19,8 @@ class RGBProcessor(object):
         self.__HSVData=None
 
         #Debug --------------------------------------------HUE,VALUE
-        self.Logger.DebugPlot(self.__HueData,'Hue Channel Data')
-        self.Logger.DebugPlot(self.__ValData,'Value Channel Data')
+        #self.Logger.DebugPlot(self.__HueData,'Hue Channel Data')
+        #self.Logger.DebugPlot(self.__ValData,'Value Channel Data')
         
 
         print('')
@@ -44,8 +43,8 @@ class RGBProcessor(object):
         __c1_val=__T_val+__n_val*__sig_val
         __c2_val=__T_val-__n_val*__sig_val
         #binary mapping as per equation 2 & 3
-        __IsWater_hue=np.ones([self.__row,self.__col])                              
-        __IsWater_hue[(self.__HueData<__c1_hue) & (self.__HueData>__c2_hue)]=0        
+        __IsWater_hue=np.zeros([self.__row,self.__col])                              
+        __IsWater_hue[(self.__HueData<__c1_hue) & (self.__HueData>__c2_hue)]=1        
         __IsWater_val=np.zeros([self.__row,self.__col])
         __IsWater_val[(self.__ValData<__c1_val) & (self.__ValData>__c2_val)]=1            
         #MapWater data
@@ -53,9 +52,8 @@ class RGBProcessor(object):
         self.__Map_Water[(__IsWater_val==1) & (__IsWater_hue==1) ]=1
         
         #Debug ---------------------------------------- IsWaterHue,IsWaterVal,MapWater
-        #self.Logger.SaveArrayToGeotiff(__IsWater_hue,'Is Water Hue Data')
-        #self.Logger.SaveArrayToGeotiff(__IsWater_val,'Is Water Val Data')
-        #self.Logger.SaveArrayToGeotiff(self.__Map_Water,'Water Map Data')
+        #self.Logger.DebugPlot(__IsWater_hue,'Is Water Hue Data')
+        #self.Logger.DebugPlot(__IsWater_val,'Is Water Val Data')
         
         
         
