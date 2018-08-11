@@ -125,23 +125,6 @@ class Log(object):
         print('')
         print(colored("Elapsed Time(kml Saving): %s seconds " % (time.time() - start_time),'green'))
    
-    def SaveDataAsSHPPoint(self,Identifier,Data):
-        start_time=time.time()
-        outputfile=self.OutputDir+str(Identifier)+'__point.shp'
-
-        __lat=Data[:,0]
-        __lon=Data[:,1]
-
-        Writer_SHP=shapefile.Writer(shapefile.POINT)
-        Writer_SHP.field('Latitude')
-        Writer_SHP.field('Longitude')
-        Writer_SHP.record(__lat,__lon)
-        Writer_SHP.save(outputfile)
-
-        self.PrintLogStatus('Saving '+str(Identifier)+'_point.shp')
-
-        print('')
-        print(colored("Elapsed Time(shp Saving): %s seconds " % (time.time() - start_time),'green'))
     def SaveRGBAsImage(self,Identifier,Data):
         start_time=time.time()
         self.PrintLogStatus('Saving RGB data As Image')
@@ -149,7 +132,11 @@ class Log(object):
         scipy.misc.imsave(__RGBImageFile,Data)
         print('')
         print(colored("Elapsed Time(JPG Saving): %s seconds " % (time.time() - start_time),'green'))
-   
+
+
+
+###single runner
+
 class DebugLog(object):
     def __init__(self,Directory):
         self.Directory=Directory

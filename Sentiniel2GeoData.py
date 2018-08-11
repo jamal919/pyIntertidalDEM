@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from Sentiniel2Logger import Log,DebugLog
 import time,numpy as np,gc,scipy.signal
 from termcolor import colored
