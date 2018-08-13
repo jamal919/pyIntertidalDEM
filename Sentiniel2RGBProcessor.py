@@ -54,6 +54,7 @@ class RGBProcessor(object):
         #Debug ---------------------------------------- IsWaterHue,IsWaterVal,MapWater
         #self.Logger.DebugPlot(__IsWater_hue,'Is Water Hue Data')
         #self.Logger.DebugPlot(__IsWater_val,'Is Water Val Data')
+        #self.Logger.DebugPlot(self.__Map_Water,' Water Map')
         
         
         

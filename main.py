@@ -4,13 +4,14 @@ from Sentiniel2Info import displayInfo
 from Sentiniel2Logger import Log,DebugLog
 from Sentiniel2Preprocessor import Preprocessor
 from Sentiniel2RGBProcessor import RGBProcessor
+from Sentiniel2DataFilter import DataFilter
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 from termcolor import colored
 import os
 
 testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
 testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
-directory=testCase1
+directory=testCase2
 
 
 def ModuleRun(directory):
@@ -30,17 +31,17 @@ def ModuleRun(directory):
     
     ProcessRGB=RGBProcessor(RGBData,directory)    #RGBprocessor Object
 
-    MapWater=ProcessRGB.GetWaterMap()
+    IsWater=ProcessRGB.GetWaterMap()
 
     NoData=Logger.GetNoDataCorrection()
 
-    MapWater[NoData==1]=0
+    IsWater[NoData==1]=0
     
-    Logger.DebugPlot(MapWater,'MapWater')
+    Logger.SaveArrayToGeotiff(IsWater,'IsWater')
+    
+    #Filter=DataFilter(directory,IsWater)           #Data tester object
 
-    #Test=DataTester(directory,MapWater)           #Data tester object
-
-    #Test.SegmentationWaterMap()
+    #WaterMap=Filter.FilterWaterMap(5000)
 
     #GeoObj=GeoData(directory,MapWater)
     
@@ -56,6 +57,23 @@ def ModuleRun(directory):
 
     plt.show()
     
+def DebugRun(directory):
+    Logger=Log(directory)
+    
+    DebugLogger=DebugLog(directory) 
+    
+    DataFile=Logger.OutputDir+'IsWater.tiff'
+    
+    IsWater=DebugLogger.GetFileData(DataFile)
 
+    Filter=DataFilter(directory,IsWater)
+
+    WaterMap=Filter.FilterWaterMap()
+
+    Logger.DebugPlot(WaterMap,'WaterMap')
+
+    plt.show()
+    
+    
 if __name__=='__main__':
-    ModuleRun(directory)
+    DebugRun(directory)
