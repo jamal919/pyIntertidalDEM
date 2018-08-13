@@ -122,12 +122,10 @@ class Preprocessor(object):
         self.__GreenNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__NIRNorm)
         self.__BlueNew=(1- self.__SWIRNorm)+(self.__SWIRNorm*self.__BlueNorm)
 
-        
-
     def __ConstructRGB(self):
         [__row,__col]=np.shape(self.__SWIRNorm)         #Row Col of the image
         __dim=3                                         #RGB 
-        self.__RGBData=np.zeros([__row,__col,__dim])    #Black Background
+        self.__RGBData=np.zeros([__row,__col,__dim])   #Black Background
         self.__RGBData[:,:,0]=self.__RedNew
         self.__RGBData[:,:,1]=self.__GreenNew
         self.__RGBData[:,:,2]=self.__BlueNew
