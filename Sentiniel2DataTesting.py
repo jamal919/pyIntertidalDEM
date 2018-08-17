@@ -1,6 +1,5 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
 from Sentiniel2Logger import Log
-from termcolor import colored
 
 class DataTester(object):
     def __init__(self,Directory,Data):
@@ -32,4 +31,4 @@ class DataTester(object):
         self.__SortedByFeature=np.argsort(self.__CountsOfFeature)
         self.__TotalFeatures=np.shape(self.__CountsOfFeature)[0]
         self.__Logger.SaveDataAsCSV('FeatureData',np.column_stack([__FeatureNumber,self.__CountsOfFeature]))
-        print(colored("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time),'green'))
+        print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))

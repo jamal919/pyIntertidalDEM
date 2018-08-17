@@ -1,4 +1,3 @@
-from termcolor import colored
 from Sentiniel2Logger import Log 
 
 class displayInfo(object):
@@ -14,26 +13,26 @@ class displayInfo(object):
         
         self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
 
-    def Banner(self):
+    def __Banner(self):
         print('')
-        print(colored('*********************************************************************************************','blue'))
-        print(colored('****************************'+colored('        SENTINIEL2        ','red')+colored('***************************************','green'),'green'))
-        print(colored('*********************************************************************************************','blue'))
+        print('*********************************************************************************************')
+        print('****************************        SENTINIEL2        ***************************************')
+        print('*********************************************************************************************')
         print('')
     
     def __DisplayProductInformation(self):
         
-        print(colored('    Satelite Name  :','green')+ colored(self.__IdentifierStrings[0],'blue'))
+        print('    Satelite Name  :'+ self.__IdentifierStrings[0])
         
-        print(colored('             Date  :','green')+ colored(self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4],'blue'))
+        print('             Date  :'+ self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4])
         
-        print(colored('             Time  :','green')+ colored(self.__DateTimeStamp[1][0:2]+':'+self.__DateTimeStamp[1][2:4]+':'+self.__DateTimeStamp[1][4:]+':'+self.__DateTimeStamp[2]+'(ms)','blue'))
+        print('             Time  :'+ self.__DateTimeStamp[1][0:2]+':'+self.__DateTimeStamp[1][2:4]+':'+self.__DateTimeStamp[1][4:]+':'+self.__DateTimeStamp[2])
         
-        print(colored('     Product Type  :','green')+ colored(self.__IdentifierStrings[2]+colored('(See Handbook for description)','red'),'blue'))
+        print('     Product Type  :'+ self.__IdentifierStrings[2])
         
-        print(colored('Geographical Zone  :','green')+ colored(self.__IdentifierStrings[3]+colored('(Zone,Tile,OrbitNumber)','red'),'blue'))
+        print('Geographical Zone  :'+ self.__IdentifierStrings[3])
         
-        print(colored('    Metadata Type  :','green')+ colored(self.__IdentifierStrings[4]+' Version:'+self.__IdentifierStrings[5][1]+colored('(See Handbook for description)','red'),'blue'))
+        print('    Metadata Type  :'+ self.__IdentifierStrings[4]+' Version:'+self.__IdentifierStrings[5][1])
         
     def __DataFileList(self):
         
@@ -61,10 +60,12 @@ class displayInfo(object):
         
         for f in self.__Files:
             print('')
-            print(colored(f,'green'))
+            print(f)
             print('')
 
     def DisplayFileList(self):
+
+        self.__Banner()
     
         self.__DisplayProductInformation()        
         

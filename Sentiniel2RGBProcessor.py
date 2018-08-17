@@ -1,6 +1,5 @@
 import time,matplotlib,numpy as np,gc
 from Sentiniel2Logger import Log
-from termcolor import colored
 
 class RGBProcessor(object):
     
@@ -24,7 +23,7 @@ class RGBProcessor(object):
         
 
         print('')
-        print(colored("Total Elapsed Time(HSVConversion): %s seconds " % (time.time() - start_time),'green'))
+        print("Total Elapsed Time(HSVConversion): %s seconds " % (time.time() - start_time))
     
     def __MapWater(self):
         self.Logger.PrintLogStatus('Mapping Water')

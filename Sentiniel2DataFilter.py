@@ -1,6 +1,5 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
 from Sentiniel2Logger import Log
-from termcolor import colored
 
 class DataFilter(object):
     def __init__(self,Directory,Data):
@@ -35,6 +34,6 @@ class DataFilter(object):
         start_time=time.time()
         self.__Logger.PrintLogStatus('Filtering Water Map')
         self.__DetectWater()
-        print(colored("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time),'green'))
+        print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
         return self.__MapWater
         

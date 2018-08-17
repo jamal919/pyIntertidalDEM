@@ -1,6 +1,5 @@
 from Sentiniel2Logger import Log,DebugLog
 import time,numpy as np,gc,scipy.signal
-from termcolor import colored
 from osgeo import gdal,osr
 
 class GeoData(object):
@@ -25,7 +24,7 @@ class GeoData(object):
         #Cleanup
         __ConvolutedData=None
         gc.collect()
-        print(colored("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time),'green'))
+        print("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time))
     
     def __PixelToSpaceCoordinate(self):
         [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=self.__Logger.GetGeoTransformData()
@@ -56,7 +55,7 @@ class GeoData(object):
             self.__LatitudeData[indice]=__latitude_point
             self.__LongitudeData[indice]=__longitude_point
         print('')
-        print(colored("Total Elapsed Time(SpaceCoords to Lat Lon): %s seconds " % (time.time() - start_time),'green'))
+        print("Total Elapsed Time(SpaceCoords to Lat Lon): %s seconds " % (time.time() - start_time))
 
     def GetShoreLineGeoData(self):
         self.__ConvolutedMap()
