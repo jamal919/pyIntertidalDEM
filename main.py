@@ -2,16 +2,16 @@
 
 from Sentiniel2Info import displayInfo
 from Sentiniel2Logger import Log,DebugLog
-from Sentiniel2Preprocessor import Preprocessor
-from Sentiniel2RGBProcessor import RGBProcessor
+from Sentiniel2Processor import Processor
 from Sentiniel2DataFilter import DataFilter
 from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os
 
-testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
-testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
-directory=testCase1
+parser = argparse.ArgumentParser()
+parser.add_argument("Dir", help="Directory of HUE and Value Data",type=str)
+args = parser.parse_args()
+directory=args.Dir
 
 
 def ModuleRun(directory):
@@ -19,29 +19,20 @@ def ModuleRun(directory):
 
     Logger=Log(directory)            #Logger Object
 
-    InfoObj=displayInfo(directory)   #Info
+    ProcessorOBJ=Processor(directory)
 
-    Files=InfoObj.DisplayFileList()
+    IsWater=ProcessorOBJ.GetWaterMap()
+
+    #NoData=Logger.GetNoDataCorrection()
+
+    #IsWater[NoData==1]=0
     
-    preprocess=Preprocessor(Files,directory)      #Preprocessor Object
+    Logger.DebugPlot(IsWater,'Iswater')
+    #Filter=DataFilter(directory,IsWater)
 
-    RGBData=preprocess.GetRGBData()
+    #WaterMap=Filter.FilterWaterMap()
 
-    Logger.DebugPlot(RGBData,'QKL_RGB')
-    
-    ProcessRGB=RGBProcessor(RGBData,directory)    #RGBprocessor Object
-
-    IsWater=ProcessRGB.GetWaterMap()
-
-    NoData=Logger.GetNoDataCorrection()
-
-    IsWater[NoData==1]=0
-    
-    Filter=DataFilter(directory,IsWater)
-
-    WaterMap=Filter.FilterWaterMap()
-
-    Logger.DebugPlot(WaterMap,'WaterMap')
+    #Logger.DebugPlot(WaterMap,'WaterMap')
 
     #Geo=GeoData(directory,WaterMap)
     
