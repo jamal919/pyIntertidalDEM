@@ -7,7 +7,6 @@ from Sentiniel2RGBProcessor import RGBProcessor
 from Sentiniel2DataFilter import DataFilter
 from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
-from termcolor import colored
 import os
 
 testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
@@ -44,9 +43,9 @@ def ModuleRun(directory):
 
     Logger.DebugPlot(WaterMap,'WaterMap')
 
-    Geo=GeoData(directory,WaterMap)
+    #Geo=GeoData(directory,WaterMap)
     
-    LatLon=Geo.GetShoreLineGeoData()
+    #LatLon=Geo.GetShoreLineGeoData()
     
     #Logger.DebugPrint(LatLon,'Lat Lon')
 
@@ -54,7 +53,7 @@ def ModuleRun(directory):
     
     #Logger.SaveDataAsKML(Identifier,LatLon)
     
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
+    print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
 
     plt.show()
     

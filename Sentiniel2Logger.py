@@ -1,5 +1,4 @@
 import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc 
-from termcolor import colored
 from osgeo import gdal
     
 class Log(object):
@@ -15,20 +14,20 @@ class Log(object):
     
     def PrintLogStatus(self,Status):
         print('')
-        print(colored('*Status:'+colored(Status,'red'),'cyan'))
+        print('*Status:'+Status)
         print('')
 
     def DebugPrint(self,Variable,VariableIdentifier):
         print('')
-        print(colored('DEBUG OBJECT:'+colored(VariableIdentifier,'blue'),'cyan'))
-        print(colored('*********************************************************************************************','red'))
-        print(colored(Variable,'green'))
-        print(colored('*********************************************************************************************','red'))
+        print('DEBUG OBJECT:'+VariableIdentifier)
+        print('*********************************************************************************************')
+        print(Variable)
+        print('*********************************************************************************************')
         print('')
 
     def DebugPlot(self,Variable,VariableIdentifier):
         
-        print(colored('plotting data:'+VariableIdentifier,'blue'))
+        print('plotting data:'+VariableIdentifier)
         
         plt.figure(VariableIdentifier)
         
@@ -44,8 +43,8 @@ class Log(object):
             DataSet=gdal.Open(self.GeoTiffDir,gdal.GA_ReadOnly)        #taking readonly data
         
         except RuntimeError as e_Read:                                        #Error handling
-            print(colored('Error while opening file!','red'))
-            print(colored('Error Details:','blue'))
+            print('Error while opening file!')
+            print('Error Details:')
             print(e_Read)
             sys.exit(1)
     
@@ -62,12 +61,12 @@ class Log(object):
                 gc.collect()
                 
             except RuntimeError as e_arr:                                   #Error handling
-                print(colored('Error while data extraction file!','red'))
-                print(colored('Error Details:','blue'))
+                print('Error while data extraction file!')
+                print('Error Details:')
                 print(e_arr)
                 sys.exit(1)
         else:
-            print('The file contains multiple bands','red')
+            print('The file contains multiple bands')
             sys.exit(1)
         
         DataSet=None
@@ -97,7 +96,7 @@ class Log(object):
         OutputDataset.FlushCache()
         OutputDataset=None
         print('')
-        print(colored("Elapsed Time(GeoTiff Saving): %s seconds " % (time.time() - start_time),'green'))
+        print("Elapsed Time(GeoTiff Saving): %s seconds " % (time.time() - start_time))
 
     def SaveDataAsCSV(self,Identifier,Data):
         start_time=time.time()  
@@ -109,7 +108,7 @@ class Log(object):
         self.PrintLogStatus('Saving '+str(Identifier)+'.csv')
 
         print('')
-        print(colored("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time),'green'))
+        print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
     
     def SaveDataAsKML(self,Identifier,Data):
         start_time = time.time()
@@ -123,7 +122,7 @@ class Log(object):
         self.PrintLogStatus('Saving '+str(Identifier)+'.kml')
 
         print('')
-        print(colored("Elapsed Time(kml Saving): %s seconds " % (time.time() - start_time),'green'))
+        print("Elapsed Time(kml Saving): %s seconds " % (time.time() - start_time))
    
     def SaveRGBAsImage(self,Identifier,Data):
         start_time=time.time()
@@ -131,7 +130,7 @@ class Log(object):
         __RGBImageFile=self.OutputDir+str(Identifier)+'.jpg'
         scipy.misc.imsave(__RGBImageFile,Data)
         print('')
-        print(colored("Elapsed Time(JPG Saving): %s seconds " % (time.time() - start_time),'green'))
+        print("Elapsed Time(JPG Saving): %s seconds " % (time.time() - start_time))
 
 
 
@@ -147,8 +146,8 @@ class DebugLog(object):
             self.__DataSet=gdal.Open(self.__Filename,gdal.GA_ReadOnly)        #taking readonly data
         
         except RuntimeError as e_Read:                                        #Error handling
-            print(colored('Error while opening file!','red'))
-            print(colored('Error Details:','blue'))
+            print('Error while opening file!')
+            print('Error Details:')
             print(e_Read)
             sys.exit(1)
 
@@ -168,17 +167,17 @@ class DebugLog(object):
                 gc.collect()
                 
             except RuntimeError as e_arr:                                   #Error handling
-                print(colored('Error while data extraction file!','red'))
-                print(colored('Error Details:','blue'))
+                print('Error while data extraction file!')
+                print('Error Details:')
                 print(e_arr)
                 sys.exit(1)
         else:
-            print('The file contains multiple bands','red')
+            print('The file contains multiple bands')
             sys.exit(1)
 
     def GetFileData(self,FileName):
         
-        self.Logger.PrintLogStatus('Getting data from file:'+colored(FileName,'blue'))
+        self.Logger.PrintLogStatus('Getting data from file:'+FileName)
         
         self.__Filename=FileName
 

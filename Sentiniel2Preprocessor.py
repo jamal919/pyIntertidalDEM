@@ -1,8 +1,6 @@
 
 import sys,time,gc,numpy as np
 
-from termcolor import colored
-
 from osgeo import gdal
 
 from Sentiniel2Logger import Log
@@ -19,8 +17,8 @@ class Preprocessor(object):
             self.__DataSet=gdal.Open(self.__Filename,gdal.GA_ReadOnly)        #taking readonly data
         
         except RuntimeError as e_Read:                                        #Error handling
-            print(colored('Error while opening file!','red'))
-            print(colored('Error Details:','blue'))
+            print('Error while opening file!')
+            print('Error Details:')
             print(e_Read)
             sys.exit(1)
 
@@ -40,17 +38,17 @@ class Preprocessor(object):
                 gc.collect()
                 
             except RuntimeError as e_arr:                                   #Error handling
-                print(colored('Error while data extraction file!','red'))
-                print(colored('Error Details:','blue'))
+                print('Error while data extraction file!')
+                print('Error Details:')
                 print(e_arr)
                 sys.exit(1)
         else:
-            print('The file contains multiple bands','red')
+            print('The file contains multiple bands')
             sys.exit(1)
 
     def __GetFileData(self,FileName):
         
-        self.Logger.PrintLogStatus('Getting data from file:'+colored(FileName,'blue'))
+        self.Logger.PrintLogStatus('Getting data from file:'+FileName)
         
         self.__Filename=FileName
 
@@ -85,7 +83,7 @@ class Preprocessor(object):
         
     def __CloudMaskCorrection(self,BandData,MaskData,Identifier):
         
-        self.Logger.PrintLogStatus('Processing Cloud Mask With:'+colored(Identifier,'blue'))                                                                               
+        self.Logger.PrintLogStatus('Processing Cloud Mask With:'+Identifier)                                                                               
         
         __Decimals=self.__GetDecimalsWithEndBit(np.amax(MaskData))
 
@@ -165,5 +163,5 @@ class Preprocessor(object):
         self.__ConstructRGB()
         self.__CleanUp()
         print('')
-        print(colored("Total Elapsed Time(Preprocessing): %s seconds " % (time.time() - start_time),'green'))
+        print("Total Elapsed Time(Preprocessing): %s seconds " % (time.time() - start_time))
         return self.__RGBData
