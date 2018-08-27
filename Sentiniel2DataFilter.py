@@ -32,7 +32,7 @@ class DataFilter(object):
         
     def FilterWaterMap(self):
         start_time=time.time()
-        self.__Logger.PrintLogStatus('Filtering Water Map')
+        print('Filtering Water Map')
         self.__DetectWater()
         print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
         return self.__MapWater
