@@ -1,18 +1,19 @@
-from Sentiniel2TiffData import TiffReader,TiffWritter,NoData
+from Sentiniel2Logger import Info,TiffReader,TiffWritter
 import numpy as np,sys 
 
 class BandData(object):
-    def __init__(self,Files,Directory):
+    def __init__(self,Directory):
+        InfoObj=Info(Directory)
+        Files=InfoObj.DisplayFileList()
         self.__RedBandFile=Files[1]
         self.__GreenBandFile=Files[2]
         self.__BlueBandFile=Files[0]
         self.__AlphaBandFile=Files[3]
         self.__CloudMask10mFile=Files[4]
         self.__CloudMask20mFile=Files[5]
-        self.Directory=Directory
-        self.TiffReader=TiffReader(self.Directory)
-        self.TiffWritter=TiffWritter(self.Directory)
-    
+        self.TiffReader=TiffReader(Directory)
+        self.TiffWritter=TiffWritter(Directory)
+        
     def __GetDecimalsWithEndBit(self,MaxValue):
         
         __results=[]
@@ -57,9 +58,7 @@ class BandData(object):
         
         
         self.__AlphaUpSampling()
-        
-        print(sys.getsizeof(self.__AlphaBand)/(2**30))
-        
+            
     def __ProcessRedChannel(self):
         __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
 
@@ -76,9 +75,7 @@ class BandData(object):
         __RedBand=(255-self.__AlphaBand)+(self.__AlphaBand*__RedBand)
         
         self.TiffWritter.SaveArrayToGeotiff(__RedBand,'Red Channel')
-
-        print(sys.getsizeof(__RedBand)/(2**30))
-              
+                  
     def __ProcessGreenChannel(self):
         __GreenBand=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
 
@@ -95,8 +92,6 @@ class BandData(object):
         __GreenBand=(255-self.__AlphaBand)+(self.__AlphaBand*__GreenBand)
         
         self.TiffWritter.SaveArrayToGeotiff(__GreenBand,'Green Channel')
-
-        print(sys.getsizeof(__GreenBand)/(2**30))
         
     def __ProcessBlueChannel(self):
         __BlueBand=self.TiffReader.GetTiffData(self.__BlueBandFile)  #Read
@@ -114,8 +109,6 @@ class BandData(object):
         __BlueBand=(255-self.__AlphaBand)+(self.__AlphaBand*__BlueBand)
         
         self.TiffWritter.SaveArrayToGeotiff(__BlueBand,'Blue Channel')
-
-        print(sys.getsizeof(__BlueBand)/(2**30))
         
     def Data(self):
         self.__ProcessAlphaChannel()

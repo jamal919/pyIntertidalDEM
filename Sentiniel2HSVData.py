@@ -1,8 +1,10 @@
 from Sentiniel2TiffData import TiffReader,TiffWritter,NoData
+from Sentiniel2Logger import Log
 import numpy as np,sys 
 
 class HSVData(object):
     def __init__(self,Directory):
+        self.Logger=Log(Directory)
         self.RedDataFile=str(Directory)+'/Red Channel.tiff'
         self.GreenDataFile=str(Directory)+'/Green Channel.tiff'
         self.BlueDataFile=str(Directory)+'/Blue Channel.tiff'
@@ -35,9 +37,9 @@ class HSVData(object):
         
         __Hue= (__Hue / 6.0) % 1.0
 
-        self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
+        #self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
         
-        self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
-
-            
+        #self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
+        self.Logger.DebugPlot(__Hue,'Hue Data')
+        self.Logger.DebugPlot(__Max,'Value Data')
         

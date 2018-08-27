@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-
-from Sentiniel2Info import displayInfo
 from Sentiniel2ChannelData import BandData
-from Sentiniel2HSVData import HSVData
-from Sentiniel2Processor import Processor
-from Sentiniel2Logger import Log
+#from Sentiniel2HSVData import HSVData
+#from Sentiniel2Processor import Processor
+#from Sentiniel2ATBIAO import ATBmask
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os,psutil
 
@@ -14,11 +12,9 @@ args = parser.parse_args()
 directory=args.Dir
 
 def SaveRGB(directory):
-    Info=displayInfo(directory)
-    Files=Info.DisplayFileList()
-    BandDataObj=BandData(Files,directory)
+    BandDataObj=BandData(directory)
     BandDataObj.Data()
-
+'''
 def SaveHUEVALUE(directory):
     HSVDataObj=HSVData(directory)
     HSVDataObj.HueValueRGB()
@@ -27,16 +23,17 @@ def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
     ProcessorObj.GetIsWater()
 
-def SaveWaterMap(directory):
-    pass
-
+def ATBO(directory):
+    ATBmaskObj=ATBmask(directory)
+    ATBmaskObj.Data()
+'''
 def ModuleRun(directory):
     start_time=time.time()
 
-    #SaveRGB(directory)
+    SaveRGB(directory)
     #SaveHUEVALUE(directory)
     #SaveIsWater(directory)
-
+    #ATBO(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
     pid = os.getpid()

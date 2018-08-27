@@ -1,4 +1,4 @@
-from Sentiniel2Logger import Log,DebugLog
+from Sentiniel2Logger import Log
 import time,numpy as np,gc,scipy.signal
 from osgeo import gdal,osr
 
@@ -7,11 +7,10 @@ class GeoData(object):
     def __init__(self,Directory,MapWater):
         self.Directory=Directory
         self.__Logger=Log(self.Directory)
-        self.__DebugLogger=DebugLog(self.Directory)
         self.MapWater=MapWater
 
     def __ConvolutedMap(self):
-        self.__Logger.PrintLogStatus('Mapping ShoreLine')
+        print('Mapping ShoreLine')
         [self.__row,self.__col]=np.shape(self.MapWater)
         start_time = time.time()
         __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
