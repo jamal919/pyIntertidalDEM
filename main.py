@@ -4,7 +4,7 @@ from Sentiniel2HSVData import HSVData
 from Sentiniel2Processor import Processor
 from Sentiniel2DataFilter import DataFilter
 from Sentiniel2GeoData import GeoData
-#from Sentiniel2ATBIAO import ATBmask
+from Sentiniel2AtmosphereTest import AtmTest
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os,psutil
 
@@ -33,11 +33,11 @@ def SaveLatLon(directory):
     GeoDataObj=GeoData(directory)
     GeoDataObj.ShoreLine()
 
-'''
-def ATBO(directory):
-    ATBmaskObj=ATBmask(directory)
-    ATBmaskObj.Data()
-'''
+
+def AtmTestFunc(directory):
+    AtmTestObj=AtmTest(directory)
+    AtmTestObj.ATBdata()
+    
 def ModuleRun(directory):
     start_time=time.time()
 
@@ -46,7 +46,7 @@ def ModuleRun(directory):
     SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
-    #ATBO(directory)
+    #AtmTestFunc(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
     pid = os.getpid()
