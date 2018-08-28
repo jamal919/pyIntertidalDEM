@@ -1,5 +1,5 @@
 import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc 
-from osgeo import gdal
+from osgeo import gdal,osr
 from mpl_toolkits.basemap import Basemap
 
 class Info(object):
@@ -174,7 +174,48 @@ class TiffWritter(object):
 class ViewData(object):
 
     def __init__(self,Directory):
-        self.Directory=Directory
+        __InfoObj=Info(Directory)
+        Reader=TiffReader(Directory)
+        __NoDataFile=__InfoObj.EdgeMaskDir()
+        __DataSet=Reader.ReadTiffData(__NoDataFile)
+        GeoTransForm=__DataSet.GetGeoTransform()
+        Projection=__DataSet.GetProjection()
+        __DataSet=Reader.GetTiffData(__NoDataFile)
+        [row,col]=np.shape(__DataSet)
+        __DataSet=None
+
+        xdiff=1000
+        ydiff=1000
+        ceilx=-(-row//xdiff)
+        ceily=-(-col//ydiff)
+        xps=np.arange(0,ceilx*xdiff,xdiff)
+        yps=np.arange(0,ceily*ydiff,ydiff)
+        
+        [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=GeoTransForm
+        __pixel_Coordinate_X=xps
+        __pixel_Coordinate_y=yps
+        __Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
+        __Space_coordinate_Y= __rotation_2* __pixel_Coordinate_X +    __pixel_height* __pixel_Coordinate_y + __y_offset
+        
+        ##get CRS from dataset
+        __Coordinate_Reference_System=osr.SpatialReference()                     #Get Co-ordinate reference
+        __Coordinate_Reference_System.ImportFromWkt(Projection)                  #projection reference
+
+        ## create lat/long CRS with WGS84 datum<GDALINFO for details>
+        __Coordinate_Reference_System_GEO=osr.SpatialReference()
+        __Coordinate_Reference_System_GEO.ImportFromEPSG(4326)                   # 4326 is the EPSG id of lat/long CRS
+
+        __Transform_term = osr.CoordinateTransformation(__Coordinate_Reference_System, __Coordinate_Reference_System_GEO)
+        Latitude=np.zeros(np.shape(yps)[0])
+        Longitude=np.zeros(np.shape(xps)[0])
+        for idx in range(0,np.shape(yps)[0]):
+            (__latitude_point, __longitude_point, _ ) = __Transform_term.TransformPoint(__Space_coordinate_X[idx], __Space_coordinate_Y[idx])
+            Latitude[idx]=__latitude_point
+            Longitude[idx]=__longitude_point
+        self.__XPS=xps
+        self.__YPS=yps
+        self.__Lats=np.round(Latitude,decimals=4) 
+        self.__Lons=np.round(Longitude,decimals=4)
         
     def DebugPrint(self,Variable,VariableIdentifier):
         print('DEBUG OBJECT:'+VariableIdentifier)
@@ -182,7 +223,7 @@ class ViewData(object):
         print(Variable)
         print('*********************************************************************************************')
         
-    def DebugPlot(self,Variable,VariableIdentifier):
+    def PlotWithGeoRef(self,Variable,VariableIdentifier):
         
         print('plotting data:'+VariableIdentifier)
         
@@ -193,6 +234,10 @@ class ViewData(object):
         plt.title(VariableIdentifier)
         
         plt.grid(True)
+
+        plt.xticks(self.__XPS,self.__Lats)
+
+        plt.yticks(self.__YPS,self.__Lons)
         
 class SaveData(object):
     def __init__(self,Directory):

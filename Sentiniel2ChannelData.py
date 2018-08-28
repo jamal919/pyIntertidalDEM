@@ -1,4 +1,4 @@
-from Sentiniel2Logger import Info,TiffReader,TiffWritter
+from Sentiniel2Logger import Info,TiffReader,TiffWritter,ViewData
 import numpy as np,sys 
 
 class BandData(object):
@@ -13,7 +13,7 @@ class BandData(object):
         self.__CloudMask20mFile=Files[5]
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
-        
+
     def __GetDecimalsWithEndBit(self,MaxValue):
         
         __results=[]
@@ -109,7 +109,7 @@ class BandData(object):
         __BlueBand=(255-self.__AlphaBand)+(self.__AlphaBand*__BlueBand)
         
         self.TiffWritter.SaveArrayToGeotiff(__BlueBand,'Blue Channel')
-        
+
     def Data(self):
         self.__ProcessAlphaChannel()
         self.__ProcessRedChannel()

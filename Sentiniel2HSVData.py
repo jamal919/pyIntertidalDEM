@@ -3,6 +3,7 @@ import numpy as np,sys
 
 class HSVData(object):
     def __init__(self,Directory):
+
         __InfoObj=Info(Directory)
         __InputFolder=__InfoObj.OutputDir()
         self.RedDataFile=__InputFolder+'/Red Channel.tiff'

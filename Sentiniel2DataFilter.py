@@ -1,6 +1,7 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
 from Sentiniel2Logger import TiffReader,Info,TiffWritter
 class DataFilter(object):
+    
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
         __InputFolder=__InfoObj.OutputDir()

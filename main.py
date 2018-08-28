@@ -41,11 +41,11 @@ def ATBO(directory):
 def ModuleRun(directory):
     start_time=time.time()
 
-    SaveRGB(directory)
-    SaveHUEVALUE(directory)
+    #SaveRGB(directory)
+    #SaveHUEVALUE(directory)
     SaveIsWater(directory)
-    SaveWaterMap(directory)
-    SaveLatLon(directory)
+    #SaveWaterMap(directory)
+    #SaveLatLon(directory)
     #ATBO(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
