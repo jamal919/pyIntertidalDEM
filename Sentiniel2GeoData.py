@@ -10,6 +10,7 @@ class GeoData(object):
         __WaterMapFile=__InputFolder+'/WaterMap.tiff'
         Reader=TiffReader(Directory)
         self.MapWater=Reader.GetTiffData(__WaterMapFile)
+
         __NoDataFile=__InfoObj.EdgeMaskDir()
         __DataSet=Reader.ReadTiffData(__NoDataFile)
         self.GeoTransForm=__DataSet.GetGeoTransform()

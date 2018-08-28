@@ -58,5 +58,5 @@ class Processor(object):
         IsWater=np.empty(np.shape(self.__IsWater_val))
         IsWater[:]=0
         IsWater[(self.__IsWater_hue==1) & (self.__IsWater_val==1)]=1
-        #self.DataViewer.DebugPlot(IsWater,'IsWater')
+        self.DataViewer.PlotWithGeoRef(IsWater,'IsWater')
         self.TiffWritter.SaveArrayToGeotiff(IsWater,'Iswater')
