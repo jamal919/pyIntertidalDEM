@@ -1,13 +1,21 @@
-from Sentiniel2Logger import Log
+from Sentiniel2Logger import Info,TiffReader,SaveData
 import time,numpy as np,gc,scipy.signal
 from osgeo import gdal,osr
 
 class GeoData(object):
 
-    def __init__(self,Directory,MapWater):
-        self.Directory=Directory
-        self.__Logger=Log(self.Directory)
-        self.MapWater=MapWater
+    def __init__(self,Directory):
+        __InfoObj=Info(Directory)
+        __InputFolder=__InfoObj.OutputDir()
+        __WaterMapFile=__InputFolder+'/WaterMap.tiff'
+        Reader=TiffReader(Directory)
+        self.MapWater=Reader.GetTiffData(__WaterMapFile)
+        __NoDataFile=__InfoObj.EdgeMaskDir()
+        __DataSet=Reader.ReadTiffData(__NoDataFile)
+        self.GeoTransForm=__DataSet.GetGeoTransform()
+        self.Projection=__DataSet.GetProjection()
+        __DataSet=None
+        self.DataSaver=SaveData(Directory)
 
     def __ConvolutedMap(self):
         print('Mapping ShoreLine')
@@ -26,7 +34,7 @@ class GeoData(object):
         print("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time))
     
     def __PixelToSpaceCoordinate(self):
-        [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=self.__Logger.GetGeoTransformData()
+        [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=self.GeoTransForm
         __pixel_Coordinate_X=self.__Map_ShoreLine[:,1]
         __pixel_Coordinate_y=self.__Map_ShoreLine[:,0]
         self.__Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
@@ -39,7 +47,7 @@ class GeoData(object):
         start_time=time.time()
         ##get CRS from dataset
         __Coordinate_Reference_System=osr.SpatialReference()                     #Get Co-ordinate reference
-        __Coordinate_Reference_System.ImportFromWkt(self.__Logger.GetProjectionData()) #projection reference
+        __Coordinate_Reference_System.ImportFromWkt(self.Projection)             #projection reference
 
         ## create lat/long CRS with WGS84 datum<GDALINFO for details>
         __Coordinate_Reference_System_GEO=osr.SpatialReference()
@@ -56,8 +64,8 @@ class GeoData(object):
         print('')
         print("Total Elapsed Time(SpaceCoords to Lat Lon): %s seconds " % (time.time() - start_time))
 
-    def GetShoreLineGeoData(self):
+    def ShoreLine(self):
         self.__ConvolutedMap()
         self.__PixelToSpaceCoordinate()
         self.__SpaceCoordinateToLatLon()
-        return np.column_stack((self.__LatitudeData,self.__LongitudeData))
+        self.DataSaver.SaveDataAsCSV('LatLonData',np.column_stack((self.__LatitudeData,self.__LongitudeData)))
