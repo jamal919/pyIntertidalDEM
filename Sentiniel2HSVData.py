@@ -1,19 +1,18 @@
-from Sentiniel2TiffData import TiffReader,TiffWritter,NoData
-from Sentiniel2Logger import Log
+from Sentiniel2Logger import TiffReader,TiffWritter,Info
 import numpy as np,sys 
 
 class HSVData(object):
     def __init__(self,Directory):
-        self.Logger=Log(Directory)
-        self.RedDataFile=str(Directory)+'/Red Channel.tiff'
-        self.GreenDataFile=str(Directory)+'/Green Channel.tiff'
-        self.BlueDataFile=str(Directory)+'/Blue Channel.tiff'
+        __InfoObj=Info(Directory)
+        __InputFolder=__InfoObj.OutputDir()
+        self.RedDataFile=__InputFolder+'/Red Channel.tiff'
+        self.GreenDataFile=__InputFolder+'/Green Channel.tiff'
+        self.BlueDataFile=__InputFolder+'/Blue Channel.tiff'
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
 
-    
-
     def HueValueRGB(self): 
+        print('Computing Hue and Value channel')
         __RedData=self.TiffReader.GetTiffData(self.RedDataFile)
         __GreenData=self.TiffReader.GetTiffData(self.GreenDataFile)
         __BlueData=self.TiffReader.GetTiffData(self.BlueDataFile)
@@ -37,9 +36,7 @@ class HSVData(object):
         
         __Hue= (__Hue / 6.0) % 1.0
 
-        #self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
+        self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
         
-        #self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
-        self.Logger.DebugPlot(__Hue,'Hue Data')
-        self.Logger.DebugPlot(__Max,'Value Data')
+        self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
         

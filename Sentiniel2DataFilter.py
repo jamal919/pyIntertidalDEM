@@ -1,12 +1,14 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
-from Sentiniel2Logger import Log
-
+from Sentiniel2Logger import TiffReader,Info,TiffWritter
 class DataFilter(object):
-    def __init__(self,Directory,Data):
-        self.Directory=Directory
-        self.Data=Data
-        self.__Logger=Log(self.Directory)
-
+    def __init__(self,Directory):
+        __InfoObj=Info(Directory)
+        __InputFolder=__InfoObj.OutputDir()
+        __IsWaterFile=__InputFolder+'/Iswater.tiff'
+        Reader=TiffReader(Directory)
+        self.TiffWritter=TiffWritter(Directory)
+        self.Data=Reader.GetTiffData(__IsWaterFile)
+        
     def __SegmentFeatures(self,Features,Thresh):
         __SignificantData=np.zeros(np.shape(self.Data))
         __Labeled,_=scipy.ndimage.measurements.label(Features)
@@ -34,6 +36,6 @@ class DataFilter(object):
         start_time=time.time()
         print('Filtering Water Map')
         self.__DetectWater()
+        self.TiffWritter.SaveArrayToGeotiff(self.__MapWater,'WaterMap')
         print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
-        return self.__MapWater
         

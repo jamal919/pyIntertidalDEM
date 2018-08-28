@@ -1,5 +1,6 @@
 import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc 
 from osgeo import gdal
+from mpl_toolkits.basemap import Basemap
 
 class Info(object):
 
@@ -22,6 +23,14 @@ class Info(object):
         self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
 
         self.EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
+        
+        __Date=self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
+        
+        __Time=self.__DateTimeStamp[1][0:2]+'-'+self.__DateTimeStamp[1][2:4]+'-'+self.__DateTimeStamp[1][4:]
+        
+        self.DateTime=__Date+' '+__Time
+        self.SateliteName=self.__IdentifierStrings[0]
+        self.Zone=self.__IdentifierStrings[3]    
     
     def OutputDir(self):
         __OutputDir=self.__OutputFolder+self.__DirectoryStrings[-1]+'/'
@@ -189,16 +198,21 @@ class SaveData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
         self.OutputDir=InfoObj.OutputDir()
-        
+        self.DateTime=InfoObj.DateTime
+        self.SateliteName=InfoObj.SateliteName
+        self.Zone=InfoObj.Zone
+
     def SaveDataAsCSV(self,Identifier,Data):
-        start_time=time.time()  
+        start_time=time.time()
+        __Information=[self.DateTime,self.SateliteName,self.Zone]  
+        print('Saving '+str(Identifier)+'.csv')
         csvfile=self.OutputDir+str(Identifier)+'.csv'
         with open(csvfile,"w") as output:
             writer=csv.writer(output,lineterminator='\n')
             for index in range(0,np.shape(Data)[0]):
-                writer.writerow(Data[index].tolist())
-        print('Saving '+str(Identifier)+'.csv')
-
+                __Information[3:]=Data[index].tolist()
+                writer.writerow(__Information)
+       
         print('')
         print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
     

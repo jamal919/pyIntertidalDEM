@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 from Sentiniel2ChannelData import BandData
-#from Sentiniel2HSVData import HSVData
-#from Sentiniel2Processor import Processor
+from Sentiniel2HSVData import HSVData
+from Sentiniel2Processor import Processor
+from Sentiniel2DataFilter import DataFilter
+from Sentiniel2GeoData import GeoData
 #from Sentiniel2ATBIAO import ATBmask
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os,psutil
@@ -14,7 +16,7 @@ directory=args.Dir
 def SaveRGB(directory):
     BandDataObj=BandData(directory)
     BandDataObj.Data()
-'''
+
 def SaveHUEVALUE(directory):
     HSVDataObj=HSVData(directory)
     HSVDataObj.HueValueRGB()
@@ -23,6 +25,15 @@ def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
     ProcessorObj.GetIsWater()
 
+def SaveWaterMap(directory):
+    DataFilterObj=DataFilter(directory)
+    DataFilterObj.FilterWaterMap()
+
+def SaveLatLon(directory):
+    GeoDataObj=GeoData(directory)
+    GeoDataObj.ShoreLine()
+
+'''
 def ATBO(directory):
     ATBmaskObj=ATBmask(directory)
     ATBmaskObj.Data()
@@ -31,8 +42,10 @@ def ModuleRun(directory):
     start_time=time.time()
 
     SaveRGB(directory)
-    #SaveHUEVALUE(directory)
-    #SaveIsWater(directory)
+    SaveHUEVALUE(directory)
+    SaveIsWater(directory)
+    SaveWaterMap(directory)
+    SaveLatLon(directory)
     #ATBO(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
@@ -42,7 +55,7 @@ def ModuleRun(directory):
     
     memoryUse = py.memory_info()[0]/(2**30)  # memory use in GB
 
-    print('memory use:', memoryUse)
+    print('memory use(in GB):', memoryUse)
     
     plt.show()
     
