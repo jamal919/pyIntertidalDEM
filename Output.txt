@@ -1,0 +1,63 @@
+ansary@ansary-UX410UAR:~/Sentiniel2/s2_bob_dem$ ./main.py /home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4/
+
+*********************************************************************************************
+****************************        SENTINIEL2        ***************************************
+*********************************************************************************************
+
+    Satelite Name  :SENTINEL2B
+             Date  :30-11-2017
+             Time  :04:21:57:149
+     Product Type  :L2A
+Geographical Zone  :T46QCK
+    Metadata Type  :D Version:1
+Listing Files To Be used
+
+/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4//SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4_FRE_B2.tif
+
+
+/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4//SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4_FRE_B4.tif
+
+
+/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4//SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4_FRE_B8.tif
+
+
+/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4//SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4_FRE_B11.tif
+
+
+/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4//MASKS/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4_CLM_R1.tif
+
+
+/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4//MASKS/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4_CLM_R2.tif
+
+Processing Cloud Mask With:Alpha Band 20m
+Processing Cloud Mask With:Red Band 10m
+*Saving Red Channel.tiff
+Elapsed Time(GeoTiff Saving): 0.6427013874053955 seconds
+Processing Cloud Mask With:Green Band 10m
+*Saving Green Channel.tiff
+Elapsed Time(GeoTiff Saving): 1.4296648502349854 seconds
+Processing Cloud Mask With:Blue Band 10m
+*Saving Blue Channel.tiff
+Elapsed Time(GeoTiff Saving): 1.8267254829406738 seconds
+Computing Hue and Value channel
+*Saving Hue Data.tiff
+Elapsed Time(GeoTiff Saving): 8.584856033325195 seconds
+*Saving Value Data.tiff
+Elapsed Time(GeoTiff Saving): 4.285411834716797 seconds
+Getting Hue Data
+Getting Value Data
+*Saving Iswater.tiff
+Elapsed Time(GeoTiff Saving): 2.3483264446258545 seconds
+Filtering Water Map
+*Saving WaterMap.tiff
+Elapsed Time(GeoTiff Saving): 1.2280755043029785 seconds
+Total Elapsed Time(Segmentation): 9.999755382537842 seconds
+Mapping ShoreLine
+Total Elapsed Time(Convolution): 4.811340808868408 seconds
+
+Total Elapsed Time(SpaceCoords to Lat Lon): 0.4060502052307129 seconds
+Saving LatLonData.csv
+
+Elapsed Time(CSV Saving): 0.7140803337097168 seconds
+Total Elapsed Time: 80.18708229064941 seconds
+memory use(in GB): 0.4557762145996094
