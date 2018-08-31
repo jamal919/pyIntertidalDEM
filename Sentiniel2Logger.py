@@ -1,6 +1,5 @@
 import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc 
 from osgeo import gdal,osr
-from mpl_toolkits.basemap import Basemap
 
 class Info(object):
 

@@ -41,9 +41,9 @@ def AtmTestFunc(directory):
 def ModuleRun(directory):
     start_time=time.time()
 
-    #SaveRGB(directory)
+    SaveRGB(directory)
     #SaveHUEVALUE(directory)
-    SaveIsWater(directory)
+    #SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
     #AtmTestFunc(directory)
