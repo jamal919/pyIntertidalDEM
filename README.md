@@ -26,6 +26,6 @@ import os                              #Directory Access
 
 import shapefile                       #shapefile output 
 
-import scipy.misc		       #Image saving
+import scipy.misc		               #Image saving
 
-import csv			       #CSV saving
+import csv			                   #CSV saving

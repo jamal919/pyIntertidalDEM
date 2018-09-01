@@ -30,7 +30,7 @@ class Info(object):
         self.DateTime=__Date+' '+__Time
         self.SateliteName=self.__IdentifierStrings[0]
         self.Zone=self.__IdentifierStrings[3]    
-    
+
     def OutputDir(self):
         __OutputDir=self.__OutputFolder+self.__DirectoryStrings[-1]+'/'
         if not os.path.exists(__OutputDir):

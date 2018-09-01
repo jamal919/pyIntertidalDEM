@@ -24,7 +24,6 @@ class GeoData(object):
         start_time = time.time()
         __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
         __ConvolutedData=scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
-        
         __ConvolutedData[__ConvolutedData<1]=0
         __ConvolutedData[__ConvolutedData>0]=1
         self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing

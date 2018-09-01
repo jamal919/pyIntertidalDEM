@@ -20,8 +20,7 @@ class HSVData(object):
         
         __Max=np.maximum(np.maximum(__RedData,__GreenData),__BlueData) ##Val
         __Hue=np.empty(np.shape(__Max))
-        __Hue[:]=0
-        
+        __Hue[:]=0        
         __Min=np.minimum(np.minimum(__RedData,__GreenData),__BlueData)
         __Chroma=__Max-__Min
         __Ipos= __Chroma>0
