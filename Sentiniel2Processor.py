@@ -1,7 +1,6 @@
 import time,matplotlib,numpy as np,gc,sys
 from osgeo import gdal
 from Sentiniel2Logger import TiffReader,TiffWritter,ViewData,Info
-from Sentiniel2AtmosphereTest import AtmTest
 class Processor(object):
     
     def __init__(self,Directory):
@@ -11,15 +10,13 @@ class Processor(object):
         self.Directory=Directory
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
-        AtmTestObj=AtmTest(Directory)
-        self.IAOdata=AtmTestObj.IAOdata()
+        
 
     def __ProcessHUEData(self):
         print('Getting Hue Data')
         __File=self.__InputFolder+"/Hue Data.tiff"
         __HueData=self.TiffReader.GetTiffData(__File)
         __HueData=__HueData/np.amax(__HueData)
-        __HueData[self.IAOdata==1]=0
         #hue channel constants
         __n_hue=1                      #scaling factor
         idx=__HueData>0 
@@ -31,8 +28,8 @@ class Processor(object):
         __c2_hue=__T_hue-__n_hue*__sig_hue
         
         self.__IsWater_hue=np.empty(np.shape(__HueData))
-        self.__IsWater_hue[:]=0                              
-        self.__IsWater_hue[(__HueData>__c1_hue) | (__HueData<__c2_hue)]=1  ##Change in condition
+        self.__IsWater_hue[:]=1                              
+        self.__IsWater_hue[(__HueData>__c1_hue) | (__HueData<__c2_hue)]=0  ##Change in condition
         #self.DataViewer.PlotWithGeoRef(self.__IsWater_hue,'self.__IsWater_hue')
 
     def __ProcessValData(self):
@@ -40,7 +37,6 @@ class Processor(object):
         __File=self.__InputFolder+"/Value Data.tiff"
         __ValData=self.TiffReader.GetTiffData(__File)
         __ValData=__ValData/np.amax(__ValData)
-        __ValData[self.IAOdata==1]=1
         #value channel constants
         __n_val=1                           #scaling factor(question)
         idx=__ValData<1 

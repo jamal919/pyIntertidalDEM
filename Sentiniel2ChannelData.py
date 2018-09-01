@@ -76,7 +76,7 @@ class BandData(object):
 
         self.TiffWritter.SaveArrayToGeotiff(__RedBand,'Red Channel')
 
-        self.DataViewer.PlotWithGeoRef(__RedBand,'RedBand')
+        #self.DataViewer.PlotWithGeoRef(__RedBand,'RedBand')
 
     def __ProcessGreenChannel(self):
         __GreenBand=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
@@ -97,7 +97,7 @@ class BandData(object):
 
         self.TiffWritter.SaveArrayToGeotiff(__GreenBand,'Green Channel')
 
-        self.DataViewer.PlotWithGeoRef(__GreenBand,'GreenBand')
+        #self.DataViewer.PlotWithGeoRef(__GreenBand,'GreenBand')
         
     def __ProcessBlueChannel(self):
         __BlueBand=self.TiffReader.GetTiffData(self.__BlueBandFile)  #Read
@@ -118,8 +118,9 @@ class BandData(object):
 
         self.TiffWritter.SaveArrayToGeotiff(__BlueBand,'Blue Channel')
 
-        self.DataViewer.PlotWithGeoRef(__BlueBand,'BlueBand')
+        #self.DataViewer.PlotWithGeoRef(__BlueBand,'BlueBand')
 
+        
     def Data(self):
         self.__ProcessAlphaChannel()
         self.__ProcessRedChannel()

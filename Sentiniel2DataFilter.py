@@ -23,9 +23,7 @@ class DataFilter(object):
     def __DetectWater(self):
         
         __SignificantWaterData=self.__SegmentFeatures(self.Data,100000) #Water Data
-        
         __LabeledWater,_=scipy.ndimage.measurements.label(__SignificantWaterData)
-       
         __LandData=np.ones(np.shape(self.Data))
         __LandData[__LabeledWater>0]=0
         __SignificantLandData=self.__SegmentFeatures(__LandData,10000)  #Land Data
