@@ -5,8 +5,8 @@ class BandData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
         Files=InfoObj.DisplayFileList()
-        self.__RedBandFile=Files[1]
-        self.__GreenBandFile=Files[2]
+        self.__RedBandFile=Files[2]
+        self.__GreenBandFile=Files[1]
         self.__BlueBandFile=Files[0]
         self.__AlphaBandFile=Files[3]
         self.__CloudMask10mFile=Files[4]
@@ -43,6 +43,23 @@ class BandData(object):
     def __AlphaUpSampling(self):
         self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
 
+    def __NormalizeData(self,Data):
+        Data=Data.astype(np.float)
+        Data[Data==-10000]=np.nan
+        Mean=np.nanmean(Data)
+        self.DataViewer.DebugPrint(Mean,'Mean')
+        Std=np.nanstd(Data)
+        self.DataViewer.DebugPrint(Std,'STD')
+        Data=(Data-Mean)
+        Data=Data/Std
+        Min=(np.nanmin(Data))
+        self.DataViewer.DebugPrint(Min,'Minimum')
+        Data=Data+((-1)*(Min))
+        self.DataViewer.DebugPrint(np.nanmax(Data),'Max')
+        Data=Data/np.nanmax(Data)
+        
+        return Data
+
     def __ProcessAlphaChannel(self):
         
         self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
@@ -51,11 +68,12 @@ class BandData(object):
         
         self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
         
-        self.__AlphaBand[self.__AlphaBand==-10000]=0                       #No Data Correction
-        
-        self.__AlphaBand=(self.__AlphaBand/np.amax(self.__AlphaBand))  
-        
         self.__AlphaUpSampling()
+        
+        self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
+
+        self.DataViewer.PlotWithGeoRef(self.__AlphaBand,'Alpha')
+        
             
     def __ProcessRedChannel(self):
         __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
@@ -64,19 +82,18 @@ class BandData(object):
         
         __RedBand=self.__CloudMaskCorrection(__RedBand,__CloudMask10m,'Red Band 10m')
         
-        __RedBand[__RedBand==-10000]=0                       #No Data Correction
         
-        __RedBand=(__RedBand/np.amax(__RedBand))
-        
+        __RedBand=self.__NormalizeData(__RedBand)
+
         __RedBand=(1-self.__AlphaBand)+(self.__AlphaBand*__RedBand)
         
-        __RedBand=__RedBand*255
+        #__RedBand=__RedBand*255
 
-        __RedBand=__RedBand.astype(np.uint8)                 #8 bit integer
+        #__RedBand=__RedBand.astype(np.uint8)                 #8 bit integer
 
         self.TiffWritter.SaveArrayToGeotiff(__RedBand,'Red Channel')
 
-        #self.DataViewer.PlotWithGeoRef(__RedBand,'RedBand')
+        self.DataViewer.PlotWithGeoRef(__RedBand,'RedBand')
 
     def __ProcessGreenChannel(self):
         __GreenBand=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
@@ -85,19 +102,17 @@ class BandData(object):
         
         __GreenBand=self.__CloudMaskCorrection(__GreenBand,__CloudMask10m,'Green Band 10m')
         
-        __GreenBand[__GreenBand==-10000]=0                       #No Data Correction
-        
-        __GreenBand=(__GreenBand/np.amax(__GreenBand)) 
-        
+        __GreenBand=self.__NormalizeData(__GreenBand)
+
         __GreenBand=(1-self.__AlphaBand)+(self.__AlphaBand*__GreenBand)
 
-        __GreenBand=__GreenBand*255
+        #__GreenBand=__GreenBand*255
 
-        __GreenBand=__GreenBand.astype(np.uint8)                 #8 bit integer
+        #__GreenBand=__GreenBand.astype(np.uint8)                 #8 bit integer
 
         self.TiffWritter.SaveArrayToGeotiff(__GreenBand,'Green Channel')
 
-        #self.DataViewer.PlotWithGeoRef(__GreenBand,'GreenBand')
+        self.DataViewer.PlotWithGeoRef(__GreenBand,'GreenBand')
         
     def __ProcessBlueChannel(self):
         __BlueBand=self.TiffReader.GetTiffData(self.__BlueBandFile)  #Read
@@ -106,19 +121,17 @@ class BandData(object):
         
         __BlueBand=self.__CloudMaskCorrection(__BlueBand,__CloudMask10m,'Blue Band 10m')
         
-        __BlueBand[__BlueBand==-10000]=0                       #No Data Correction
-        
-        __BlueBand=(__BlueBand/np.amax(__BlueBand)) 
+        __BlueBand=self.__NormalizeData(__BlueBand)
         
         __BlueBand=(1-self.__AlphaBand)+(self.__AlphaBand*__BlueBand)
         
-        __BlueBand=__BlueBand*255
+        #__BlueBand=__BlueBand*255
 
-        __BlueBand=__BlueBand.astype(np.uint8)                 #8 bit integer
+        #__BlueBand=__BlueBand.astype(np.uint8)                 #8 bit integer
 
         self.TiffWritter.SaveArrayToGeotiff(__BlueBand,'Blue Channel')
 
-        #self.DataViewer.PlotWithGeoRef(__BlueBand,'BlueBand')
+        self.DataViewer.PlotWithGeoRef(__BlueBand,'BlueBand')
 
         
     def Data(self):

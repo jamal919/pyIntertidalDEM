@@ -65,11 +65,11 @@ class Info(object):
         
         BandFileB2=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B2.tif'
         
-        BandFileB4=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
+        BandFileB4=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B3.tif'
         
-        BandFileB8=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B8.tif'
+        BandFileB8=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
         
-        BandFileB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B11.tif'
+        BandFileB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B12.tif'
 
         CloudMask10m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R1.tif'
         
