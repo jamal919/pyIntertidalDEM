@@ -35,11 +35,11 @@ def SaveLatLon(directory):
 def ModuleRun(directory):
     start_time=time.time()
 
-    SaveRGB(directory)
+    #SaveRGB(directory)
     SaveHUEVALUE(directory)
-    SaveIsWater(directory)
-    SaveWaterMap(directory)
-    SaveLatLon(directory)
+    #SaveIsWater(directory)
+    #SaveWaterMap(directory)
+    #SaveLatLon(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
     pid = os.getpid()
