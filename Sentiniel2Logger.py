@@ -175,6 +175,7 @@ class ViewData(object):
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
         Reader=TiffReader(Directory)
+        self.OUTdir=__InfoObj.OutputDir()
         __NoDataFile=__InfoObj.EdgeMaskDir()
         __DataSet=Reader.ReadTiffData(__NoDataFile)
         GeoTransForm=__DataSet.GetGeoTransform()
@@ -221,15 +222,20 @@ class ViewData(object):
         print('*********************************************************************************************')
         print(Variable)
         print('*********************************************************************************************')
-        
+    
+ 
+
     def PlotWithGeoRef(self,Variable,VariableIdentifier):
         
         print('plotting data:'+VariableIdentifier)
+        low=np.nanmin(Variable)
+        high=np.nanmax(Variable)
+        
+        V=np.linspace(low,high,10,endpoint=True)
+        
         
         plt.figure(VariableIdentifier)
-        
-        plt.imshow(Variable)
-        
+            
         plt.title(VariableIdentifier)
         
         plt.grid(True)
@@ -237,7 +243,16 @@ class ViewData(object):
         plt.xticks(self.__XPS,self.__Lats)
 
         plt.yticks(self.__YPS,self.__Lons)
+   
+        plt.imshow(Variable)
+
+        plt.colorbar(ticks=V)
         
+        plt.savefig(self.OUTdir+VariableIdentifier+'.png')
+        
+    
+    
+    
 class SaveData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
