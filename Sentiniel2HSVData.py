@@ -21,30 +21,22 @@ class HSVData(object):
        
         __Inan=np.isnan(__RedData)
 
-        __RedData[__Inan]=-10000
-        __BlueData[__Inan]=-10000
-        __GreenData[__Inan]=-10000
-
+        
         __Max=np.maximum(np.maximum(__RedData,__GreenData),__BlueData) ##Val
         __Max[__Inan]=np.nan
 
-        __RedData[__Inan]=10000
-        __BlueData[__Inan]=10000
-        __GreenData[__Inan]=10000
         
         __Min=np.minimum(np.minimum(__RedData,__GreenData),__BlueData)
+        __Min[__Inan]=np.nan
         
-        __RedData[__Inan]=0
-        __BlueData[__Inan]=0
-        __GreenData[__Inan]=0
-
 
         __Chroma=__Max-__Min
-        
+        __Chroma[__Inan]=0
+        '''
         __RedData[__Inan]=np.nan
         __BlueData[__Inan]=np.nan
         __GreenData[__Inan]=np.nan
-
+        '''
         __Ipos= __Chroma>0
 
         __Hue=np.empty(np.shape(__Max))        
@@ -64,11 +56,11 @@ class HSVData(object):
         __Hue=__Hue/np.amax(__Hue)
         __Hue[__Inan]=np.nan
         
-        #self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
+        self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
         self.DataViewer.PlotWithGeoRef(__Hue,'Hue')
-        #self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
+        self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
         self.DataViewer.PlotWithGeoRef(__Max,'Value')
-        self.HueValueRGBspherical()
+        
     
     def HueValueRGBspherical(self):
         print('Computing Hue and Value channel')

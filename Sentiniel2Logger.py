@@ -1,4 +1,4 @@
-import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc 
+import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,csv,scipy.misc,matplotlib 
 from osgeo import gdal,osr
 
 class Info(object):
@@ -233,7 +233,14 @@ class ViewData(object):
         
         V=np.linspace(low,high,10,endpoint=True)
         
+        #[row,col]=np.shape(Variable)
+
+        #X=np.arange(0,row)
+
+        #Y=np.arange(0,col)
         
+
+
         plt.figure(VariableIdentifier)
             
         plt.title(VariableIdentifier)
@@ -244,15 +251,14 @@ class ViewData(object):
 
         plt.yticks(self.__YPS,self.__Lons)
    
+        #plt.pcolor(X, Y, Variable, cmap=plt.jet(), vmin=low, vmax=high)
         plt.imshow(Variable)
 
+        #plt.colorbar()
         plt.colorbar(ticks=V)
         
         plt.savefig(self.OUTdir+VariableIdentifier+'.png')
-        
-    
-    
-    
+            
 class SaveData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
