@@ -65,18 +65,20 @@ class Info(object):
         
         BandFileB2=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B2.tif'
         
-        BandFileB4=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B3.tif'
+        BandFileB3=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B3.tif'
         
-        BandFileB8=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
+        BandFileB4=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
+
+        BandFileB8=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B8.tif'
         
-        BandFileB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B12.tif'
+        BandFileB12=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B12.tif'
 
         CloudMask10m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R1.tif'
         
         CloudMask20m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R2.tif'
 
         
-        self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB11,CloudMask10m,CloudMask20m]
+        self.__Files=[BandFileB2,BandFileB3,BandFileB4,BandFileB8,BandFileB12,CloudMask10m,CloudMask20m]
 
     def __PrintFileList(self):
         print('Listing Files To Be used')
