@@ -35,9 +35,9 @@ def SaveLatLon(directory):
 def ModuleRun(directory):
     start_time=time.time()
 
-    SaveRGB(directory)
-    SaveHUEVALUE(directory)
-    #SaveIsWater(directory)
+    #SaveRGB(directory)
+    #SaveHUEVALUE(directory)
+    SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
@@ -50,7 +50,7 @@ def ModuleRun(directory):
 
     print('memory use(in GB):', memoryUse)
     
-    #plt.show()
+    plt.show()
     
 if __name__=='__main__':
     ModuleRun(directory)
