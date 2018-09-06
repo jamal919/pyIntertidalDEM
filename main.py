@@ -18,7 +18,8 @@ def SaveRGB(directory):
 
 def SaveHUEVALUE(directory):
     HSVDataObj=HSVData(directory)
-    HSVDataObj.HueValueRGB()
+    #HSVDataObj.HueValueRGB()
+    HSVDataObj.HueValueRGBspherical()
 
 def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
@@ -35,8 +36,9 @@ def SaveLatLon(directory):
 def ModuleRun(directory):
     start_time=time.time()
 
-    #SaveRGB(directory)
-    #SaveHUEVALUE(directory)
+    
+    SaveRGB(directory)
+    SaveHUEVALUE(directory)
     SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)

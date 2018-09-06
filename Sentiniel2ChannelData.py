@@ -8,9 +8,10 @@ class BandData(object):
         self.__RedBandFile=Files[2]
         self.__GreenBandFile=Files[1]
         self.__BlueBandFile=Files[0]
-        self.__AlphaBandFile=Files[3]
-        self.__CloudMask10mFile=Files[4]
-        self.__CloudMask20mFile=Files[5]
+        self.__NIRBandFile=Files[3]
+        self.__AlphaBandFile=Files[4]
+        self.__CloudMask10mFile=Files[5]
+        self.__CloudMask20mFile=Files[6]
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
@@ -49,6 +50,11 @@ class BandData(object):
         Data[Data==-10000]=np.nan
         Mean=np.nanmean(Data)
         Std=np.nanstd(Data)
+        Data[Data>Mean+3*Std]=Mean+3*Std
+        Data[Data<Mean-3*Std]=Mean-3*Std
+        Mean=np.nanmean(Data)
+        Std=np.nanstd(Data)
+        
         Data=(Data-Mean)/Std
         Min=(np.nanmin(Data))
         Data=Data+((-1)*(Min))
@@ -110,11 +116,63 @@ class BandData(object):
         self.TiffWritter.SaveArrayToGeotiff(__BlueBand,'Blue Channel')
         self.DataViewer.PlotWithGeoRef(__BlueBand,'Blue')
 
+    def __modifiedGreen(self):
+        Green=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
+        NIR=self.TiffReader.GetTiffData(self.__NIRBandFile)
+        Green=self.__NormalizeData(Green)
+        NIR=self.__NormalizeData(NIR)
+        GreenNew=(Green-NIR)/(Green+NIR)
+        self.DataViewer.PlotWithGeoRef(GreenNew,'Green New')
+        GreenPos=np.zeros(np.shape(GreenNew))
+        GreenPos[GreenNew>0]=GreenNew[GreenNew>0]
         
+        self.DataViewer.PlotWithGeoRef(GreenPos,'Green Positive')
+
+        Data=GreenPos
+        stdtest=np.zeros(np.shape(Data))
+        
+        mean=np.nanmean(Data)
+        
+        std=np.nanstd(Data)
+        
+        ig1=(Data<mean+1*std) & (Data>mean-1*std)
+        stdtest[ig1]=Data[ig1]
+        stdtest[np.isnan(Data)]=np.nan
+        stdtest[stdtest==0]=np.nan
+        
+       
+        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:1st std')
+        
+        ig2=(Data<mean+2*std) & (Data>mean-2*std)
+        stdtest[ig2]=Data[ig2]
+        stdtest[ig1]=np.nan
+
+        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:2nd std')
+
+        ig3=(Data<mean+3*std) & (Data>mean-3*std)
+        stdtest[ig3]=Data[ig3]
+        stdtest[ig2]=np.nan
+
+        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:3rd std')
+
+        ig4=(Data<mean+4*std) & (Data>mean-4*std)
+        stdtest[ig4]=Data[ig4]
+        stdtest[ig3]=np.nan
+        
+        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:4th std')
+        
+        ig5=(Data<mean+5*std) & (Data>mean-5*std)
+        stdtest[ig5]=Data[ig5]
+        stdtest[ig4]=np.nan
+        
+        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:5th std')     
+        
+
         
     def Data(self):
         self.__ProcessAlphaChannel()
         self.__ProcessRedChannel()
         self.__ProcessGreenChannel()
         self.__ProcessBlueChannel()
+        #self.__modifiedGreen()
     
