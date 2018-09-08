@@ -37,8 +37,8 @@ def ModuleRun(directory):
     start_time=time.time()
 
     
-    SaveRGB(directory)
-    SaveHUEVALUE(directory)
+    #SaveRGB(directory)
+    #SaveHUEVALUE(directory)
     SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
