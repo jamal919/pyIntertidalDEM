@@ -22,6 +22,8 @@ class Info(object):
         self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
 
         self.EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
+
+        self.IAO=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_IAO_R1.tif'
         
         __Date=self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
         
@@ -283,6 +285,21 @@ class SaveData(object):
         print('')
         print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
     
+    def SaveImageDataAsCSV(self,Identifier,Data):
+        start_time=time.time()
+        print('Saving '+str(Identifier)+'.csv')
+        csvfile=self.OutputDir+str(Identifier)+'.csv'
+        with open(csvfile,"w") as output:
+            writer=csv.writer(output,lineterminator='\n')
+            for index in range(0,np.shape(Data)[0]):
+                writer.writerow(Data[index].tolist())
+       
+        print('')
+        print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
+    
+
+
+
     def SaveDataAsKML(self,Identifier,Data):
         start_time = time.time()
         outputfile=self.OutputDir+str(Identifier)+'.kml'
