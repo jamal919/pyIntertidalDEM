@@ -4,8 +4,8 @@ class DataFilter(object):
     
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
-        __InputFolder=__InfoObj.OutputDir()
-        __IsWaterFile=__InputFolder+'/Iswater.tiff'
+        __InputFolder=__InfoObj.OutputDir('TIFF')
+        __IsWaterFile=__InputFolder+'/3.1.3_IsWater.tiff'
         Reader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.Data=Reader.GetTiffData(__IsWaterFile)

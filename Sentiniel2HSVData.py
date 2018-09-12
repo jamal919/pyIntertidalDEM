@@ -5,94 +5,65 @@ class HSVData(object):
     def __init__(self,Directory):
 
         __InfoObj=Info(Directory)
-        __InputFolder=__InfoObj.OutputDir()
-        self.RedDataFile=__InputFolder+'/Red Channel.tiff'
-        self.GreenDataFile=__InputFolder+'/Green Channel.tiff'
-        self.BlueDataFile=__InputFolder+'/Blue Channel.tiff'
+        __InputFolder=__InfoObj.OutputDir('TIFF')
+        self.RedDataFile=__InputFolder+'/1.2.3_Red_Alpha_Applied.tiff'
+        self.GreenDataFile=__InputFolder+'/1.3.3_Green_Alpha_Applied.tiff'
+        self.BlueDataFile=__InputFolder+'/1.4.3_Blue_Alpha_Applied.tiff'
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
 
-    def HueValueRGB(self): 
-        print('Computing Hue and Value channel')
-        __RedData=self.TiffReader.GetTiffData(self.RedDataFile)
-        __GreenData=self.TiffReader.GetTiffData(self.GreenDataFile)
-        __BlueData=self.TiffReader.GetTiffData(self.BlueDataFile)
-       
-        __Inan=np.isnan(__RedData)
 
-        
-        __Max=np.maximum(np.maximum(__RedData,__GreenData),__BlueData) ##Val
-        __Max[__Inan]=np.nan
-
-        
-        __Min=np.minimum(np.minimum(__RedData,__GreenData),__BlueData)
-        __Min[__Inan]=np.nan
-        
-
-        __Chroma=__Max-__Min
-        __Chroma[__Inan]=0
-        __Ipos= __Chroma>0
-
-        __Hue=np.empty(np.shape(__Max))        
-        __Hue[:]=0
-
-        idx = (__RedData== __Max) & __Ipos 
-        __Hue[idx] = (__GreenData[idx] - __BlueData[idx]) / __Chroma[idx]
-
-        idx = (__GreenData == __Max) & __Ipos 
-        __Hue[idx] = 2.0 + (__BlueData[idx] - __RedData[idx]) / __Chroma[idx]
-
-        idx = (__BlueData == __Max) & __Ipos 
-        __Hue[idx] = 4.0 + (__RedData[idx] - __GreenData[idx]) / __Chroma[idx]
-        
-        __Hue= (__Hue / 6.0) % 1.0
-        
-        __Hue[__Inan]=np.nan
-        
-        Mean=np.nanmean(__Hue)
-        Std=np.nanstd(__Hue)
-        __Hue=(__Hue-Mean)/Std
-        Min=(np.nanmin(__Hue))
-        __Hue=__Hue+((-1)*(Min))
-        __Hue=__Hue/np.nanmax(__Hue)
-        
-        self.TiffWritter.SaveArrayToGeotiff(__Hue,'Hue Data')
-        self.DataViewer.PlotWithGeoRef(__Hue,'Hue')
-        self.TiffWritter.SaveArrayToGeotiff(__Max,'Value Data')
-        self.DataViewer.PlotWithGeoRef(__Max,'Value')
-        
+    def HueValueRGB(self):
     
-    def HueValueRGBspherical(self):
-        print('Computing Hue and Value channel')
+        print('Computing Hue and Value channel from RGB data')
         R=self.TiffReader.GetTiffData(self.RedDataFile)
         G=self.TiffReader.GetTiffData(self.GreenDataFile)
         B=self.TiffReader.GetTiffData(self.BlueDataFile)
+        [row,col]=R.shape
+        RGB=np.empty([row,col,3])
+        RGB[:,:,0]=R
+        RGB[:,:,1]=G
+        RGB[:,:,2]=B
+
+        #2.1.1 RGB
+        self.DataViewer.PlotWithGeoRef(RGB,'2.1.1_RGB')
+        
+
+
         iN=np.isnan(R)
+        Hue=np.empty(np.shape(R))
+
         Max=np.maximum(np.maximum(R,G),B) ##Val
         Max[iN]=np.nan
-        Hue=np.empty(np.shape(R))
-        iO=(R>=G) & (G> B) #infinite =
-        iC=(G> R) & (R>=B) #zero
-        iS=(G>=B) & (B> R) #
-        iA=(B> G) & (G> R) #
-        iV=(B> R) & (R>=G) #zero
-        iR=(R>=B) & (B> G) #
-        Hue[iO]=  ((G[iO]-B[iO])/(R[iO]-B[iO]))
-        Hue[iC]=2-((R[iC]-B[iC])/(G[iC]-B[iC]))
-        Hue[iS]=2+((B[iS]-R[iS])/(G[iS]-R[iS]))
-        Hue[iA]=4-((G[iA]-R[iA])/(B[iA]-R[iA]))
-        Hue[iV]=4+((R[iV]-G[iV])/(B[iV]-G[iV]))
-        Hue[iR]=6-((B[iR]-G[iR])/(R[iR]-G[iR]))
+        Min=np.minimum(np.minimum(R,G),B) ##min
+        Min[iN]=np.nan
+        
+        #Max==Min segment
+        Chroma=Max-Min
+        Chroma[iN]=np.nan
+        iZ=(Chroma==0)
+        Hue[iZ]=0
+
+        iV=(Chroma>0)
+        #Max=Red
+        iR=(R==Max) & iV
+        Hue[iR]=((60*((G[iR]-B[iR])/(Max[iR]-Min[iR])))+360) % 360
+        #Max=Green
+        iG=(G==Max) & iV
+        Hue[iG]=(60*((B[iG]-R[iG])/(Max[iG]-Min[iG])))+120
+        #Max=Blue
+        iB=(B==Max) & iV
+        Hue[iB]=(60*((B[iB]-R[iB])/(Max[iB]-Min[iB])))+240
+
         Hue[iN]=np.nan
-        Mean=np.nanmean(Hue)
-        Std=np.nanstd(Hue)
-        Hue=(Hue-Mean)/Std
-        Min=(np.nanmin(Hue))
-        Hue=Hue+((-1)*(Min))
+        
         Hue=Hue/np.nanmax(Hue)
         
-        self.TiffWritter.SaveArrayToGeotiff(Hue,'Hue Data')
-        self.DataViewer.PlotWithGeoRef(Hue,'Hue--sp')
-        self.TiffWritter.SaveArrayToGeotiff(Max,'Value Data')
-        self.DataViewer.PlotWithGeoRef(Max,'Value')
+        #2.2.1 HUE Normalized Pekel
+        self.TiffWritter.SaveArrayToGeotiff(Hue,'2.2.1_HUE_Normalized_Pekel')
+        self.DataViewer.PlotWithGeoRef(Hue,'2.2.1_HUE_Normalized_Pekel')
+        #2.2.2 Value Normalized Pekel
+        self.TiffWritter.SaveArrayToGeotiff(Max,'2.2.2 Value Normalized Pekel')
+        self.DataViewer.PlotWithGeoRef(Max,'2.2.2 Value Normalized Pekel')
+        

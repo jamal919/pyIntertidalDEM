@@ -5,8 +5,8 @@ class BandData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
         Files=InfoObj.DisplayFileList()
-        self.__RedBandFile=Files[2]
-        self.__GreenBandFile=Files[1]
+        self.__RedBandFile=Files[3]
+        self.__GreenBandFile=Files[2]
         self.__BlueBandFile=Files[0]
         self.__NIRBandFile=Files[3]
         self.__AlphaBandFile=Files[4]
@@ -61,6 +61,11 @@ class BandData(object):
         Data=Data/np.nanmax(Data)
         return Data
 
+    def __SaveChannelData(self,Data,Identifier):
+        self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
+        self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+
+
     def __ProcessAlphaChannel(self):
         
         self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
@@ -70,9 +75,15 @@ class BandData(object):
         self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
         
         self.__AlphaUpSampling()
-        
+        ##1.1.1 Alpha CLOUD
+        self.__SaveChannelData(self.__AlphaBand,'1.1.1_Alpha_CLM_Upsampled')
+
         self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
-        self.DataViewer.PlotWithGeoRef(self.__AlphaBand,'Alpha')
+        
+        ##1.1.2 Alpha NORM
+        self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
+        
+        
             
     def __ProcessRedChannel(self):
         __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
@@ -81,13 +92,19 @@ class BandData(object):
         
         __RedBand=self.__CloudMaskCorrection(__RedBand,__CloudMask10m,'Red Band 10m')
         
+        #1.2.1 Red CLM
+        self.__SaveChannelData(__RedBand,'1.2.1_RED_CLM')
+
         __RedBand=self.__NormalizeData(__RedBand)
 
+        #1.2.2 Red NORM
+        self.__SaveChannelData(__RedBand,'1.2.2_RED_NORM')
+
         __RedBand=(1-self.__AlphaBand)+(self.__AlphaBand*__RedBand)
-        
-        self.TiffWritter.SaveArrayToGeotiff(__RedBand,'Red Channel')
-        self.DataViewer.PlotWithGeoRef(__RedBand,'Red')
-        
+
+        #1.2.3 Red Alpha Applied
+        self.__SaveChannelData(__RedBand,'1.2.3_Red_Alpha_Applied')
+ 
     def __ProcessGreenChannel(self):
         __GreenBand=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
 
@@ -95,12 +112,19 @@ class BandData(object):
         
         __GreenBand=self.__CloudMaskCorrection(__GreenBand,__CloudMask10m,'Green Band 10m')
         
+        #1.3.1 Green CLM
+        self.__SaveChannelData(__GreenBand,'1.3.1_Green_CLM')
+
         __GreenBand=self.__NormalizeData(__GreenBand)
+
+        #1.3.2 Green NORM
+        self.__SaveChannelData(__GreenBand,'1.3.2_Green_NORM')
 
         __GreenBand=(1-self.__AlphaBand)+(self.__AlphaBand*__GreenBand)
 
-        self.TiffWritter.SaveArrayToGeotiff(__GreenBand,'Green Channel')
-        self.DataViewer.PlotWithGeoRef(__GreenBand,'Green')
+        #1.3.3 Green Alpha Applied
+        self.__SaveChannelData(__GreenBand,'1.3.3_Green_Alpha_Applied')
+
 
     def __ProcessBlueChannel(self):
         __BlueBand=self.TiffReader.GetTiffData(self.__BlueBandFile)  #Read
@@ -109,64 +133,18 @@ class BandData(object):
         
         __BlueBand=self.__CloudMaskCorrection(__BlueBand,__CloudMask10m,'Blue Band 10m')
         
+        #1.4.1 Blue CLM
+        self.__SaveChannelData(__BlueBand,'1.4.1_Blue_CLM')
+
         __BlueBand=self.__NormalizeData(__BlueBand)
+
+        #1.4.2 Blue NORM
+        self.__SaveChannelData(__BlueBand,'1.4.2_Blue_NORM')
 
         __BlueBand=(1-self.__AlphaBand)+(self.__AlphaBand*__BlueBand)
 
-        self.TiffWritter.SaveArrayToGeotiff(__BlueBand,'Blue Channel')
-        self.DataViewer.PlotWithGeoRef(__BlueBand,'Blue')
-
-    def __modifiedGreen(self):
-        Green=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
-        NIR=self.TiffReader.GetTiffData(self.__NIRBandFile)
-        Green=self.__NormalizeData(Green)
-        NIR=self.__NormalizeData(NIR)
-        GreenNew=(Green-NIR)/(Green+NIR)
-        self.DataViewer.PlotWithGeoRef(GreenNew,'Green New')
-        GreenPos=np.zeros(np.shape(GreenNew))
-        GreenPos[GreenNew>0]=GreenNew[GreenNew>0]
-        
-        self.DataViewer.PlotWithGeoRef(GreenPos,'Green Positive')
-
-        Data=GreenPos
-        stdtest=np.zeros(np.shape(Data))
-        
-        mean=np.nanmean(Data)
-        
-        std=np.nanstd(Data)
-        
-        ig1=(Data<mean+1*std) & (Data>mean-1*std)
-        stdtest[ig1]=Data[ig1]
-        stdtest[np.isnan(Data)]=np.nan
-        stdtest[stdtest==0]=np.nan
-        
-       
-        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:1st std')
-        
-        ig2=(Data<mean+2*std) & (Data>mean-2*std)
-        stdtest[ig2]=Data[ig2]
-        stdtest[ig1]=np.nan
-
-        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:2nd std')
-
-        ig3=(Data<mean+3*std) & (Data>mean-3*std)
-        stdtest[ig3]=Data[ig3]
-        stdtest[ig2]=np.nan
-
-        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:3rd std')
-
-        ig4=(Data<mean+4*std) & (Data>mean-4*std)
-        stdtest[ig4]=Data[ig4]
-        stdtest[ig3]=np.nan
-        
-        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:4th std')
-        
-        ig5=(Data<mean+5*std) & (Data>mean-5*std)
-        stdtest[ig5]=Data[ig5]
-        stdtest[ig4]=np.nan
-        
-        self.DataViewer.PlotWithGeoRef(stdtest,'DATA:5th std')     
-        
+        #1.4.3 Blue Alpha Applied
+        self.__SaveChannelData(__BlueBand,'1.4.3_Blue_Alpha_Applied')
 
         
     def Data(self):
@@ -174,5 +152,4 @@ class BandData(object):
         self.__ProcessRedChannel()
         self.__ProcessGreenChannel()
         self.__ProcessBlueChannel()
-        #self.__modifiedGreen()
     

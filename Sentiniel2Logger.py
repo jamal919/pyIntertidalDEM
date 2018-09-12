@@ -12,6 +12,20 @@ class Info(object):
         if not os.path.exists(self.__OutputFolder):
 
             os.mkdir(self.__OutputFolder)
+        
+        self.PNGdir=self.__OutputFolder+'PNG Files/'
+        if not os.path.exists(self.PNGdir):
+
+            os.mkdir(self.PNGdir)
+        self.TIFFDir=self.__OutputFolder+'TIFF Files/'
+        if not os.path.exists(self.TIFFDir):
+
+            os.mkdir(self.TIFFDir)
+        self.CSVDir=self.__OutputFolder+'CSV Files/'
+        if not os.path.exists(self.CSVDir):
+
+            os.mkdir(self.CSVDir)
+        
 
         self.__DirectoryStrings=str(self.directory).split('/')             #split the directory to extract specific folder
         
@@ -32,9 +46,24 @@ class Info(object):
         self.DateTime=__Date+' '+__Time
         self.SateliteName=self.__IdentifierStrings[0]
         self.Zone=self.__IdentifierStrings[3]    
+        
+       
 
-    def OutputDir(self):
-        __OutputDir=self.__OutputFolder+self.__DirectoryStrings[-1]+'/'
+    def OutputDir(self,Type):
+        if(Type==str('PNG')):
+            __OutputFolder=self.PNGdir+str(self.Zone)+'/'
+            if not os.path.exists(__OutputFolder):
+                os.mkdir(__OutputFolder)
+        if(Type==str('TIFF')): 
+            __OutputFolder=self.TIFFDir+str(self.Zone)+'/'
+            if not os.path.exists(__OutputFolder):
+                os.mkdir(__OutputFolder)
+        if(Type==str('CSV')): 
+            __OutputFolder=self.CSVDir+str(self.Zone)+'/'
+            if not os.path.exists(__OutputFolder):
+                os.mkdir(__OutputFolder)
+        
+        __OutputDir=__OutputFolder+self.__DirectoryStrings[-1]+'/'
         if not os.path.exists(__OutputDir):
             os.mkdir(__OutputDir)
         return __OutputDir
@@ -61,7 +90,7 @@ class Info(object):
         
         print('Geographical Zone  :'+ self.__IdentifierStrings[3])
         
-        print('    Metadata Type  :'+ self.__IdentifierStrings[4]+' Version:'+self.__IdentifierStrings[5][1])
+        print('    Metadata Type  :'+ self.__IdentifierStrings[4]+' Version:'+self.__IdentifierStrings[5])
         
     def __DataFileList(self):
         
@@ -148,10 +177,8 @@ class TiffWritter(object):
     def __init__(self,Directory):
         self.Directory=Directory
         InfoObj=Info(self.Directory)
-        self.OutputDir=InfoObj.OutputDir()
-        self.GeoTiffDir=InfoObj.EdgeMaskDir() #Generall Case--ReadCase
-        #self.GeoTiffDir=str(self.Directory)+'/EDG.tif'
-
+        self.OutputDir=InfoObj.OutputDir('TIFF')
+        self.GeoTiffDir=InfoObj.EdgeMaskDir() 
     
     def __ProjectionAndTransfromData(self):
         TiffReaderObj=TiffReader(self.Directory)
@@ -179,7 +206,7 @@ class ViewData(object):
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
         Reader=TiffReader(Directory)
-        self.OUTdir=__InfoObj.OutputDir()
+        self.OUTdir=__InfoObj.OutputDir('PNG')
         __NoDataFile=__InfoObj.EdgeMaskDir()
         __DataSet=Reader.ReadTiffData(__NoDataFile)
         GeoTransForm=__DataSet.GetGeoTransform()
@@ -229,7 +256,7 @@ class ViewData(object):
     
  
 
-    def PlotWithGeoRef(self,Variable,VariableIdentifier):
+    def PlotWithGeoRef(self,Variable,VariableIdentifier,PlotImdt=False):
         
         print('plotting data:'+VariableIdentifier)
         low=np.nanmin(Variable)
@@ -262,11 +289,16 @@ class ViewData(object):
         plt.colorbar(ticks=V)
         
         plt.savefig(self.OUTdir+VariableIdentifier+'.png')
+        
+        if (PlotImdt==True):
+            plt.show() 
+        plt.clf()
+        plt.close()
             
 class SaveData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
-        self.OutputDir=InfoObj.OutputDir()
+        self.OutputDir=InfoObj.OutputDir('CSV')
         self.DateTime=InfoObj.DateTime
         self.SateliteName=InfoObj.SateliteName
         self.Zone=InfoObj.Zone
