@@ -5,7 +5,7 @@ from Sentiniel2Processor import Processor
 from Sentiniel2DataFilter import DataFilter
 from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
-import os,psutil
+import os,psutil,sys,gc    
 
 parser = argparse.ArgumentParser()
 parser.add_argument("Dir", help="Directory of HUE and Value Data",type=str)
@@ -18,8 +18,7 @@ def SaveRGB(directory):
 
 def SaveHUEVALUE(directory):
     HSVDataObj=HSVData(directory)
-    #HSVDataObj.HueValueRGB()
-    HSVDataObj.HueValueRGBspherical()
+    HSVDataObj.HueValueRGB()
 
 def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
@@ -37,8 +36,8 @@ def ModuleRun(directory):
     start_time=time.time()
 
     
-    #SaveRGB(directory)
-    #SaveHUEVALUE(directory)
+    SaveRGB(directory)
+    SaveHUEVALUE(directory)
     SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
@@ -52,7 +51,18 @@ def ModuleRun(directory):
 
     print('memory use(in GB):', memoryUse)
     
-    plt.show()
+    #plt.show()
     
 if __name__=='__main__':
-    ModuleRun(directory)
+    if sys.version_info[1] < 3.6:
+        raise Exception("Must be using Python 3")
+    else:
+        ModuleRun(directory)
+        '''
+        DataPath='/home/ansary/Sentiniel2/Data/'
+        DataFolders=os.listdir(path=DataPath)
+        for df in DataFolders:
+            directory=DataPath+df+'/'
+            ModuleRun(directory)
+            gc.collect()
+        '''

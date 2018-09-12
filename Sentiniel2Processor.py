@@ -5,27 +5,35 @@ class Processor(object):
     
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
-        self.__InputFolder=__InfoObj.OutputDir()
+        self.__InputFolder=__InfoObj.OutputDir('TIFF')
         self.DataViewer=ViewData(Directory)
         self.Directory=Directory
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
-        self.IAOData=self.TiffReader.GetTiffData(__InfoObj.IAO)
+       
+    def __SaveChannelData(self,Data,Identifier):
+        self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
+        self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+
+
+    def __LoadHueValue(self):
+        
+        print('Getting Value Data')
+        __File=self.__InputFolder+"/2.2.2 Value Normalized Pekel.tiff"
+        self.__ValData=self.TiffReader.GetTiffData(__File)
+        
+        print('Getting Hue Data')
+        __File=self.__InputFolder+"/2.2.1_HUE_Normalized_Pekel.tiff"
+        self.__HueData=self.TiffReader.GetTiffData(__File)
+        
 
     def __ProcessValData(self):
-        print('Getting Value Data')
-        __File=self.__InputFolder+"/Value Data.tiff"
-        __ValData=self.TiffReader.GetTiffData(__File)
-        Water=__ValData*self.IAOData
+        print('Processing Value Channel')
 
-        self.DataViewer.PlotWithGeoRef(Water,'Water val')
-        
-        #value channel constants
-        
-        __T_val=np.nanmedian(Water[Water>0])     #Median 
-        __sig_val=np.nanstd(Water[Water>0])      #standard deviation
-        
-        __n_val=1
+        __T_val=np.nanmedian(self.__ValData)     #Median 
+        __sig_val=np.nanstd(self.__ValData)      #standard deviation
+        __n_val=0.5
+
         self.DataViewer.DebugPrint(__n_val,'nval')
         self.DataViewer.DebugPrint(__T_val,'Tval')
         self.DataViewer.DebugPrint(__sig_val,'Sval')
@@ -37,24 +45,19 @@ class Processor(object):
         self.DataViewer.DebugPrint(__c2_val,'c2hue')
         
         
-        self.__IsWater_val=np.empty(np.shape(__ValData))
+        self.__IsWater_val=np.empty(np.shape(self.__ValData))
         self.__IsWater_val[:]=0
-        self.__IsWater_val[(__ValData<__c1_val) & (__ValData>__c2_val) ]=1
-        self.DataViewer.PlotWithGeoRef(self.__IsWater_val,'self.__IsWater_val')
-        self.TiffWritter.SaveArrayToGeotiff(self.__IsWater_val,'Water+problametic data')
+        self.__IsWater_val[(self.__ValData<__c1_val) & (self.__ValData>__c2_val) ]=1
+        
+        #3.1.1_Is_Water_Val_SF-'+str(__n_val)
+        self.__SaveChannelData(self.__IsWater_val,'3.1.1_Is_Water_Val_SF-'+str(__n_val))
+       
     def __ProcessHUEData(self):
-        print('Getting Hue Data')
-        __File=self.__InputFolder+"/Hue Data.tiff"
-        __HueData=self.TiffReader.GetTiffData(__File)
-        Water=__HueData*(1-self.IAOData) 
-        self.DataViewer.PlotWithGeoRef(Water,'Water hue')
-        self.DataViewer.PlotWithGeoRef(__HueData,'pure hue')
         
+        __T_hue=np.nanmedian(self.__HueData)     #Median
+        __sig_hue=np.nanstd(self.__HueData)      #standard deviation
+        __n_hue=0.5
         
-        __T_hue=np.nanmedian(Water[Water>0])     #Median
-        __sig_hue=np.nanstd(Water[Water>0])      #standard deviation
-        
-        __n_hue=1
         self.DataViewer.DebugPrint(__n_hue,'nhue')
         self.DataViewer.DebugPrint(__T_hue,'Thue')
         self.DataViewer.DebugPrint(__sig_hue,'Shue')
@@ -67,23 +70,22 @@ class Processor(object):
         self.DataViewer.DebugPrint(__c2_hue,'c2hue')
         
         
-        self.__IsWater_hue=np.empty(np.shape(__HueData))
-        self.__IsWater_hue[:]=1
-        self.__IsWater_hue[(__HueData<__c1_hue) & (__HueData>__c2_hue) ]=0  ##Change in condition
-        self.__IsWater_hue[__HueData==0]=1
-        self.DataViewer.PlotWithGeoRef(self.__IsWater_hue,'self.__IsWater_hue')
+        self.__IsWater_hue=np.empty(np.shape(self.__HueData))
+        self.__IsWater_hue[:]=0
+        self.__IsWater_hue[(self.__HueData<__c1_hue) & (self.__HueData>__c2_hue) ]=1  ##Change in condition
+        
+        #3.1.2_Is_Water_Hue_SF-'+str(__n_hue)
+        self.__SaveChannelData(self.__IsWater_hue,'3.1.2_Is_Water_Hue_SF-'+str(__n_hue))
+       
         
     
         
     def GetIsWater(self):
-        
+        self.__LoadHueValue()
         self.__ProcessValData()
-        
-        #self.__ProcessHUEData()
-        '''
+        self.__ProcessHUEData()
         IsWater=np.empty(np.shape(self.__IsWater_val))
         IsWater[:]=0
         IsWater[(self.__IsWater_hue==1) & (self.__IsWater_val==1)]=1
-        self.DataViewer.PlotWithGeoRef(IsWater,'IsWater')
-        self.TiffWritter.SaveArrayToGeotiff(IsWater,'Iswater')
-        '''
+        #3.1.3_IsWater_nhue-str(nHue)_nVal-(nVal)
+        self.__SaveChannelData(IsWater,'3.1.3_IsWater')        
