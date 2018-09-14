@@ -37,8 +37,6 @@ class Info(object):
 
         self.EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
 
-        self.IAO=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_IAO_R1.tif'
-        
         __Date=self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
         
         __Time=self.__DateTimeStamp[1][0:2]+'-'+self.__DateTimeStamp[1][2:4]+'-'+self.__DateTimeStamp[1][4:]
@@ -264,14 +262,6 @@ class ViewData(object):
         
         V=np.linspace(low,high,10,endpoint=True)
         
-        #[row,col]=np.shape(Variable)
-
-        #X=np.arange(0,row)
-
-        #Y=np.arange(0,col)
-        
-
-
         plt.figure(VariableIdentifier)
             
         plt.title(VariableIdentifier)
@@ -282,17 +272,18 @@ class ViewData(object):
 
         plt.yticks(self.__YPS,self.__Lons)
    
-        #plt.pcolor(X, Y, Variable, cmap=plt.jet(), vmin=low, vmax=high)
         plt.imshow(Variable)
 
-        #plt.colorbar()
         plt.colorbar(ticks=V)
         
         plt.savefig(self.OUTdir+VariableIdentifier+'.png')
         
         if (PlotImdt==True):
             plt.show() 
+        
+        #clear memory
         plt.clf()
+        
         plt.close()
             
 class SaveData(object):

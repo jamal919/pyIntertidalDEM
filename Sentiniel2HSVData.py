@@ -6,9 +6,11 @@ class HSVData(object):
 
         __InfoObj=Info(Directory)
         __InputFolder=__InfoObj.OutputDir('TIFF')
+        
         self.RedDataFile=__InputFolder+'/1.2.3_Red_Alpha_Applied.tiff'
         self.GreenDataFile=__InputFolder+'/1.3.3_Green_Alpha_Applied.tiff'
         self.BlueDataFile=__InputFolder+'/1.4.3_Blue_Alpha_Applied.tiff'
+        
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)

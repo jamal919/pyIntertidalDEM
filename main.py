@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os,psutil,sys,gc    
 
 parser = argparse.ArgumentParser()
-parser.add_argument("Dir", help="Directory of HUE and Value Data",type=str)
+parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
 args = parser.parse_args()
 directory=args.Dir
 
@@ -23,7 +23,7 @@ def SaveHUEVALUE(directory):
 def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
     ProcessorObj.GetIsWater()
-
+    
 def SaveWaterMap(directory):
     DataFilterObj=DataFilter(directory)
     DataFilterObj.FilterWaterMap()
@@ -31,7 +31,7 @@ def SaveWaterMap(directory):
 def SaveLatLon(directory):
     GeoDataObj=GeoData(directory)
     GeoDataObj.ShoreLine()
-    
+
 def ModuleRun(directory):
     start_time=time.time()
 
@@ -51,18 +51,20 @@ def ModuleRun(directory):
 
     print('memory use(in GB):', memoryUse)
     
-    #plt.show()
+
+def SetRun(directory):
     
+    DataPath=directory
+    DataFolders=os.listdir(path=DataPath)
+    for df in DataFolders:
+        directory=DataPath+df+'/'
+        ModuleRun(directory)
+        gc.collect()
+    
+
 if __name__=='__main__':
     if sys.version_info[1] < 3.6:
         raise Exception("Must be using Python 3")
     else:
         ModuleRun(directory)
-        '''
-        DataPath='/home/ansary/Sentiniel2/Data/'
-        DataFolders=os.listdir(path=DataPath)
-        for df in DataFolders:
-            directory=DataPath+df+'/'
-            ModuleRun(directory)
-            gc.collect()
-        '''
+        
