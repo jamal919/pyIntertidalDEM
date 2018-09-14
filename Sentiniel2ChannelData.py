@@ -89,9 +89,11 @@ class BandData(object):
         ##1.1.2 Alpha NORM
         self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
         
-        #self.__AlphaBand[self.__AlphaBand<0.1]=0
-        #1.1.3 Alpha Modified
-        #self.__SaveChannelData(self.__AlphaBand,'1.1.3_Alpha_Modified')
+        self.__AlphaBand[self.__AlphaBand<0.1]=0
+        ##1.1.3 Alpha Modified
+        self.__SaveChannelData(self.__AlphaBand,'1.1.3 Alpha Modified')
+        
+        
             
     def __ProcessRedChannel(self):
         __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
