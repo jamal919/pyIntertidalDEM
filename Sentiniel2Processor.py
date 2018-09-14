@@ -13,7 +13,7 @@ class Processor(object):
        
     def __SaveChannelData(self,Data,Identifier):
         self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
-        self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+        #self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
 
     def __LoadHueValue(self):
@@ -26,14 +26,23 @@ class Processor(object):
         __File=self.__InputFolder+"/2.2.1_HUE_Normalized_Pekel.tiff"
         self.__HueData=self.TiffReader.GetTiffData(__File)
         
+        print('Getting Modified alpha')
+        __File=self.__InputFolder+"/1.1.2_Alpha_NORM.tiff"
+        self.__Alpha=self.TiffReader.GetTiffData(__File)
+        self.__Alpha[self.__Alpha<0.1]=1
+        self.__Alpha[self.__Alpha>=0.1]=0
+        self.__Alpha[self.__Alpha==0]=1
+        
+
+        self.__iNan=np.isnan(self.__HueData)
 
     def __ProcessValData(self):
         print('Processing Value Channel')
 
-        __T_val=np.nanmedian(self.__ValData)     #Median 
-        __sig_val=np.nanstd(self.__ValData)      #standard deviation
+        __T_val=np.nanmedian(self.__ValData*self.__Alpha)     #Median 
+        __sig_val=np.nanstd(self.__ValData*self.__Alpha)      #standard deviation
         __n_val=0.5
-
+        
         self.DataViewer.DebugPrint(__n_val,'nval')
         self.DataViewer.DebugPrint(__T_val,'Tval')
         self.DataViewer.DebugPrint(__sig_val,'Sval')
@@ -48,15 +57,18 @@ class Processor(object):
         self.__IsWater_val=np.empty(np.shape(self.__ValData))
         self.__IsWater_val[:]=0
         self.__IsWater_val[(self.__ValData<__c1_val) & (self.__ValData>__c2_val) ]=1
-        
+        self.__IsWater_val=self.__IsWater_val.astype(np.float)
+        self.__IsWater_val[self.__iNan]=np.nan
         #3.1.1_Is_Water_Val_SF-'+str(__n_val)
         self.__SaveChannelData(self.__IsWater_val,'3.1.1_Is_Water_Val_SF-'+str(__n_val))
        
     def __ProcessHUEData(self):
         
-        __T_hue=np.nanmedian(self.__HueData)     #Median
-        __sig_hue=np.nanstd(self.__HueData)      #standard deviation
-        __n_hue=0.5
+        __T_hue=np.nanmedian(self.__HueData*self.__Alpha)     #Median
+        __sig_hue=np.nanstd(self.__HueData*self.__Alpha)      #standard deviation
+        __n_hue=0.4
+        
+        self.DataViewer.PlotWithGeoRef(self.__HueData*self.__Alpha,'mult',PlotImdt=True)
         
         self.DataViewer.DebugPrint(__n_hue,'nhue')
         self.DataViewer.DebugPrint(__T_hue,'Thue')
@@ -71,8 +83,10 @@ class Processor(object):
         
         
         self.__IsWater_hue=np.empty(np.shape(self.__HueData))
-        self.__IsWater_hue[:]=0
-        self.__IsWater_hue[(self.__HueData<__c1_hue) & (self.__HueData>__c2_hue) ]=1  ##Change in condition
+        self.__IsWater_hue[:]=1
+        self.__IsWater_hue[(self.__HueData>__c1_hue) | (self.__HueData<__c2_hue) ]=0  ##Change in condition
+        self.__IsWater_hue=self.__IsWater_hue.astype(np.float)
+        self.__IsWater_hue[self.__iNan]=np.nan
         
         #3.1.2_Is_Water_Hue_SF-'+str(__n_hue)
         self.__SaveChannelData(self.__IsWater_hue,'3.1.2_Is_Water_Hue_SF-'+str(__n_hue))
@@ -88,4 +102,6 @@ class Processor(object):
         IsWater[:]=0
         IsWater[(self.__IsWater_hue==1) & (self.__IsWater_val==1)]=1
         #3.1.3_IsWater_nhue-str(nHue)_nVal-(nVal)
+        IsWater=IsWater.astype(np.float)
+        IsWater[self.__iNan]=np.nan
         self.__SaveChannelData(IsWater,'3.1.3_IsWater')        

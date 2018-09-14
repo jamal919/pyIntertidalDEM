@@ -46,10 +46,9 @@ class BandData(object):
         self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
 
     def __NormalizeData(self,Data):
-        Data=Data.astype(np.float)
-        Data[Data==-10000]=np.nan
         Mean=np.nanmean(Data)
         Std=np.nanstd(Data)
+      
         Data[Data>Mean+3*Std]=Mean+3*Std
         Data[Data<Mean-3*Std]=Mean-3*Std
         Mean=np.nanmean(Data)
@@ -65,6 +64,10 @@ class BandData(object):
         self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
         self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
+    def __NanConversion(self,Data):
+        Data=Data.astype(np.float)
+        Data[Data==-10000]=np.nan
+        return Data
 
     def __ProcessAlphaChannel(self):
         
@@ -75,6 +78,9 @@ class BandData(object):
         self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
         
         self.__AlphaUpSampling()
+
+        self.__AlphaBand=self.__NanConversion(self.__AlphaBand)
+
         ##1.1.1 Alpha CLOUD
         self.__SaveChannelData(self.__AlphaBand,'1.1.1_Alpha_CLM_Upsampled')
 
@@ -83,7 +89,9 @@ class BandData(object):
         ##1.1.2 Alpha NORM
         self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
         
-        
+        #self.__AlphaBand[self.__AlphaBand<0.1]=0
+        #1.1.3 Alpha Modified
+        #self.__SaveChannelData(self.__AlphaBand,'1.1.3_Alpha_Modified')
             
     def __ProcessRedChannel(self):
         __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
@@ -92,6 +100,8 @@ class BandData(object):
         
         __RedBand=self.__CloudMaskCorrection(__RedBand,__CloudMask10m,'Red Band 10m')
         
+        __RedBand=self.__NanConversion(__RedBand)
+
         #1.2.1 Red CLM
         self.__SaveChannelData(__RedBand,'1.2.1_RED_CLM')
 
@@ -112,6 +122,8 @@ class BandData(object):
         
         __GreenBand=self.__CloudMaskCorrection(__GreenBand,__CloudMask10m,'Green Band 10m')
         
+        __GreenBand=self.__NanConversion(__GreenBand)
+
         #1.3.1 Green CLM
         self.__SaveChannelData(__GreenBand,'1.3.1_Green_CLM')
 
@@ -133,6 +145,8 @@ class BandData(object):
         
         __BlueBand=self.__CloudMaskCorrection(__BlueBand,__CloudMask10m,'Blue Band 10m')
         
+        __BlueBand=self.__NanConversion(__BlueBand)
+
         #1.4.1 Blue CLM
         self.__SaveChannelData(__BlueBand,'1.4.1_Blue_CLM')
 
