@@ -38,7 +38,7 @@ def ModuleRun(directory):
     
     SaveRGB(directory)
     SaveHUEVALUE(directory)
-    SaveIsWater(directory)
+    #SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))

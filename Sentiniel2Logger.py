@@ -340,7 +340,7 @@ class SaveData(object):
     def SaveRGBAsImage(self,Identifier,Data):
         start_time=time.time()
         print('Saving RGB data As Image')
-        __RGBImageFile=self.OutputDir+str(Identifier)+'.jpg'
+        __RGBImageFile=self.OutputDir+str(Identifier)+'.png'
         scipy.misc.imsave(__RGBImageFile,Data)
         print('')
-        print("Elapsed Time(JPG Saving): %s seconds " % (time.time() - start_time))
+        print("Elapsed Time(PNG Saving): %s seconds " % (time.time() - start_time))

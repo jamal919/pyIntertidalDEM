@@ -1,4 +1,4 @@
-from Sentiniel2Logger import TiffReader,TiffWritter,Info,ViewData
+from Sentiniel2Logger import TiffReader,TiffWritter,Info,ViewData,SaveData
 import numpy as np,sys 
 
 class HSVData(object):
@@ -14,7 +14,7 @@ class HSVData(object):
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
-
+        self.DataSaver=SaveData(Directory)
 
     def HueValueRGB(self):
     
@@ -29,8 +29,8 @@ class HSVData(object):
         RGB[:,:,2]=B
 
         #2.1.1 RGB
-        self.DataViewer.PlotWithGeoRef(RGB,'2.1.1_RGB')
-        
+        #self.DataViewer.PlotWithGeoRef(RGB,'2.1.1_RGB')
+        self.DataSaver.SaveRGBAsImage('2.1.1_RGB',RGB)
 
 
         iN=np.isnan(R)
