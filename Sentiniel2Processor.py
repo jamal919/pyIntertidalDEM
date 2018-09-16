@@ -13,7 +13,7 @@ class Processor(object):
        
     def __SaveChannelData(self,Data,Identifier):
         self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
-        #self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+        self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
 
     def __LoadHueValue(self):
@@ -31,8 +31,10 @@ class Processor(object):
         __File=self.__InputFolder+"/1.1.2_Alpha_NORM.tiff"
         __Alpha=self.TiffReader.GetTiffData(__File)
         self.__WaterMask=np.zeros(__Alpha.shape)
+        
         self.__WaterMask[__Alpha<0.1]=1
-        self.DataViewer.PlotWithGeoRef(self.__WaterMask,'3.0.0_Water_Mask_Alpha')
+
+        #self.DataViewer.PlotWithGeoRef(self.__WaterMask,'3.0.0_Water_Mask_Alpha')
         
 
 
@@ -40,8 +42,8 @@ class Processor(object):
         print('Processing Value Channel')
 
         __T_val=np.nanmedian(self.__ValData[self.__WaterMask==1])     #Median 
-        __sig_val=np.nanstd(self.__ValData[self.__WaterMask==1])      #standard deviation
-        __n_val=0.1
+        __sig_val=np.nanstd(self.__ValData)      #standard deviation
+        __n_val=0.5
 
         self.DataViewer.DebugPrint(__n_val,'nval')
         self.DataViewer.DebugPrint(__T_val,'Tval')
@@ -65,8 +67,8 @@ class Processor(object):
     def __ProcessHUEData(self):
         
         __T_hue=np.nanmedian(self.__HueData[self.__WaterMask==1])     #Median
-        __sig_hue=np.nanstd(self.__HueData[self.__WaterMask==1])      #standard deviation
-        __n_hue=0.1
+        __sig_hue=np.nanstd(self.__HueData)      #standard deviation
+        __n_hue=0.4
         
         self.DataViewer.DebugPrint(__n_hue,'nhue')
         self.DataViewer.DebugPrint(__T_hue,'Thue')
@@ -94,6 +96,7 @@ class Processor(object):
         
     def GetIsWater(self):
         self.__LoadHueValue()
+        
         self.__ProcessValData()
         self.__ProcessHUEData()
         IsWater=np.empty(np.shape(self.__IsWater_val))
@@ -103,3 +106,4 @@ class Processor(object):
         IsWater[self.__iNan]=np.nan
         #3.1.3_IsWater_nhue-str(nHue)_nVal-(nVal)
         self.__SaveChannelData(IsWater,'3.1.3_IsWater')        
+        

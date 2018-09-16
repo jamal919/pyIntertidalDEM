@@ -38,7 +38,7 @@ def ModuleRun(directory):
     
     SaveRGB(directory)
     SaveHUEVALUE(directory)
-    #SaveIsWater(directory)
+    SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
@@ -55,16 +55,23 @@ def ModuleRun(directory):
 def SetRun(directory):
     
     DataPath=directory
-    DataFolders=os.listdir(path=DataPath)
-    for df in DataFolders:
-        directory=DataPath+df+'/'
-        ModuleRun(directory)
-        gc.collect()
-    
+    Zones=['T46QBK','T46QCK','T46QCL','T46QBL']
+    for zone in Zones:
+        DataPath=DataPath+str(zone)+'/'
+        print('Executing Module for zone:'+str(zone))
+        DataFolders=os.listdir(path=DataPath)
+        for df in DataFolders:
+            dirc=DataPath+df+'/'
+            ModuleRun(dirc)
+            gc.collect()
+        DataPath=directory
+
+
 
 if __name__=='__main__':
     if sys.version_info[1] < 3.6:
         raise Exception("Must be using Python 3")
     else:
         ModuleRun(directory)
+        #SetRun(directory)
         

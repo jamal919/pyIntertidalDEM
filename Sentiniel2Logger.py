@@ -32,7 +32,7 @@ class Info(object):
         self.__DirectoryStrings=list(filter(bool,self.__DirectoryStrings))
         
         self.__IdentifierStrings=self.__DirectoryStrings[-1].split('_')    #split the specific folder data identifiers
-        
+       
         self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
 
         self.EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
