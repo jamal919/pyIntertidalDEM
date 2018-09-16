@@ -8,7 +8,7 @@ class BandData(object):
         self.__RedBandFile=Files[3]
         self.__GreenBandFile=Files[2]
         self.__BlueBandFile=Files[0]
-        self.__NIRBandFile=Files[3]
+        self.__VegBandFile=Files[1]
         self.__AlphaBandFile=Files[4]
         self.__CloudMask10mFile=Files[5]
         self.__CloudMask20mFile=Files[6]
@@ -86,6 +86,7 @@ class BandData(object):
 
         self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
         
+        self.__AlphaBand=np.around(self.__AlphaBand,decimals=2)
         ##1.1.2 Alpha NORM
         self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
         
@@ -161,11 +162,10 @@ class BandData(object):
 
         #1.4.3 Blue Alpha Applied
         self.__SaveChannelData(__BlueBand,'1.4.3_Blue_Alpha_Applied')
-
         
     def Data(self):
         self.__ProcessAlphaChannel()
         self.__ProcessRedChannel()
         self.__ProcessGreenChannel()
         self.__ProcessBlueChannel()
-    
+       

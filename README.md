@@ -1,6 +1,6 @@
-# USEAGE: $./main.py  /path/to/unzipped/directory
+  USEAGE: $./main.py  /path/to/unzipped/directory
 
-# Python--3.6.5
+  Python--3.6.5
 
     Name             Version         Use                                      
 --------------     -------------    ---------------------------
