@@ -5,17 +5,19 @@ class BandData(object):
     def __init__(self,Directory):
         InfoObj=Info(Directory)
         Files=InfoObj.DisplayFileList()
-        self.__RedBandFile=Files[3]
-        self.__GreenBandFile=Files[2]
+        self.__RedBandFile=Files[2]
+        self.__GreenBandFile=Files[1]
         self.__BlueBandFile=Files[0]
-        self.__VegBandFile=Files[1]
-        self.__AlphaBandFile=Files[4]
-        self.__CloudMask10mFile=Files[5]
-        self.__CloudMask20mFile=Files[6]
+        self.__AlphaBandFile=Files[3]
+        self.__CloudMask10mFile=Files[4]
+        self.__CloudMask20mFile=Files[5]
+        
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
         self.DataSaver=SaveData(Directory)
+
+   
 
     def __GetDecimalsWithEndBit(self,MaxValue):
         
@@ -42,22 +44,16 @@ class BandData(object):
         
         return BandData 
     
-    def __AlphaUpSampling(self):
-        self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
+        
 
     def __NormalizeData(self,Data):
+        
         Mean=np.nanmean(Data)
         Std=np.nanstd(Data)
       
         Data[Data>Mean+3*Std]=Mean+3*Std
         Data[Data<Mean-3*Std]=Mean-3*Std
-        Mean=np.nanmean(Data)
-        Std=np.nanstd(Data)
-        
-        Data=(Data-Mean)/Std
-        Min=(np.nanmin(Data))
-        Data=Data+((-1)*(Min))
-        Data=Data/np.nanmax(Data)
+        Data=(Data-np.nanmin(Data))/(np.nanmax(Data)-np.nanmin(Data))
         return Data
 
     def __SaveChannelData(self,Data,Identifier):
@@ -72,25 +68,26 @@ class BandData(object):
     def __ProcessAlphaChannel(self):
         
         self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
-
+        
         __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask
         
         self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
         
-        self.__AlphaUpSampling()
-
+        self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
+        
         self.__AlphaBand=self.__NanConversion(self.__AlphaBand)
-
+        
+        
         ##1.1.1 Alpha CLOUD
         self.__SaveChannelData(self.__AlphaBand,'1.1.1_Alpha_CLM_Upsampled')
 
         self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
         
-        self.__AlphaBand=np.around(self.__AlphaBand,decimals=2)
+        #self.__AlphaBand=np.around(self.__AlphaBand,decimals=2)
         ##1.1.2 Alpha NORM
         self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
         
-        self.__AlphaBand[self.__AlphaBand<0.1]=0
+        self.__AlphaBand[self.__AlphaBand<0.5*np.nanstd(self.__AlphaBand)]=0
         ##1.1.3 Alpha Modified
         self.__SaveChannelData(self.__AlphaBand,'1.1.3 Alpha Modified')
         
@@ -168,4 +165,4 @@ class BandData(object):
         self.__ProcessRedChannel()
         self.__ProcessGreenChannel()
         self.__ProcessBlueChannel()
-       
+        
