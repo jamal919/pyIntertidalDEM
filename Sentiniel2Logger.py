@@ -2,11 +2,15 @@ import time,os,simplekml,shapefile,matplotlib.pyplot as plt,numpy as np,sys,gc,c
 from osgeo import gdal,osr
 
 class Info(object):
+    '''
+        The purpose of this class is to collect useable data from the input data
+    '''
+
 
     def __init__(self,directory):
-        
         self.directory=directory                                           #The directory that contains the files(MASKS and Band Files)
 
+        #SECTION: Creation of output Log for the data
         self.__OutputFolder=str(os.getcwd())+'/Output_log/'
 
         if not os.path.exists(self.__OutputFolder):
@@ -26,6 +30,9 @@ class Info(object):
 
             os.mkdir(self.CSVDir)
         
+        
+        #SECTION: Information of the data
+        #The existance of EDG_R1 file is necessary in data folder for the program to work properly
 
         self.__DirectoryStrings=str(self.directory).split('/')             #split the directory to extract specific folder
         
@@ -48,6 +55,28 @@ class Info(object):
        
 
     def OutputDir(self,Type):
+        '''
+            Returns output directory based on file type
+            The structre of Output directory is as follows:
+
+                            Output_log
+                                |
+                                |
+                     ------------------------
+                     |          |           |
+                    PNG        CSV         TIFF
+                     |          |           |
+                    Zones      Zones       Zones
+                     |          |           |
+                DataString   DataString   DataString
+                     |          |           |
+            Stepwise Results  Final      Stepwise Results
+                             Lat Lon
+            
+            *A sample Zone looks like: T45QYE
+
+            *A sample Data string look like: SENTINEL2B_20171103-043722-293_L2A_T45QYG_D_V1-4
+        '''
         if(Type==str('PNG')):
             __OutputFolder=self.PNGdir+str(self.Zone)+'/'
             if not os.path.exists(__OutputFolder):
@@ -66,17 +95,11 @@ class Info(object):
             os.mkdir(__OutputDir)
         return __OutputDir
 
-    def EdgeMaskDir(self):
-        return self.EdgeMask
-
-    def __Banner(self):
-        print('')
-        print('*********************************************************************************************')
-        print('****************************        SENTINIEL2        ***************************************')
-        print('*********************************************************************************************')
-        print('')
     
     def __DisplayProductInformation(self):
+        '''
+            Displays information about the data
+        '''
         
         print('    Satelite Name  :'+ self.__IdentifierStrings[0])
         
@@ -91,7 +114,22 @@ class Info(object):
         print('    Metadata Type  :'+ self.__IdentifierStrings[4]+' Version:'+self.__IdentifierStrings[5])
         
     def __DataFileList(self):
-        
+
+        '''
+            Lists the files to be used for processing
+            For our purposes 4 bands and 2 masks are used:
+
+            |---------+------+------------+------------+
+            | Band No | Type | Wavelength | Resolution |
+            |---------+------+------------+------------+
+            | B2      | Blue | 490nm      |         10 |
+            | B4      | Red  | 665nm      |         10 |
+            | B8      | NIR  | 842nm      |         10 |
+            | B12     | SWIR | 2190nm     |         20 |
+            |---------+------+------------+------------+
+
+            The two Cloud masks contains cloud information for 10m and 20m resolutions 
+        '''
         BandFileB2=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B2.tif'
         
         BandFileB4=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
@@ -106,32 +144,35 @@ class Info(object):
         
         self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB12,CloudMask10m,CloudMask20m]
 
-    def __PrintFileList(self):
-        print('Listing Files To Be used')
-        
-        for f in self.__Files:
-            print('')
-            print(f)
-            print('')
-
-    def DisplayFileList(self):
-
-        self.__Banner()
     
+    def DisplayFileList(self):
+        '''
+            Display's data information
+
+            Creates the List of files to be used
+
+            Returns the file List
+        '''
         self.__DisplayProductInformation()        
         
         self.__DataFileList()
-    
-        self.__PrintFileList()
         
         return self.__Files 
 
+
+
 class TiffReader(object):
 
+    '''
+        The purpose of this class is to contain necessary functions to Read GeoTiff data
+    '''
     def __init__(self,Directory):
         self.Directory=Directory
     
     def ReadTiffData(self,File):
+        '''
+            Reads the Dataset
+        '''
         gdal.UseExceptions()
         try:
             __DataSet=gdal.Open(File,gdal.GA_ReadOnly)        #taking readonly data
@@ -144,6 +185,9 @@ class TiffReader(object):
         return __DataSet
     
     def GetTiffData(self,File):
+        '''
+            Returns single Raster data as array
+        '''
         __DataSet=self.ReadTiffData(File)
    
         if(__DataSet.RasterCount==1):                          
@@ -166,16 +210,31 @@ class TiffReader(object):
         else:
             print('The file contains Multiple bands')
             sys.exit(1)
-    
+
+
 class TiffWritter(object):
+
+    '''
+        The purpose of this class is to write Array data as Geotiff
+    '''
 
     def __init__(self,Directory):
         self.Directory=Directory
+
         InfoObj=Info(self.Directory)
-        self.OutputDir=InfoObj.OutputDir('TIFF')
-        self.GeoTiffDir=InfoObj.EdgeMaskDir() 
+        self.OutputDir=InfoObj.OutputDir('TIFF')   #Gets the Tiff data output directory creates by Info class
+        
+        self.GeoTiffDir=InfoObj.EdgeMask           #Gets the edgemask file
     
     def __ProjectionAndTransfromData(self):
+        '''
+            GeoTiff mainly consists of three parts:
+            >Projection Data
+            >Geo Transformation Data
+            >Raster Data(Array data/ values )
+            
+            According to the given datafolder, the edge mask is used to collect the Projection and geotransformation data   
+        '''
         TiffReaderObj=TiffReader(self.Directory)
         DataSet=TiffReaderObj.ReadTiffData(self.GeoTiffDir)
         self.__Projection=DataSet.GetProjection()
@@ -183,10 +242,17 @@ class TiffWritter(object):
         DataSet=None
     
     def SaveArrayToGeotiff(self,Array,Identifier):
-        self.__ProjectionAndTransfromData()
+        '''
+            Saving array Data as geotiff
+        '''
+
+        self.__ProjectionAndTransfromData()        # Gets projection and geotransform
+
         print('*Saving '+str(Identifier)+'.tiff')
         start_time=time.time()
-        GeoTiffFileName = str(Identifier)+'.tiff'
+        
+        GeoTiffFileName = str(Identifier)+'.tiff'   # Output geotiff file name according to identifier
+        
         Driver = gdal.GetDriverByName('GTiff')
         OutputDataset = Driver.Create(self.OutputDir+GeoTiffFileName,np.shape(Array)[0],np.shape(Array)[1], 1,gdal.GDT_Float32)
         OutputDataset.GetRasterBand(1).WriteArray(Array)
@@ -198,11 +264,21 @@ class TiffWritter(object):
 
 class ViewData(object):
 
+    '''
+        The purpose of this class is to view specific data as Plot or Print the data
+    '''
+
     def __init__(self,Directory):
+       
         __InfoObj=Info(Directory)
+       
         Reader=TiffReader(Directory)
+       
         self.OUTdir=__InfoObj.OutputDir('PNG')
-        __NoDataFile=__InfoObj.EdgeMaskDir()
+       
+       ##The following section is used to collect the Lat Lon of Plot axis from pixel
+       ##----------------------------------------------------------------------------
+        __NoDataFile=__InfoObj.EdgeMask
         __DataSet=Reader.ReadTiffData(__NoDataFile)
         GeoTransForm=__DataSet.GetGeoTransform()
         Projection=__DataSet.GetProjection()
@@ -242,8 +318,13 @@ class ViewData(object):
         self.__YPS=yps
         self.__Lats=np.round(Latitude,decimals=4) 
         self.__Lons=np.round(Longitude,decimals=4)
-        
+        ##--------------------------------------------------------------------------------------------------------------------------------------------
+
+
     def DebugPrint(self,Variable,VariableIdentifier):
+        '''
+            Prints a varible as respect to indentification
+        '''
         print('DEBUG OBJECT:'+VariableIdentifier)
         print('*********************************************************************************************')
         print(Variable)
@@ -253,6 +334,11 @@ class ViewData(object):
 
     def PlotWithGeoRef(self,Variable,VariableIdentifier,PlotImdt=False):
         
+        '''
+            Plots the data with Geo reference
+        '''
+
+
         print('plotting data:'+VariableIdentifier)
         low=np.nanmin(Variable)
         high=np.nanmax(Variable)
@@ -284,6 +370,10 @@ class ViewData(object):
         plt.close()
             
 class SaveData(object):
+    '''
+        The purpose of this class is to save the Lat Lon data as KML and CSV
+    '''
+
     def __init__(self,Directory):
         InfoObj=Info(Directory)
         self.OutputDir=InfoObj.OutputDir('CSV')
@@ -292,6 +382,9 @@ class SaveData(object):
         self.Zone=InfoObj.Zone
 
     def SaveDataAsCSV(self,Identifier,Data):
+        '''
+            Saves Lat Lon Data as CSV in a Given Format
+        '''
         start_time=time.time()
         __Information=[self.DateTime,self.SateliteName,self.Zone]  
         print('Saving '+str(Identifier)+'.csv')
@@ -305,22 +398,11 @@ class SaveData(object):
         print('')
         print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
     
-    def SaveImageDataAsCSV(self,Identifier,Data):
-        start_time=time.time()
-        print('Saving '+str(Identifier)+'.csv')
-        csvfile=self.OutputDir+str(Identifier)+'.csv'
-        with open(csvfile,"w") as output:
-            writer=csv.writer(output,lineterminator='\n')
-            for index in range(0,np.shape(Data)[0]):
-                writer.writerow(Data[index].tolist())
-       
-        print('')
-        print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
-    
-
-
-
     def SaveDataAsKML(self,Identifier,Data):
+        '''
+            Saves Lat Lon Data as KML 
+        '''
+
         start_time = time.time()
         outputfile=self.OutputDir+str(Identifier)+'.kml'
         kml=simplekml.Kml()
@@ -334,10 +416,4 @@ class SaveData(object):
         print('')
         print("Elapsed Time(kml Saving): %s seconds " % (time.time() - start_time))
    
-    def SaveRGBAsImage(self,Identifier,Data):
-        start_time=time.time()
-        print('Saving RGB data As Image')
-        __RGBImageFile=self.OutputDir+str(Identifier)+'.png'
-        scipy.misc.imsave(__RGBImageFile,Data)
-        print('')
-        print("Elapsed Time(PNG Saving): %s seconds " % (time.time() - start_time))
+    
