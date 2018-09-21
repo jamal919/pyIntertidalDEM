@@ -1,10 +1,15 @@
-from Sentiniel2Logger import Info,TiffReader,TiffWritter,ViewData,SaveData
+from Sentiniel2Logger import Info,TiffReader,TiffWritter,ViewData
 import numpy as np,sys 
 
 class BandData(object):
+    '''
+        The purpose of this class is to Process the Band data
+    '''
     def __init__(self,Directory):
+
         InfoObj=Info(Directory)
         Files=InfoObj.DisplayFileList()
+        #Files to be used
         self.__RedBandFile=Files[2]
         self.__GreenBandFile=Files[1]
         self.__BlueBandFile=Files[0]
@@ -15,12 +20,45 @@ class BandData(object):
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
-        self.DataSaver=SaveData(Directory)
-
-   
-
-    def __GetDecimalsWithEndBit(self,MaxValue):
         
+   
+    
+    def __CloudMaskCorrection(self,BandData,MaskData,Identifier):
+        
+        
+        '''
+            A cloud mask for each resolution (CLM_R1.tif ou CLM_R2.tif) contains the following 8 Bit data
+                - bit 0 (1) : all clouds except the thinnest and all shadows
+                - bit 1 (2) : all clouds (except the thinnest)
+                - bit 2 (4) : clouds detected via mono-temporal thresholds
+                - bit 3 (8) : clouds detected via multi-temporal thresholds
+                - bit 4 (16) : thinnest clouds
+                - bit 5 (32) : cloud shadows cast by a detected cloud
+                - bit 6 (64) : cloud shadows cast by a cloud outside image
+                - bit 7 (128) : high clouds detected by 1.38 µm
+            
+            An aggresive cloud masking is done based on the bit 0 (all clouds except the thinnest and all shadows)
+            
+            The algorithm for cloud detecting all clouds except the thinnest and all shadows is as follows:
+            > Get the maximum value of CLM File
+            > Get the decimal numbers that ends with 1 upto the maximum value
+            > Set the pixels contains these decimals to negative Reflectance and return the data file  
+        
+        '''
+        print('Processing Cloud Mask With:'+Identifier)                                                                               
+        
+        __Decimals=self.__GetDecimalsWithEndBit(np.amax(MaskData))
+
+        for v in range(0,len(__Decimals)):
+            BandData[MaskData==__Decimals[v]]=-10000                #Exclude data point Identifier= - Reflectance value
+        
+        return BandData 
+    
+    
+    def __GetDecimalsWithEndBit(self,MaxValue):
+        '''
+            Detects all the values that contains endbit set to 1
+        '''
         __results=[]
         
         for i in range(0,MaxValue+1):
@@ -33,21 +71,24 @@ class BandData(object):
         
         return __results
         
-    def __CloudMaskCorrection(self,BandData,MaskData,Identifier):
-        
-        print('Processing Cloud Mask With:'+Identifier)                                                                               
-        
-        __Decimals=self.__GetDecimalsWithEndBit(np.amax(MaskData))
-
-        for v in range(0,len(__Decimals)):
-            BandData[MaskData==__Decimals[v]]=-10000                #Exclude data point Identifier= - Reflectance value
-        
-        return BandData 
     
-        
+    def __NanConversion(self,Data):
+        '''
+            Converts negative Relfectance values(Cloud and No data values) to Nan
+        '''
+        Data=Data.astype(np.float)
+        Data[Data==-10000]=np.nan
+        return Data
 
     def __NormalizeData(self,Data):
-        
+        '''
+            Normalizes the data as follows:
+            > Cuts of data at 3rd Standard Deviation from mean to avoid highly exceptional valued data
+                    
+                                Data - Min
+            > Data Normalized=-------------
+                                Max - Min
+        '''        
         Mean=np.nanmean(Data)
         Std=np.nanstd(Data)
       
@@ -56,17 +97,25 @@ class BandData(object):
         Data=(Data-np.nanmin(Data))/(np.nanmax(Data)-np.nanmin(Data))
         return Data
 
+
+
     def __SaveChannelData(self,Data,Identifier):
+        '''
+            Save's the Channel data as TIFF and PNG
+        '''
         self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
         self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
-    def __NanConversion(self,Data):
-        Data=Data.astype(np.float)
-        Data[Data==-10000]=np.nan
-        return Data
-
+    
     def __ProcessAlphaChannel(self):
-        
+        '''
+            The alpha band is taken to be B12 resolution 20m and processed as follows
+            > Correct values with 20m cloud mask
+            > Upsample the data to 10m
+            > Set negative reflectance values to Nan
+            > Normalize the data
+            > Cut off data which are less than half of Standard deviation to zero
+        '''
         self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
         
         __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask
@@ -83,7 +132,6 @@ class BandData(object):
 
         self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
         
-        #self.__AlphaBand=np.around(self.__AlphaBand,decimals=2)
         ##1.1.2 Alpha NORM
         self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
         
@@ -94,6 +142,15 @@ class BandData(object):
         
             
     def __ProcessRedChannel(self):
+        '''
+            The Red band is taken to be B8 resolution 10m and processed as follows
+            > Correct values with 10m cloud mask
+            > Set negative reflectance values to Nan
+            > Normalize the data
+            > Apply alpha to data as Data=(1- Alpha)+ Data*Alpha
+        '''
+        
+
         __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
 
         __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask
@@ -116,6 +173,14 @@ class BandData(object):
         self.__SaveChannelData(__RedBand,'1.2.3_Red_Alpha_Applied')
  
     def __ProcessGreenChannel(self):
+        '''
+            The Green band is taken to be B4 resolution 10m and processed as follows
+            > Correct values with 10m cloud mask
+            > Set negative reflectance values to Nan
+            > Normalize the data
+            > Apply alpha to data as Data=(1- Alpha)+ Data*Alpha
+        '''
+        
         __GreenBand=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
 
         __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask
@@ -139,6 +204,14 @@ class BandData(object):
 
 
     def __ProcessBlueChannel(self):
+        '''
+            The Blue band is taken to be B2 resolution 10m and processed as follows
+            > Correct values with 10m cloud mask
+            > Set negative reflectance values to Nan
+            > Normalize the data
+            > Apply alpha to data as Data=(1- Alpha)+ Data*Alpha
+        '''
+        
         __BlueBand=self.TiffReader.GetTiffData(self.__BlueBandFile)  #Read
 
         __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask
@@ -161,6 +234,30 @@ class BandData(object):
         self.__SaveChannelData(__BlueBand,'1.4.3_Blue_Alpha_Applied')
         
     def Data(self):
+        '''
+            Process all the channel data step by step and save the following
+            
+            1.1-Alpha
+                --1.1.1 Alpha Band CLOUD mask applied and upsampled
+                --1.1.2 Alpha Normalized
+                --1.1.3 Alpha Modified
+            
+            1.2-Red
+                --1.2.1 Red Cloud mask applied
+                --1.2.2 Red Normalized
+                --1.2.3 Red Alpha Applied
+            
+            1.3-Green
+                --1.3.1 Green Cloud mask applied
+                --1.3.2 Green Normalized
+                --1.3.3 Green Alpha Applied
+
+            1.4-Blue
+                --1.4.1 Blue Cloud mask applied
+                --1.4.2 Blue Normalized
+                --1.4.3 Blue Alpha Applied
+
+        '''
         self.__ProcessAlphaChannel()
         self.__ProcessRedChannel()
         self.__ProcessGreenChannel()
