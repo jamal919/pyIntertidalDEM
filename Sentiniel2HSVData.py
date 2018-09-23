@@ -3,11 +3,15 @@ from Sentiniel2Logger import TiffReader,TiffWritter,Info,ViewData
 import numpy as np,sys 
 
 class HSVData(object):
+    '''
+        The purpose of this class is to compute Hue and Value channel Data from RGB
+    '''
     def __init__(self,Directory):
 
         __InfoObj=Info(Directory)
         __InputFolder=__InfoObj.OutputDir('TIFF')
         
+        #INPUT RGB
         self.RedDataFile=__InputFolder+'/1.2.3_Red_Alpha_Applied.tiff'
         self.GreenDataFile=__InputFolder+'/1.3.3_Green_Alpha_Applied.tiff'
         self.BlueDataFile=__InputFolder+'/1.4.3_Blue_Alpha_Applied.tiff'
@@ -17,7 +21,27 @@ class HSVData(object):
         self.DataViewer=ViewData(Directory)
        
     def HueValueRGB(self):
-    
+        '''
+            Hue and Value Channel Data Are computed by Pekel et al. (2014) as follows:
+            
+            Value=max(R,G,B)
+            
+                | =0                           ; if R=G=B
+                |
+                |           G-B
+                | =(60x-------------)mod 360   ; if V=R
+                |       V-min(R,G,B)
+                |
+                |           B-R
+            Hue=| =(60x-------------)+120      ; if V=G
+                |       V-min(R,G,B)
+                |           
+                |           R-G
+                | =(60x-------------)+240      ; if V=B
+                |       V-min(R,G,B)
+
+        '''
+
         print('Computing Hue and Value channel from RGB data')
         R=self.TiffReader.GetTiffData(self.RedDataFile)
         G=self.TiffReader.GetTiffData(self.GreenDataFile)

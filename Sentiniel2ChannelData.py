@@ -6,6 +6,8 @@ class BandData(object):
         The purpose of this class is to Process the Band data
     '''
     def __init__(self,Directory):
+        
+        self.Directory=Directory ##--
 
         InfoObj=Info(Directory)
         Files=InfoObj.DisplayFileList()
@@ -16,7 +18,8 @@ class BandData(object):
         self.__AlphaBandFile=Files[3]
         self.__CloudMask10mFile=Files[4]
         self.__CloudMask20mFile=Files[5]
-        
+        self.__B11file=Files[6]
+
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
@@ -103,8 +106,8 @@ class BandData(object):
         '''
             Save's the Channel data as TIFF and PNG
         '''
-        self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
-        self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+        self.DataViewer.PlotWithGeoRef(Data,str(Identifier),PlotImdt=True)
+        #self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
     
     def __ProcessAlphaChannel(self):
@@ -126,16 +129,23 @@ class BandData(object):
         
         self.__AlphaBand=self.__NanConversion(self.__AlphaBand)
         
+        B11=self.TiffReader.GetTiffData(self.__B11file)
+        B11=self.__CloudMaskCorrection(B11,__CloudMask20m,'B11 Band 20m')
+        B11=np.array(B11.repeat(2,axis=0).repeat(2,axis=1))
+        B11=self.__NanConversion(B11)
         
+        self.__AlphaBand=self.__AlphaBand+B11
+
+
         ##1.1.1 Alpha CLOUD
-        self.__SaveChannelData(self.__AlphaBand,'1.1.1_Alpha_CLM_Upsampled')
+        #self.__SaveChannelData(self.__AlphaBand,'1.1.1_Alpha_CLM_Upsampled')
 
         self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
         
         ##1.1.2 Alpha NORM
-        self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
+        #self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
         
-        self.__AlphaBand[self.__AlphaBand<0.5*np.nanstd(self.__AlphaBand)]=0
+        self.__AlphaBand[self.__AlphaBand<np.nanstd(self.__AlphaBand)]=0
         ##1.1.3 Alpha Modified
         self.__SaveChannelData(self.__AlphaBand,'1.1.3 Alpha Modified')
         
@@ -232,7 +242,33 @@ class BandData(object):
 
         #1.4.3 Blue Alpha Applied
         self.__SaveChannelData(__BlueBand,'1.4.3_Blue_Alpha_Applied')
+    
+    def ListAlphaValues(self):
+
+        DirectoryStrings=str(self.Directory).split('/')             #split the directory to extract specific folder
         
+        DirectoryStrings=list(filter(bool,DirectoryStrings))
+
+        self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
+        
+        __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask
+        
+        self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
+        
+        self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
+        
+        self.__AlphaBand=self.__NanConversion(self.__AlphaBand)
+        
+        self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
+        self.__AlphaBand[self.__AlphaBand<0.5*np.nanstd(self.__AlphaBand)]=0
+        Thresh=0.5*np.nanstd(self.__AlphaBand)
+        print(DirectoryStrings[-1]+'            '+str(Thresh))
+        with open("/media/ansary/My Passport/WORKFOLDER/s2_bob_dem/ThreshAlpha.txt", "a") as text_file:
+            text_file.write(DirectoryStrings[-1]+'            '+str(Thresh)+"\n")
+        self.DataViewer.PlotWithGeoRef(self.__AlphaBand,DirectoryStrings[-1]+'__Alpha__Check')
+
+
+
     def Data(self):
         '''
             Process all the channel data step by step and save the following
@@ -259,7 +295,8 @@ class BandData(object):
 
         '''
         self.__ProcessAlphaChannel()
-        self.__ProcessRedChannel()
-        self.__ProcessGreenChannel()
-        self.__ProcessBlueChannel()
+        #self.__ProcessRedChannel()
+        #self.__ProcessGreenChannel()
+        #self.__ProcessBlueChannel()
+        #self.ListAlphaValues()
         

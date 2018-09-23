@@ -37,7 +37,7 @@ def ModuleRun(directory):
 
     
     SaveRGB(directory)
-    SaveHUEVALUE(directory)
+    #SaveHUEVALUE(directory)
     #SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
@@ -72,6 +72,6 @@ if __name__=='__main__':
     if sys.version_info[1] < 3.6:
         raise Exception("Must be using Python 3")
     else:
-        #ModuleRun(directory)
-        SetRun(directory)
+        ModuleRun(directory)
+        #SetRun(directory)
         
