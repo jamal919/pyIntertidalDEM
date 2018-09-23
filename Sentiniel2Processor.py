@@ -14,9 +14,16 @@ class Processor(object):
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
        
-    def __SaveChannelData(self,Data,Identifier):
+     ##Saving Necessary Results
+
+    def __SaveChannelData(self,Data,Identifier,SaveGeoTiff=False):
+        '''
+            Save's the Channel data as TIFF and PNG
+        '''
         self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
-        #self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+        
+        if(SaveGeoTiff==True):
+            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
 
     def __LoadHueValue(self):
@@ -25,100 +32,127 @@ class Processor(object):
         '''
         
         print('Getting Value Data')
-        __File=self.__InputFolder+"/2.2.2 Value Normalized Pekel.tiff"
-        self.__ValData=self.TiffReader.GetTiffData(__File)
+        __File=self.__InputFolder+"2.2.2 Value Normalized Pekel.tiff"
+        self.Value=self.TiffReader.GetTiffData(__File)
         
         print('Getting Hue Data')
-        __File=self.__InputFolder+"/2.2.1_HUE_Normalized_Pekel.tiff"
-        self.__HueData=self.TiffReader.GetTiffData(__File)
-        
-        self.__iNan=np.isnan(self.__HueData)
-
+        __File=self.__InputFolder+"2.2.1_HUE_Normalized_Pekel.tiff"
+        self.Hue=self.TiffReader.GetTiffData(__File)
+    
+    def __CreateWaterMask(self): 
+        '''
+            A thresh hold is selected for which Alpha is clipped to 0 to form a water mask
+        '''   
         print('Getting Alpha Channel')
-
-        __File=self.__InputFolder+"/1.1.3 Alpha Modified.tiff"
+        __File=self.__InputFolder+"1.1.3 Alpha Band N.tiff"
+        Alpha=self.TiffReader.GetTiffData(__File)
         
-        self.__Alpha=self.TiffReader.GetTiffData(__File)
+        
+        print('Creating WaterMask')
+        self.iNan=np.isnan(Alpha)
+
+        self.WaterMask=np.zeros(Alpha.shape)
+        
+        self.WaterMask[Alpha<0.5*np.nanstd(Alpha)]=1  ##Changeable
+        
+        self.WaterMask[self.iNan]=np.nan
+        
+        self.__SaveChannelData(self.WaterMask,'3.1.0 Water Mask')
     
+    def __MaskHueValue(self):
+        print('Masking Value Channel with water mask')
+        self.Value[self.WaterMask==0]=np.nan
+        self.__SaveChannelData(self.Value,'3.1.1 Masked Value Channel')
 
+        print('Inverse Masking Value Channel with water mask')
+        self.Hue[self.WaterMask==1]=np.nan
+        self.__SaveChannelData(self.Hue,'3.1.3 Inversed Masked Hue Channel')
 
-    def __ProcessValData(self):
-        print('Processing Value Channel')
+    def __FormBinaryWaterValueChannel(self):
+        '''
+            BW_value is formed as:
+            
+            BW_value=(I_value (i, j) < T value + n value . σ value ) ∧ (I value (i, j) > T value − n value . σ value )
 
-        __T_val=np.nanmedian(self.__ValData[self.__Alpha==0])     #Median 
-        __sig_val=np.nanstd(self.__ValData)      #standard deviation
+            Here I_value= Water Mask applied Value channel
+               T_value is Median of I_value 
+               S_value is standard deviation of I_value
+        '''
+        print('Calculating Binary Water Value Channel')
+        T=np.nanmedian(self.Value)     #Median 
+        S=np.nanstd(self.Value)      #standard deviation
         
-        __T_Land=np.nanmedian(self.__ValData[self.__Alpha!=0])
+        n=5                            #Scaling Factor
 
-        __n_val=(__T_val-__T_Land)*__sig_val
-        #__n_val=0.5
-        '''
-        self.DataViewer.DebugPrint(__n_val,'nval')
-        self.DataViewer.DebugPrint(__T_val,'Tval')
-        self.DataViewer.DebugPrint(__sig_val,'Sval')
-        self.DataViewer.DebugPrint(__T_Land,'MinLand')       
-        '''
         #Value channel conditional constant 
-        #__c1_val=__T_val+__n_val*__sig_val
-        __c2_val=__T_val-__n_val*__sig_val
-        #self.DataViewer.DebugPrint(__c1_val,'c1hue')
-        #self.DataViewer.DebugPrint(__c2_val,'c2hue')
+        c1=T+n*S
+        c2=T-n*S
+
+        print('T='+str(T)+'   S='+str(S)+'     n='+str(n)+'     c1='+str(c1)+'        c2='+str(c2))
+
+        self.BW_Value=np.zeros(self.Value.shape)
+        self.BW_Value[(self.Value<c1) & (self.Value>c2) ]=1
         
+        self.BW_Value=self.BW_Value.astype(np.float)
+        self.BW_Value[self.iNan]=np.nan
         
-        self.__IsWater_val=np.empty(np.shape(self.__ValData))
-        self.__IsWater_val[:]=0
-        #self.__IsWater_val[(self.__ValData<__c1_val) & (self.__ValData>__c2_val) ]=1
-        self.__IsWater_val[self.__ValData>__c2_val]=1
-        self.__IsWater_val=self.__IsWater_val.astype(np.float)
-        self.__IsWater_val[self.__iNan]=np.nan
-        #3.1.1_Is_Water_Val_SF-'+str(__n_val)
-        self.__SaveChannelData(self.__IsWater_val,'3.1.1_Is_Water_Val_SF-'+str(__n_val))
-       
-    def __ProcessHUEData(self):
-        
-        __T_hue=np.nanmedian(self.__HueData[self.__Alpha==0])     #Median
-        __sig_hue=np.nanstd(self.__HueData)      #standard deviation
-        
-        __T_Land=np.nanmedian(self.__HueData[self.__Alpha!=0])
-        
-        __n_hue=(__T_Land-__T_hue)*__sig_hue
-        
-        self.DataViewer.DebugPrint(__n_hue,'nhue')
-        self.DataViewer.DebugPrint(__T_hue,'Thue')
-        self.DataViewer.DebugPrint(__sig_hue,'Shue')
-        
-        #HUE channel conditional constant 
-        __c1_hue=__T_hue+__sig_hue*__n_hue
-        #__c2_hue=__T_hue-__sig_hue*__n_hue
-        
-        self.DataViewer.DebugPrint(__c1_hue,'c1hue')
-        #self.DataViewer.DebugPrint(__c2_hue,'c2hue')
-        
-        
-        self.__IsWater_hue=np.empty(np.shape(self.__HueData))
-        self.__IsWater_hue[:]=1
-        #self.__IsWater_hue[(self.__HueData>__c1_hue) | (self.__HueData<__c2_hue) ]=1  ##Change in condition
-        self.__IsWater_hue[(self.__HueData>__c1_hue)]=0  ##Change in condition
-        self.__IsWater_hue=self.__IsWater_hue.astype(np.float)
-        self.__IsWater_hue[self.__iNan]=np.nan
-        
-        #3.1.2_Is_Water_Hue_SF-'+str(__n_hue)
-        self.__SaveChannelData(self.__IsWater_hue,'3.1.2_Is_Water_Hue_SF-'+str(__n_hue))
-       
-        
+        self.__SaveChannelData(self.BW_Value,'3.1.2 Binary Water Value Channel:SF='+str(n))
     
+    def __FormBinaryWaterHueChannel(self):
         
-    def GetIsWater(self):
-        self.__LoadHueValue()
+        '''
+            BW_hue is formed as:
+            
+            BW_hue=¬((I hue (i, j) < T hue + n hue . σ hue ) ∧ (I hue (i, j) > T hue − n hue . σ hue ))
+
+            Here I hue= Inverse Water Mask applied Hue channel
+               T hue is Median of I Hue 
+               S hue is standard deviation of I HUe
+        '''
+        print('Calculating Binary Water Hue Channel')
+        T=np.nanmedian(self.Hue)       #Median 
+        S=np.nanstd(self.Hue)          #standard deviation
         
-        self.__ProcessValData()
-        self.__ProcessHUEData()
+        n=1                            #Scaling Factor
+
+        #Value channel conditional constant 
+        c1=T+n*S
+        c2=T-n*S
+
+        print('T='+str(T)+'   S='+str(S)+'     n='+str(n)+'     c1='+str(c1)+'        c2='+str(c2))
+
+        self.BW_Hue=np.ones(self.Hue.shape)
+        self.BW_Hue[(self.Hue<c1) & (self.Hue>c2) ]=0
         
-        IsWater=np.empty(np.shape(self.__IsWater_val))
-        IsWater[:]=0
-        IsWater[(self.__IsWater_hue==1) & (self.__IsWater_val==1)]=1
+        self.BW_Hue=self.BW_Hue.astype(np.float)
+        self.BW_Hue[self.iNan]=np.nan
+        
+        self.__SaveChannelData(self.BW_Hue,'3.1.4 Binary Water Hue Channel:SF='+str(n))
+        
+    def __AndOperationWaterMap(self):
+        IsWater=np.zeros(self.BW_Hue.shape)
+
+        IsWater[(self.BW_Hue==1) & (self.BW_Value==1)]=1
         IsWater=IsWater.astype(np.float)
-        IsWater[self.__iNan]=np.nan
-        #3.1.3_IsWater_nhue-str(nHue)_nVal-(nVal)
-        self.__SaveChannelData(IsWater,'3.1.3_IsWater')        
+        IsWater[self.iNan]=np.nan
+        
+        self.__SaveChannelData(IsWater,'3.1.5 Binary Water Map')        
+        
+        
+    def GetBinaryWaterMap(self):
+        '''
+            Produce the binary water map as follows
+            > Load Hue and Value Channel Data
+            > Create Water Map from Alpha Channel
+            > Mask Value Inverse Mask Hue
+            > Binary Value Water 
+            > Birany Hue Water
+            > And operation
+        '''
+        self.__LoadHueValue()
+        self.__CreateWaterMask()
+        self.__MaskHueValue()
+        self.__FormBinaryWaterValueChannel()
+        self.__FormBinaryWaterHueChannel()
+        self.__AndOperationWaterMap()
         

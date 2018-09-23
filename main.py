@@ -22,7 +22,7 @@ def SaveHUEVALUE(directory):
 
 def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
-    ProcessorObj.GetIsWater()
+    ProcessorObj.GetBinaryWaterMap()
     
 def SaveWaterMap(directory):
     DataFilterObj=DataFilter(directory)
@@ -36,9 +36,9 @@ def ModuleRun(directory):
     start_time=time.time()
 
     
-    SaveRGB(directory)
+    #SaveRGB(directory)
     #SaveHUEVALUE(directory)
-    #SaveIsWater(directory)
+    SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
@@ -55,7 +55,8 @@ def ModuleRun(directory):
 def SetRun(directory):
     
     DataPath=directory
-    Zones=['T45QYE', 'T45RXK', 'T45RXH', 'T45QXF', 'T46QBK', 'T46QBL', 'T45QXG', 'T45QYG', 'T46QCM', 'T46QCK', 'T45RXJ', 'T45QYF', 'T46RBN', 'T45RYH', 'T46RCN', 'T46QCL', 'T45RYJ', 'T46QBM']
+    #Zones=['T45QYE', 'T46QBK', 'T46QBL', 'T46QCK','T46QCL']
+    Zones=['T46QCK']
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
         print('Executing Module for zone:'+str(zone))

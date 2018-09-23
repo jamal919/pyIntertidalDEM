@@ -12,19 +12,21 @@ class BandData(object):
         InfoObj=Info(Directory)
         Files=InfoObj.DisplayFileList()
         #Files to be used
-        self.__RedBandFile=Files[2]
+        self.__RedBandFile=Files[0]
         self.__GreenBandFile=Files[1]
-        self.__BlueBandFile=Files[0]
-        self.__AlphaBandFile=Files[3]
-        self.__CloudMask10mFile=Files[4]
-        self.__CloudMask20mFile=Files[5]
-        self.__B11file=Files[6]
-
+        self.__BlueBandFile=Files[2]
+        
+        self.__SWIRB11=Files[3]
+        self.__SWIRB12=Files[4]
+        
+        self.__CloudMask10mFile=Files[5]
+        self.__CloudMask20mFile=Files[6]
+       
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.DataViewer=ViewData(Directory)
-        
-   
+   #-----------------------------------------------------------------------------------------------------------------     
+   ##Section-- Cloud masking
     
     def __CloudMaskCorrection(self,BandData,MaskData,Identifier):
         
@@ -74,7 +76,9 @@ class BandData(object):
         
         return __results
         
-    
+    #-------------------------------------------------------------------------------------------------------------------
+    #Section- Preprocessing
+
     def __NanConversion(self,Data):
         '''
             Converts negative Relfectance values(Cloud and No data values) to Nan
@@ -86,217 +90,181 @@ class BandData(object):
     def __NormalizeData(self,Data):
         '''
             Normalizes the data as follows:
-            > Cuts of data at 3rd Standard Deviation from mean to avoid highly exceptional valued data
                     
                                 Data - Min
             > Data Normalized=-------------
                                 Max - Min
         '''        
-        Mean=np.nanmean(Data)
-        Std=np.nanstd(Data)
-      
-        Data[Data>Mean+3*Std]=Mean+3*Std
-        Data[Data<Mean-3*Std]=Mean-3*Std
         Data=(Data-np.nanmin(Data))/(np.nanmax(Data)-np.nanmin(Data))
+        return Data
+    
+
+    def __PreprocessAlpha(self,Data):
+        '''
+            Preprocess SWIR Band Data as follows:
+            > Apply cloud mask
+            > Nan convert negative reflectance values
+            > Normalize Data
+            > Upsample Data
+        '''
+        __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask        
+        Data=self.__CloudMaskCorrection(Data,__CloudMask20m,'SWIR Band 20m')
+
+        Data=self.__NanConversion(Data)
+
+        Data=self.__NormalizeData(Data)
+
+        Data=np.array(Data.repeat(2,axis=0).repeat(2,axis=1))
+
         return Data
 
 
+    def __PreprocessChannel(self,Data):
+        '''
+            Preprocess RGB Band Data as follows:
+            > Apply cloud mask
+            > Nan convert negative reflectance values
+            > Normalize Data
+        '''
+        __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask       
+        Data=self.__CloudMaskCorrection(Data,__CloudMask10m,'RGB Band 10m')
 
-    def __SaveChannelData(self,Data,Identifier):
+        Data=self.__NanConversion(Data)
+
+        Data=self.__NormalizeData(Data)
+
+        return Data
+
+    ##Saving Necessary Results
+
+    def __SaveChannelData(self,Data,Identifier,SaveGeoTiff=False):
         '''
             Save's the Channel data as TIFF and PNG
         '''
-        self.DataViewer.PlotWithGeoRef(Data,str(Identifier),PlotImdt=True)
-        #self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
+        self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
+        
+        if(SaveGeoTiff==True):
+            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier))
 
     
-    def __ProcessAlphaChannel(self):
+
+
+
+
+    #Section Main
+
+    def __CreateAlphaChannel(self):
         '''
-            The alpha band is taken to be B12 resolution 20m and processed as follows
-            > Correct values with 20m cloud mask
-            > Upsample the data to 10m
-            > Set negative reflectance values to Nan
-            > Normalize the data
-            > Cut off data which are less than half of Standard deviation to zero
+            Combine SWIR bands to create Alpha channel
         '''
-        self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
+        B11=self.TiffReader.GetTiffData(self.__SWIRB11) #Read
+        B12=self.TiffReader.GetTiffData(self.__SWIRB12)
         
-        __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask
+        B11=self.__PreprocessAlpha(B11)
+        B12=self.__PreprocessAlpha(B12)
         
-        self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
+        self.__SaveChannelData(B11,'1.1.1 B11 Band C-U-N')
+        self.__SaveChannelData(B11,'1.1.2 B12 Band C-U-N')
         
-        self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
+        self.Alpha=B11+B12
+        self.Alpha=self.__NormalizeData(self.Alpha)
+        self.__SaveChannelData(self.Alpha,'1.1.3 Alpha Band N',SaveGeoTiff=True)
         
-        self.__AlphaBand=self.__NanConversion(self.__AlphaBand)
-        
-        B11=self.TiffReader.GetTiffData(self.__B11file)
-        B11=self.__CloudMaskCorrection(B11,__CloudMask20m,'B11 Band 20m')
-        B11=np.array(B11.repeat(2,axis=0).repeat(2,axis=1))
-        B11=self.__NanConversion(B11)
-        
-        self.__AlphaBand=self.__AlphaBand+B11
+        '''
+        iNan=np.isnan(self.Alpha)
 
+        WaterMaskSTD=np.zeros(self.Alpha.shape)
+        #WaterMaskTHRESH=np.zeros(self.Alpha.shape)
 
-        ##1.1.1 Alpha CLOUD
-        #self.__SaveChannelData(self.__AlphaBand,'1.1.1_Alpha_CLM_Upsampled')
-
-        self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
+        WaterMaskSTD[self.Alpha<np.nanstd(self.Alpha)]=1
+        WaterMaskSTD[iNan]=np.nan
+        self.__SaveChannelData(WaterMaskSTD,'1.5.3 Alpha 1st STD With min value'+str(np.nanstd(self.Alpha)))
         
-        ##1.1.2 Alpha NORM
-        #self.__SaveChannelData(self.__AlphaBand,'1.1.2_Alpha_NORM')
-        
-        self.__AlphaBand[self.__AlphaBand<np.nanstd(self.__AlphaBand)]=0
-        ##1.1.3 Alpha Modified
-        self.__SaveChannelData(self.__AlphaBand,'1.1.3 Alpha Modified')
+        WaterMaskTHRESH[self.Alpha<0.1]=1
+        WaterMaskTHRESH[iNan]=np.nan
+        self.__SaveChannelData(WaterMaskTHRESH,'1.5.2 WaterMASKThresh-0.1')
+        '''
         
         
             
     def __ProcessRedChannel(self):
-        '''
-            The Red band is taken to be B8 resolution 10m and processed as follows
-            > Correct values with 10m cloud mask
-            > Set negative reflectance values to Nan
-            > Normalize the data
-            > Apply alpha to data as Data=(1- Alpha)+ Data*Alpha
-        '''
+        RED=self.TiffReader.GetTiffData(self.__RedBandFile)
+       
+        RED=self.__PreprocessChannel(RED) 
+        self.__SaveChannelData(RED,'1.2.1 Red C-N')
         
-
-        __RedBand=self.TiffReader.GetTiffData(self.__RedBandFile)  #Read
-
-        __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask
+        RED=(1-self.Alpha)+(RED*self.Alpha)
+        self.__SaveChannelData(RED,'1.2.2 Red A',SaveGeoTiff=True)
         
-        __RedBand=self.__CloudMaskCorrection(__RedBand,__CloudMask10m,'Red Band 10m')
-        
-        __RedBand=self.__NanConversion(__RedBand)
-
-        #1.2.1 Red CLM
-        self.__SaveChannelData(__RedBand,'1.2.1_RED_CLM')
-
-        __RedBand=self.__NormalizeData(__RedBand)
-
-        #1.2.2 Red NORM
-        self.__SaveChannelData(__RedBand,'1.2.2_RED_NORM')
-
-        __RedBand=(1-self.__AlphaBand)+(self.__AlphaBand*__RedBand)
-
-        #1.2.3 Red Alpha Applied
-        self.__SaveChannelData(__RedBand,'1.2.3_Red_Alpha_Applied')
- 
     def __ProcessGreenChannel(self):
-        '''
-            The Green band is taken to be B4 resolution 10m and processed as follows
-            > Correct values with 10m cloud mask
-            > Set negative reflectance values to Nan
-            > Normalize the data
-            > Apply alpha to data as Data=(1- Alpha)+ Data*Alpha
-        '''
+        GREEN=self.TiffReader.GetTiffData(self.__GreenBandFile)
+       
+        GREEN=self.__PreprocessChannel(GREEN) 
+        self.__SaveChannelData(GREEN,'1.3.1 Green C-N')
         
-        __GreenBand=self.TiffReader.GetTiffData(self.__GreenBandFile)  #Read
-
-        __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask
-        
-        __GreenBand=self.__CloudMaskCorrection(__GreenBand,__CloudMask10m,'Green Band 10m')
-        
-        __GreenBand=self.__NanConversion(__GreenBand)
-
-        #1.3.1 Green CLM
-        self.__SaveChannelData(__GreenBand,'1.3.1_Green_CLM')
-
-        __GreenBand=self.__NormalizeData(__GreenBand)
-
-        #1.3.2 Green NORM
-        self.__SaveChannelData(__GreenBand,'1.3.2_Green_NORM')
-
-        __GreenBand=(1-self.__AlphaBand)+(self.__AlphaBand*__GreenBand)
-
-        #1.3.3 Green Alpha Applied
-        self.__SaveChannelData(__GreenBand,'1.3.3_Green_Alpha_Applied')
-
-
-    def __ProcessBlueChannel(self):
-        '''
-            The Blue band is taken to be B2 resolution 10m and processed as follows
-            > Correct values with 10m cloud mask
-            > Set negative reflectance values to Nan
-            > Normalize the data
-            > Apply alpha to data as Data=(1- Alpha)+ Data*Alpha
-        '''
-        
-        __BlueBand=self.TiffReader.GetTiffData(self.__BlueBandFile)  #Read
-
-        __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask
-        
-        __BlueBand=self.__CloudMaskCorrection(__BlueBand,__CloudMask10m,'Blue Band 10m')
-        
-        __BlueBand=self.__NanConversion(__BlueBand)
-
-        #1.4.1 Blue CLM
-        self.__SaveChannelData(__BlueBand,'1.4.1_Blue_CLM')
-
-        __BlueBand=self.__NormalizeData(__BlueBand)
-
-        #1.4.2 Blue NORM
-        self.__SaveChannelData(__BlueBand,'1.4.2_Blue_NORM')
-
-        __BlueBand=(1-self.__AlphaBand)+(self.__AlphaBand*__BlueBand)
-
-        #1.4.3 Blue Alpha Applied
-        self.__SaveChannelData(__BlueBand,'1.4.3_Blue_Alpha_Applied')
+        GREEN=(1-self.Alpha)+(GREEN*self.Alpha)
+        self.__SaveChannelData(GREEN,'1.3.2 Green A',SaveGeoTiff=True)
     
-    def ListAlphaValues(self):
-
-        DirectoryStrings=str(self.Directory).split('/')             #split the directory to extract specific folder
+    def __ProcessBlueChannel(self):
+        BLUE=self.TiffReader.GetTiffData(self.__BlueBandFile)
+       
+        BLUE=self.__PreprocessChannel(BLUE) 
+        self.__SaveChannelData(BLUE,'1.4.1 Blue C-N')
         
-        DirectoryStrings=list(filter(bool,DirectoryStrings))
-
-        self.__AlphaBand=self.TiffReader.GetTiffData(self.__AlphaBandFile) #Read
-        
-        __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask
-        
-        self.__AlphaBand=self.__CloudMaskCorrection(self.__AlphaBand,__CloudMask20m,'Alpha Band 20m')
-        
-        self.__AlphaBand=np.array(self.__AlphaBand.repeat(2,axis=0).repeat(2,axis=1))
-        
-        self.__AlphaBand=self.__NanConversion(self.__AlphaBand)
-        
-        self.__AlphaBand=self.__NormalizeData(self.__AlphaBand)
-        self.__AlphaBand[self.__AlphaBand<0.5*np.nanstd(self.__AlphaBand)]=0
-        Thresh=0.5*np.nanstd(self.__AlphaBand)
-        print(DirectoryStrings[-1]+'            '+str(Thresh))
-        with open("/media/ansary/My Passport/WORKFOLDER/s2_bob_dem/ThreshAlpha.txt", "a") as text_file:
-            text_file.write(DirectoryStrings[-1]+'            '+str(Thresh)+"\n")
-        self.DataViewer.PlotWithGeoRef(self.__AlphaBand,DirectoryStrings[-1]+'__Alpha__Check')
-
+        BLUE=(1-self.Alpha)+(BLUE*self.Alpha)
+        self.__SaveChannelData(BLUE,'1.4.2 Blue A',SaveGeoTiff=True)
+    
 
 
     def Data(self):
         '''
-            Process all the channel data step by step and save the following
+            Processing all the channel data step by step and saving the following:
             
+            List of PNG
+
             1.1-Alpha
-                --1.1.1 Alpha Band CLOUD mask applied and upsampled
-                --1.1.2 Alpha Normalized
-                --1.1.3 Alpha Modified
+                --1.1.1 B11 Band C-U-N
+                --1.1.2 B12 Band C-U-N
+                --1.1.3 Alpha Band N
+                
             
             1.2-Red
-                --1.2.1 Red Cloud mask applied
-                --1.2.2 Red Normalized
-                --1.2.3 Red Alpha Applied
+                --1.2.1 Red C-N
+                --1.2.2 Red A
             
             1.3-Green
-                --1.3.1 Green Cloud mask applied
-                --1.3.2 Green Normalized
-                --1.3.3 Green Alpha Applied
-
+                --1.3.1 Green C-N
+                --1.3.2 Green A
+                
             1.4-Blue
-                --1.4.1 Blue Cloud mask applied
-                --1.4.2 Blue Normalized
-                --1.4.3 Blue Alpha Applied
+                --1.4.1 Blue C-N
+                --1.4.2 Blue A
+            
+            List of TIFF
+            1.1-Alpha
+                --1.1.3 Alpha Band N
+            1.2-Red
+                --1.2.2 Red A
+            
+            1.3-Green
+                --1.3.2 Green A
+                
+            1.4-Blue
+                --1.4.2 Blue A
+             
+            **
+            Notations:
 
+                C= Cloud Mask Applied
+                U= Upsampled
+                N= Normalized
+                A= Alpha Applied
+                 
+            **
+                
         '''
-        self.__ProcessAlphaChannel()
-        #self.__ProcessRedChannel()
-        #self.__ProcessGreenChannel()
-        #self.__ProcessBlueChannel()
-        #self.ListAlphaValues()
+        self.__CreateAlphaChannel()
+        self.__ProcessRedChannel()
+        self.__ProcessGreenChannel()
+        self.__ProcessBlueChannel()
         

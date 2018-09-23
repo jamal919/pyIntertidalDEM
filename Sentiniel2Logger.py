@@ -125,26 +125,29 @@ class Info(object):
             | B2      | Blue | 490nm      |         10 |
             | B4      | Red  | 665nm      |         10 |
             | B8      | NIR  | 842nm      |         10 |
+            | B11     | SWIR | 1610nm     |         20 |
             | B12     | SWIR | 2190nm     |         20 |
             |---------+------+------------+------------+
 
             The two Cloud masks contains cloud information for 10m and 20m resolutions 
         '''
-        BandFileB2=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B2.tif'
+        BlueBandFile=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B2.tif'
         
-        BandFileB4=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
+        RedBandFile=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
 
-        BandFileB8=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B8.tif'
+        GreenBandFile=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B8.tif'
 
-        BandFileB12=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B12.tif'
+        SWIRBandB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B11.tif'
+
+        SWIRBandB12=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B12.tif'
 
         CloudMask10m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R1.tif'
         
         CloudMask20m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R2.tif'
         
-        BandFileB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B11.tif'
+        
 
-        self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB12,CloudMask10m,CloudMask20m,BandFileB11]
+        self.__Files=[RedBandFile,GreenBandFile,BlueBandFile,SWIRBandB11,SWIRBandB12,CloudMask10m,CloudMask20m]
 
     
     def DisplayFileList(self):
@@ -417,5 +420,4 @@ class SaveData(object):
 
         print('')
         print("Elapsed Time(kml Saving): %s seconds " % (time.time() - start_time))
-   
     
