@@ -12,9 +12,9 @@ class HSVData(object):
         __InputFolder=__InfoObj.OutputDir('TIFF')
         
         #INPUT RGB
-        self.RedDataFile=__InputFolder+'/1.2.3_Red_Alpha_Applied.tiff'
-        self.GreenDataFile=__InputFolder+'/1.3.3_Green_Alpha_Applied.tiff'
-        self.BlueDataFile=__InputFolder+'/1.4.3_Blue_Alpha_Applied.tiff'
+        self.RedDataFile=__InputFolder+'1.2.2 Red A.tiff'
+        self.GreenDataFile=__InputFolder+'1.3.2 Green A.tiff'
+        self.BlueDataFile=__InputFolder+'1.4.2 Blue A.tiff'
         
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
@@ -53,7 +53,7 @@ class HSVData(object):
         RGB[:,:,2]=B
 
         #2.1.1 RGB
-        self.DataViewer.PlotWithGeoRef(RGB,'2.1.1_RGB')
+        self.DataViewer.PlotWithGeoRef(RGB,'2.1.1 RGB')
         
         
         iN=np.isnan(R)
@@ -61,9 +61,15 @@ class HSVData(object):
 
         Max=np.maximum(np.maximum(R,G),B) ##Val
         Max[iN]=np.nan
-        Min=np.minimum(np.minimum(R,G),B) ##min
-        Min[iN]=np.nan
+
         
+
+        Min=np.minimum(np.minimum(R,G),B) ##min
+
+        Min[iN]=np.nan 
+        
+        #Min=(Min-np.nanmin(Min))/(np.nanmax(Min)-np.nanmin(Min)) #norm
+
         #Max==Min segment
         Chroma=Max-Min
         Chroma[iN]=np.nan
@@ -83,8 +89,10 @@ class HSVData(object):
 
         Hue[iN]=np.nan
         
-        Hue=Hue/np.nanmax(Hue)
+        Hue=(Hue-np.nanmin(Hue))/(np.nanmax(Hue)-np.nanmin(Hue))
         
+        Max=(Max-np.nanmin(Max))/(np.nanmax(Max)-np.nanmin(Max)) #norm
+
         #2.2.1 HUE Normalized Pekel
         self.TiffWritter.SaveArrayToGeotiff(Hue,'2.2.1_HUE_Normalized_Pekel')
         self.DataViewer.PlotWithGeoRef(Hue,'2.2.1_HUE_Normalized_Pekel')
