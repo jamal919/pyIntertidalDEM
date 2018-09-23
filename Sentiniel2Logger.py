@@ -142,7 +142,9 @@ class Info(object):
         
         CloudMask20m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R2.tif'
         
-        self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB12,CloudMask10m,CloudMask20m]
+        BandFileB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B11.tif'
+
+        self.__Files=[BandFileB2,BandFileB4,BandFileB8,BandFileB12,CloudMask10m,CloudMask20m,BandFileB11]
 
     
     def DisplayFileList(self):

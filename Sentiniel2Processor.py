@@ -2,10 +2,13 @@ import time,matplotlib,numpy as np,gc,sys
 from osgeo import gdal
 from Sentiniel2Logger import TiffReader,TiffWritter,ViewData,Info
 class Processor(object):
-    
+    '''
+        Process the Hue and Value channel to construct a binary waterMap
+    '''
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
         self.__InputFolder=__InfoObj.OutputDir('TIFF')
+        
         self.DataViewer=ViewData(Directory)
         self.Directory=Directory
         self.TiffReader=TiffReader(Directory)
@@ -17,6 +20,9 @@ class Processor(object):
 
 
     def __LoadHueValue(self):
+        '''
+            Reading Saved data and forming a data mask from Alpha Data
+        '''
         
         print('Getting Value Data')
         __File=self.__InputFolder+"/2.2.2 Value Normalized Pekel.tiff"
@@ -25,38 +31,44 @@ class Processor(object):
         print('Getting Hue Data')
         __File=self.__InputFolder+"/2.2.1_HUE_Normalized_Pekel.tiff"
         self.__HueData=self.TiffReader.GetTiffData(__File)
+        
         self.__iNan=np.isnan(self.__HueData)
 
         print('Getting Alpha Channel')
-        __File=self.__InputFolder+"/1.1.2_Alpha_NORM.tiff"
-        __Alpha=self.TiffReader.GetTiffData(__File)
-        self.__DataMask=np.zeros(__Alpha.shape)
-        self.__DataSTD=np.nanstd(__Alpha)
-        self.__DataMask[__Alpha<0.5*self.__DataSTD]=1
+
+        __File=self.__InputFolder+"/1.1.3 Alpha Modified.tiff"
         
+        self.__Alpha=self.TiffReader.GetTiffData(__File)
+    
 
 
     def __ProcessValData(self):
         print('Processing Value Channel')
 
-        __T_val=np.nanmedian(self.__ValData[self.__DataMask==1])     #Median 
+        __T_val=np.nanmedian(self.__ValData[self.__Alpha==0])     #Median 
         __sig_val=np.nanstd(self.__ValData)      #standard deviation
-        __n_val=0.5
+        
+        __T_Land=np.nanmedian(self.__ValData[self.__Alpha!=0])
 
+        __n_val=(__T_val-__T_Land)*__sig_val
+        #__n_val=0.5
+        '''
         self.DataViewer.DebugPrint(__n_val,'nval')
         self.DataViewer.DebugPrint(__T_val,'Tval')
         self.DataViewer.DebugPrint(__sig_val,'Sval')
-        
+        self.DataViewer.DebugPrint(__T_Land,'MinLand')       
+        '''
         #Value channel conditional constant 
-        __c1_val=__T_val+__n_val*__sig_val
+        #__c1_val=__T_val+__n_val*__sig_val
         __c2_val=__T_val-__n_val*__sig_val
-        self.DataViewer.DebugPrint(__c1_val,'c1hue')
-        self.DataViewer.DebugPrint(__c2_val,'c2hue')
+        #self.DataViewer.DebugPrint(__c1_val,'c1hue')
+        #self.DataViewer.DebugPrint(__c2_val,'c2hue')
         
         
         self.__IsWater_val=np.empty(np.shape(self.__ValData))
         self.__IsWater_val[:]=0
-        self.__IsWater_val[(self.__ValData<__c1_val) & (self.__ValData>__c2_val) ]=1
+        #self.__IsWater_val[(self.__ValData<__c1_val) & (self.__ValData>__c2_val) ]=1
+        self.__IsWater_val[self.__ValData>__c2_val]=1
         self.__IsWater_val=self.__IsWater_val.astype(np.float)
         self.__IsWater_val[self.__iNan]=np.nan
         #3.1.1_Is_Water_Val_SF-'+str(__n_val)
@@ -64,9 +76,12 @@ class Processor(object):
        
     def __ProcessHUEData(self):
         
-        __T_hue=np.nanmedian(self.__HueData[self.__DataMask==1])     #Median
+        __T_hue=np.nanmedian(self.__HueData[self.__Alpha==0])     #Median
         __sig_hue=np.nanstd(self.__HueData)      #standard deviation
-        __n_hue=0.4
+        
+        __T_Land=np.nanmedian(self.__HueData[self.__Alpha!=0])
+        
+        __n_hue=(__T_Land-__T_hue)*__sig_hue
         
         self.DataViewer.DebugPrint(__n_hue,'nhue')
         self.DataViewer.DebugPrint(__T_hue,'Thue')
@@ -74,15 +89,16 @@ class Processor(object):
         
         #HUE channel conditional constant 
         __c1_hue=__T_hue+__sig_hue*__n_hue
-        __c2_hue=__T_hue-__sig_hue*__n_hue
+        #__c2_hue=__T_hue-__sig_hue*__n_hue
         
         self.DataViewer.DebugPrint(__c1_hue,'c1hue')
-        self.DataViewer.DebugPrint(__c2_hue,'c2hue')
+        #self.DataViewer.DebugPrint(__c2_hue,'c2hue')
         
         
         self.__IsWater_hue=np.empty(np.shape(self.__HueData))
         self.__IsWater_hue[:]=1
-        self.__IsWater_hue[(self.__HueData>__c1_hue) | (self.__HueData<__c2_hue) ]=0  ##Change in condition
+        #self.__IsWater_hue[(self.__HueData>__c1_hue) | (self.__HueData<__c2_hue) ]=1  ##Change in condition
+        self.__IsWater_hue[(self.__HueData>__c1_hue)]=0  ##Change in condition
         self.__IsWater_hue=self.__IsWater_hue.astype(np.float)
         self.__IsWater_hue[self.__iNan]=np.nan
         
@@ -97,6 +113,7 @@ class Processor(object):
         
         self.__ProcessValData()
         self.__ProcessHUEData()
+        
         IsWater=np.empty(np.shape(self.__IsWater_val))
         IsWater[:]=0
         IsWater[(self.__IsWater_hue==1) & (self.__IsWater_val==1)]=1
