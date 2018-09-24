@@ -23,7 +23,7 @@ def SaveHUEVALUE(directory):
 def SaveIsWater(directory):
     ProcessorObj=Processor(directory)
     ProcessorObj.GetBinaryWaterMap()
-    
+
 def SaveWaterMap(directory):
     DataFilterObj=DataFilter(directory)
     DataFilterObj.FilterWaterMap()
@@ -55,8 +55,9 @@ def ModuleRun(directory):
 def SetRun(directory):
     
     DataPath=directory
-    #Zones=['T45QYE', 'T46QBK', 'T46QBL', 'T46QCK','T46QCL']
-    Zones=['T46QCK']
+    
+    Zones=['T45QYE', 'T46QBK', 'T46QBL', 'T46QCK','T46QCL']
+    
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
         print('Executing Module for zone:'+str(zone))
@@ -73,6 +74,6 @@ if __name__=='__main__':
     if sys.version_info[1] < 3.6:
         raise Exception("Must be using Python 3")
     else:
-        ModuleRun(directory)
-        #SetRun(directory)
+        #ModuleRun(directory)
+        SetRun(directory)
         
