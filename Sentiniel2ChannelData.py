@@ -170,22 +170,6 @@ class BandData(object):
         self.Alpha=self.__NormalizeData(self.Alpha)
         self.__SaveChannelData(self.Alpha,'1.1.3 Alpha Band N',SaveGeoTiff=True)
         
-        '''
-        iNan=np.isnan(self.Alpha)
-
-        WaterMaskSTD=np.zeros(self.Alpha.shape)
-        #WaterMaskTHRESH=np.zeros(self.Alpha.shape)
-
-        WaterMaskSTD[self.Alpha<np.nanstd(self.Alpha)]=1
-        WaterMaskSTD[iNan]=np.nan
-        self.__SaveChannelData(WaterMaskSTD,'1.5.3 Alpha 1st STD With min value'+str(np.nanstd(self.Alpha)))
-        
-        WaterMaskTHRESH[self.Alpha<0.1]=1
-        WaterMaskTHRESH[iNan]=np.nan
-        self.__SaveChannelData(WaterMaskTHRESH,'1.5.2 WaterMASKThresh-0.1')
-        '''
-        
-        
             
     def __ProcessRedChannel(self):
         RED=self.TiffReader.GetTiffData(self.__RedBandFile)
