@@ -67,7 +67,7 @@ def SetRun(directory):
     
     DataPath=directory
     
-    Zones=['T45QYE', 'T46QBK', 'T46QBL', 'T46QCK','T46QCL']
+    Zones=['T45QYE','T46QBK','T46QBL','T46QCK']
     
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
