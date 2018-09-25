@@ -337,7 +337,7 @@ class ViewData(object):
     
  
 
-    def PlotWithGeoRef(self,Variable,VariableIdentifier,PlotImdt=False):
+    def PlotWithGeoRef(self,Variable,VariableIdentifier,PlotImdt=False,TestSaveDir=None):
         
         '''
             Plots the data with Geo reference
@@ -363,9 +363,12 @@ class ViewData(object):
         plt.imshow(Variable)
 
         plt.colorbar(ticks=V)
-        
-        plt.savefig(self.OUTdir+VariableIdentifier+'.png')
-        
+
+        if TestSaveDir is None:
+            plt.savefig(self.OUTdir+VariableIdentifier+'.png')
+        else:
+            plt.savefig(str(TestSaveDir)+VariableIdentifier+'.png')
+
         if (PlotImdt==True):
             plt.show() 
         

@@ -7,6 +7,8 @@ from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os,psutil,sys,gc    
 
+from Sentiniel2AlphaCheck_Testing import Test_Processor
+
 parser = argparse.ArgumentParser()
 parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
 args = parser.parse_args()
@@ -32,15 +34,24 @@ def SaveLatLon(directory):
     GeoDataObj=GeoData(directory)
     GeoDataObj.ShoreLine()
 
+def Test_Alpha(directory):
+    TestOBJ=Test_Processor(directory)
+    TestOBJ.GetBinaryWaterMap()
+
+
+
 def ModuleRun(directory):
     start_time=time.time()
 
     
     #SaveRGB(directory)
     #SaveHUEVALUE(directory)
-    SaveIsWater(directory)
+    #SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
+
+    Test_Alpha(directory)
+    
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
     pid = os.getpid()
