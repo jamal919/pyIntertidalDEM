@@ -6,6 +6,7 @@ class Test_Processor(object):
         Process the Hue and Value channel to construct a binary waterMap
     '''
     def __init__(self,Directory):
+        self.Dir=Directory
         __InfoObj=Info(Directory)
         self.__InputFolder=__InfoObj.OutputDir('TIFF')
         
@@ -254,16 +255,18 @@ class Test_Processor(object):
             > Birany Hue Water
             > And operation
         '''
-        #self.__PlotHistogramOfAlpha()
+        self.__PlotHistogramOfAlpha()
+        print(self.Dir)
         
-        self.__LoadHueValue()
         WSF=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]
         for sc in WSF:
+            self.__LoadHueValue()
             self.__CreateWaterMask(sc)
             self.__MaskHueValue()
             self.__FormBinaryWaterValueChannel()
-            SF=[0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,1.1,1.2,1.3,1.4,1.5]
+            SF=[0.4,0.5,0.6]
             for sf in SF: 
                 self.__FormBinaryWaterHueChannel(sf)
                 self.__AndOperationWaterMap()
+        print(self.Dir+'   Done')
         
