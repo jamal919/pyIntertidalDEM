@@ -17,7 +17,6 @@ class BandData(object):
         self.__BlueBandFile=Files[2]
         
         self.__SWIRB11=Files[3]
-        self.__SWIRB12=Files[4]
         
         self.__CloudMask10mFile=Files[5]
         self.__CloudMask20mFile=Files[6]
@@ -158,17 +157,14 @@ class BandData(object):
             Combine SWIR bands to create Alpha channel
         '''
         B11=self.TiffReader.GetTiffData(self.__SWIRB11) #Read
-        B12=self.TiffReader.GetTiffData(self.__SWIRB12)
-        
+       
         B11=self.__PreprocessAlpha(B11)
-        B12=self.__PreprocessAlpha(B12)
         
         self.__SaveChannelData(B11,'1.1.1 B11 Band C-U-N')
-        self.__SaveChannelData(B11,'1.1.2 B12 Band C-U-N')
         
-        self.Alpha=B11+B12
+        self.Alpha=B11
         self.Alpha=self.__NormalizeData(self.Alpha)
-        self.__SaveChannelData(self.Alpha,'1.1.3 Alpha Band N',SaveGeoTiff=True)
+        self.__SaveChannelData(self.Alpha,'1.1.2 Alpha Band N',SaveGeoTiff=True)
         
             
     def __ProcessRedChannel(self):
@@ -208,8 +204,8 @@ class BandData(object):
 
             1.1-Alpha
                 --1.1.1 B11 Band C-U-N
-                --1.1.2 B12 Band C-U-N
-                --1.1.3 Alpha Band N
+                
+                --1.1.2 Alpha Band N
                 
             
             1.2-Red

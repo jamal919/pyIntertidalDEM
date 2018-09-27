@@ -7,7 +7,7 @@ from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
 import os,psutil,sys,gc    
 
-from Sentiniel2AlphaCheck_Testing import Test_Processor
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
@@ -34,9 +34,6 @@ def SaveLatLon(directory):
     GeoDataObj=GeoData(directory)
     GeoDataObj.ShoreLine()
 
-def Test_Alpha(directory):
-    TestOBJ=Test_Processor(directory)
-    TestOBJ.GetBinaryWaterMap()
 
 
 
@@ -44,13 +41,12 @@ def ModuleRun(directory):
     start_time=time.time()
 
     
-    #SaveRGB(directory)
-    #SaveHUEVALUE(directory)
+    SaveRGB(directory)
+    SaveHUEVALUE(directory)
     #SaveIsWater(directory)
     #SaveWaterMap(directory)
     #SaveLatLon(directory)
 
-    Test_Alpha(directory)
     
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
@@ -66,14 +62,15 @@ def ModuleRun(directory):
 def SetRun(directory):
     
     DataPath=directory
-    
-    Zones=['T45QYE','T46QBK','T46QBL','T46QCK']
+    Zones=os.listdir(directory)
+    #Zones=['T45RXK','T46QCK','T45QYE','T46QBL']
     
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
         print('Executing Module for zone:'+str(zone))
         DataFolders=os.listdir(path=DataPath)
         for df in DataFolders:
+            
             dirc=DataPath+df+'/'
             ModuleRun(dirc)
             gc.collect()
@@ -86,5 +83,4 @@ if __name__=='__main__':
         raise Exception("Must be using Python 3")
     else:
         #ModuleRun(directory)
-        SetRun(directory)
-        
+        SetRun(directory)     
