@@ -50,8 +50,9 @@ class Info(object):
         
         self.DateTime=__Date+' '+__Time
         self.SateliteName=self.__IdentifierStrings[0]
-        self.Zone=self.__IdentifierStrings[3]    
-        
+        self.Zone=self.__IdentifierStrings[3]
+        ##Later    
+        self.WaterMaskDir=str(os.getcwd())+'/Filtered/'+str(self.Zone)+'__Filtered.tiff'
        
 
     def OutputDir(self,Type):

@@ -8,6 +8,7 @@ class Processor(object):
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
         self.__InputFolder=__InfoObj.OutputDir('TIFF')
+        self.WMdir=__InfoObj.WaterMaskDir
         
         self.IdentifierS=str(self.__InputFolder).split('/')
         self.IdentifierS=list(filter(bool,self.IdentifierS))
@@ -48,31 +49,27 @@ class Processor(object):
             A thresh hold is selected for which Alpha is clipped to 0 to form a water mask
         '''   
         print('Getting Alpha Channel')
-        __File=self.__InputFolder+"1.1.3 Alpha Band N.tiff"
+        __File=self.__InputFolder+"1.1.2 Alpha Band N.tiff"
         Alpha=self.TiffReader.GetTiffData(__File)
         
         
         print('Creating WaterMask')
         self.iNan=np.isnan(Alpha)
 
-        self.WaterMask=np.zeros(Alpha.shape)
-        ##
-        #Alpha=np.round(Alpha,decimals=1)
-        self.WaterMask[Alpha<0.5*np.nanstd(Alpha)]=1  ##Changeable
-        #self.WaterMask[Alpha<0.1]=1
-
-        self.WaterMask[self.iNan]=np.nan
+        self.WaterMask=self.TiffReader.GetTiffData(self.WMdir)  
         
-        self.__SaveChannelData(self.WaterMask,str(self.IdentifierS[-1])+'__WaterMaskFixed')
+        self.WaterMask[self.iNan]=np.nan
     
     def __MaskHueValue(self):
         print('Masking Value Channel with water mask')
-        self.Value[self.WaterMask==0]=np.nan
-        self.__SaveChannelData(self.Value,'3.1.1 Masked Value Channel')
+        self.MasKedValue=self.Value
+        self.MasKedValue[self.WaterMask==0]=np.nan
+        self.__SaveChannelData(self.MasKedValue,'3.1.1 Masked Value Channel')
 
         print('Inverse Masking Value Channel with water mask')
-        self.Hue[self.WaterMask==1]=np.nan
-        self.__SaveChannelData(self.Hue,'3.1.3 Inversed Masked Hue Channel')
+        self.MasKedHue=self.Hue
+        self.MasKedHue[self.WaterMask==1]=np.nan
+        self.__SaveChannelData(self.MasKedHue,'3.1.3 Inversed Masked Hue Channel')
 
     def __FormBinaryWaterValueChannel(self):
         '''
@@ -85,8 +82,8 @@ class Processor(object):
                S_value is standard deviation of I_value
         '''
         print('Calculating Binary Water Value Channel')
-        T=np.nanmedian(self.Value)     #Median 
-        S=np.nanstd(self.Value)      #standard deviation
+        T=np.nanmedian(self.Value[self.WaterMask==1])     #Median 
+        S=np.nanstd(self.Value[self.WaterMask==1])      #standard deviation
         
         n=5                            #Scaling Factor
 
@@ -116,8 +113,8 @@ class Processor(object):
                S hue is standard deviation of I HUe
         '''
         print('Calculating Binary Water Hue Channel')
-        T=np.nanmedian(self.Hue)       #Median 
-        S=np.nanstd(self.Hue)          #standard deviation
+        T=np.nanmedian(self.Hue[self.WaterMask==0])       #Median 
+        S=np.nanstd(self.Hue[self.WaterMask==0])          #standard deviation
         
         n=0.4                            #Scaling Factor
 

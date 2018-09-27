@@ -107,3 +107,4 @@ venv.bak/
 /Output_log/*
 .vscode/
 /__pycache__/*
+/Filtered/*
