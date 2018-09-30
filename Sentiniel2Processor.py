@@ -62,14 +62,14 @@ class Processor(object):
     
     def __MaskHueValue(self):
         print('Masking Value Channel with water mask')
-        self.MasKedValue=self.Value
-        self.MasKedValue[self.WaterMask==0]=np.nan
-        self.__SaveChannelData(self.MasKedValue,'3.1.1 Masked Value Channel')
+        MasKedValue=np.copy(self.Value)
+        MasKedValue[self.WaterMask==0]=np.nan
+        self.__SaveChannelData(MasKedValue,'3.1.1 Masked Value Channel')
 
         print('Inverse Masking Value Channel with water mask')
-        self.MasKedHue=self.Hue
-        self.MasKedHue[self.WaterMask==1]=np.nan
-        self.__SaveChannelData(self.MasKedHue,'3.1.3 Inversed Masked Hue Channel')
+        MasKedHue=np.copy(self.Hue)
+        MasKedHue[self.WaterMask==1]=np.nan
+        self.__SaveChannelData(MasKedHue,'3.1.3 Inversed Masked Hue Channel')
 
     def __FormBinaryWaterValueChannel(self):
         '''
@@ -139,7 +139,7 @@ class Processor(object):
         IsWater=IsWater.astype(np.float)
         IsWater[self.iNan]=np.nan
         
-        self.__SaveChannelData(IsWater,'3.1.5 Binary Water Map')        
+        self.__SaveChannelData(IsWater,'3.1.5 Binary Water Map',SaveGeoTiff=True)        
         
         
     def GetBinaryWaterMap(self):

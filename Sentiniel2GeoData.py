@@ -6,12 +6,12 @@ class GeoData(object):
 
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
-        __InputFolder=__InfoObj.OutputDir()
-        __WaterMapFile=__InputFolder+'/WaterMap.tiff'
+        __InputFolder=__InfoObj.OutputDir('TIFF')
+        __WaterMapFile=__InputFolder+'/4.1.1_WaterMap.tiff'
         Reader=TiffReader(Directory)
         self.MapWater=Reader.GetTiffData(__WaterMapFile)
 
-        __NoDataFile=__InfoObj.EdgeMaskDir()
+        __NoDataFile=__InfoObj.EdgeMask
         __DataSet=Reader.ReadTiffData(__NoDataFile)
         self.GeoTransForm=__DataSet.GetGeoTransform()
         self.Projection=__DataSet.GetProjection()
