@@ -52,7 +52,7 @@ class Info(object):
         self.SateliteName=self.__IdentifierStrings[0]
         self.Zone=self.__IdentifierStrings[3]
         ##Later    
-        self.WaterMaskDir=str(os.getcwd())+'/Filtered/'+str(self.Zone)+'__Filtered.tiff'
+        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/Filtered/'+str(self.Zone)+'__Filtered.tiff'
        
 
     def OutputDir(self,Type):
@@ -127,7 +127,6 @@ class Info(object):
             | B4      | Red  | 665nm      |         10 |
             | B8      | NIR  | 842nm      |         10 |
             | B11     | SWIR | 1610nm     |         20 |
-            | B12     | SWIR | 2190nm     |         20 |
             |---------+------+------------+------------+
 
             The two Cloud masks contains cloud information for 10m and 20m resolutions 
@@ -140,15 +139,13 @@ class Info(object):
 
         SWIRBandB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B11.tif'
 
-        SWIRBandB12=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B12.tif'
-
         CloudMask10m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R1.tif'
         
         CloudMask20m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R2.tif'
         
         
 
-        self.__Files=[RedBandFile,GreenBandFile,BlueBandFile,SWIRBandB11,SWIRBandB12,CloudMask10m,CloudMask20m]
+        self.__Files=[RedBandFile,GreenBandFile,BlueBandFile,SWIRBandB11,CloudMask10m,CloudMask20m]
 
     
     def DisplayFileList(self):

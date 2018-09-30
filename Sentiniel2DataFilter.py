@@ -1,11 +1,16 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
 from Sentiniel2Logger import TiffReader,Info,TiffWritter,ViewData
 class DataFilter(object):
-    
+    '''
+        This class is designed to only consider filtering those regions which are near the ocean
+        i.e-- Regions where Major connected water body exists 
+
+        THIS CLASS IS SPECIFICLY DESIGNED FOR DEM
+    '''
     def __init__(self,Directory):
         __InfoObj=Info(Directory)
         __InputFolder=__InfoObj.OutputDir('TIFF')
-        __IsWaterFile=__InputFolder+'/3.1.3_IsWater.tiff'
+        __IsWaterFile=__InputFolder+'/3.1.5 Binary Water Map.tiff'
         Reader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
         self.Data=Reader.GetTiffData(__IsWaterFile)
@@ -52,16 +57,13 @@ class DataFilter(object):
     def FilterWaterMap(self):
         start_time=time.time()
         print('Filtering Water Map')
-        '''
-        for i in range(1,10):
-            Thresh=self.__PercentThresh(i)
-            MapWater=self.__DetectWater(Thresh)
-            #self.TiffWritter.SaveArrayToGeotiff(MapWater,'4.1.1_WaterMap')
-            self.DataViewer.PlotWithGeoRef(MapWater,'4.1.1_WaterMap_ '+str(i)+' %Thresh')
-        '''
         MapWater=self.__DetectWaterFixed()
         MapWater[self.__Inan]=np.nan
-        #self.TiffWritter.SaveArrayToGeotiff(MapWater,'4.1.1_WaterMap')
+        
+        
+        self.TiffWritter.SaveArrayToGeotiff(MapWater,'4.1.1_WaterMap')
         self.DataViewer.PlotWithGeoRef(MapWater,'4.1.1_WaterMap_Fixed_Thresh')
+        
+        
         print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
         

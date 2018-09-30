@@ -43,11 +43,14 @@ class HSVData(object):
         '''
 
         print('Computing Hue and Value channel from RGB data')
+        
         R=self.TiffReader.GetTiffData(self.RedDataFile)
         G=self.TiffReader.GetTiffData(self.GreenDataFile)
         B=self.TiffReader.GetTiffData(self.BlueDataFile)
         [row,col]=R.shape
+        
         RGB=np.empty([row,col,3])
+        
         RGB[:,:,0]=R
         RGB[:,:,1]=G
         RGB[:,:,2]=B
@@ -68,8 +71,6 @@ class HSVData(object):
 
         Min[iN]=np.nan 
         
-        #Min=(Min-np.nanmin(Min))/(np.nanmax(Min)-np.nanmin(Min)) #norm
-
         #Max==Min segment
         Chroma=Max-Min
         Chroma[iN]=np.nan

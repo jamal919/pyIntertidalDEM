@@ -18,8 +18,8 @@ class BandData(object):
         
         self.__SWIRB11=Files[3]
         
-        self.__CloudMask10mFile=Files[5]
-        self.__CloudMask20mFile=Files[6]
+        self.__CloudMask10mFile=Files[4]
+        self.__CloudMask20mFile=Files[5]
        
         self.TiffReader=TiffReader(Directory)
         self.TiffWritter=TiffWritter(Directory)
