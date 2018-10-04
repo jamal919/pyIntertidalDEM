@@ -40,11 +40,11 @@ def SaveLatLon(directory):
 def ModuleRun(directory):
     start_time=time.time()
 
-    SaveRGB(directory)
-    SaveHUEVALUE(directory)
+    #SaveRGB(directory)
+    #SaveHUEVALUE(directory)
     SaveIsWater(directory)
-    SaveWaterMap(directory)
-    SaveLatLon(directory)
+    #SaveWaterMap(directory)
+    #SaveLatLon(directory)
 
     
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
@@ -61,8 +61,8 @@ def ModuleRun(directory):
 def SetRun(directory):
     
     DataPath=directory
-    Zones=os.listdir(directory)
-    
+    #Zones=os.listdir(directory)
+    Zones=['T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QCK', 'T46QBL']
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
         print('Executing Module for zone:'+str(zone))
@@ -81,6 +81,6 @@ if __name__=='__main__':
         raise Exception("Must be using Python 3")
         
     else:
-        #SetRun(directory)
+        SetRun(directory)
 
-        ModuleRun(directory)             
+        #ModuleRun(directory)             
