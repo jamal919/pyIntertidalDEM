@@ -17,7 +17,9 @@ class DataFilter(object):
         self.__Inan=np.isnan(self.Data)
         self.DataViewer=ViewData(Directory)
         
-    def __SegmentFeatures(self,Features,Thresh):
+    def __FilterLandFeatures(self,MAP):
+        Features=1-MAP
+        Thresh=10000
         __SignificantData=np.zeros(np.shape(self.Data))
         __Labeled,_=scipy.ndimage.measurements.label(Features)
         _, __CountsOfFeature = np.unique(__Labeled, return_counts=True)
@@ -27,37 +29,26 @@ class DataFilter(object):
             __SignificantData[__Labeled==sigF]=1
         return __SignificantData
 
-    def __PercentThresh(self,Value):
-        [row,col]=self.Data.shape
-        Thresh=(row*col*Value)/100
-        return Thresh
+    
 
-    def __DetectWater(self,Thresh):
-        __SignificantWaterData=self.__SegmentFeatures(self.Data,Thresh) #Water Data
-        __LabeledWater,_=scipy.ndimage.measurements.label(__SignificantWaterData)
-        __LandData=np.ones(np.shape(self.Data))
-        __LandData[__LabeledWater>0]=0
-        __SignificantLandData=self.__SegmentFeatures(__LandData,Thresh)  #Land Data
-        
-        __MapWater=np.zeros(np.shape(self.Data))
-        __MapWater[__SignificantLandData==0]=1
-        return __MapWater
     
     def __DetectWaterFixed(self):
-        __SignificantWaterData=self.__SegmentFeatures(self.Data,50000) #Water Data
-        __LabeledWater,_=scipy.ndimage.measurements.label(__SignificantWaterData)
-        __LandData=np.ones(np.shape(self.Data))
-        __LandData[__LabeledWater>0]=0
-        __SignificantLandData=self.__SegmentFeatures(__LandData,10000)  #Land Data
+        LabeledData,_=scipy.ndimage.measurements.label(self.Data)
+        Value,PixelCount=np.unique(LabeledData,return_counts=True)
+        MaxPixel=np.amax(PixelCount[Value>0])
+        MaxVal=Value[PixelCount==MaxPixel]
+        WF=np.zeros(self.Data.shape)
+        WF[LabeledData==MaxVal[0]]=1
         
-        __MapWater=np.zeros(np.shape(self.Data))
-        __MapWater[__SignificantLandData==0]=1
-        return __MapWater
+        WaterMap=self.__FilterLandFeatures(WF)
+
+        return WaterMap
     
     def FilterWaterMap(self):
         start_time=time.time()
         print('Filtering Water Map')
         MapWater=self.__DetectWaterFixed()
+        MapWater=1-MapWater
         MapWater[self.__Inan]=np.nan
         
         
