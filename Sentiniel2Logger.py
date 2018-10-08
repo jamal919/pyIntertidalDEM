@@ -52,7 +52,7 @@ class Info(object):
         self.SateliteName=self.__IdentifierStrings[0]
         self.Zone=self.__IdentifierStrings[3]
         ##Later    
-        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/Filtered/'+str(self.Zone)+'__Filtered.tiff'
+        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/WaterMask/'+str(self.Zone)+'__WaterMask.tiff'
        
 
     def OutputDir(self,Type):
@@ -82,18 +82,26 @@ class Info(object):
             __OutputFolder=self.PNGdir+str(self.Zone)+'/'
             if not os.path.exists(__OutputFolder):
                 os.mkdir(__OutputFolder)
+            __OutputDir=__OutputFolder+self.__DirectoryStrings[-1]+'/'
+            if not os.path.exists(__OutputDir):
+                os.mkdir(__OutputDir)
+
         if(Type==str('TIFF')): 
             __OutputFolder=self.TIFFDir+str(self.Zone)+'/'
             if not os.path.exists(__OutputFolder):
                 os.mkdir(__OutputFolder)
+            __OutputDir=__OutputFolder+self.__DirectoryStrings[-1]+'/'
+            if not os.path.exists(__OutputDir):
+                os.mkdir(__OutputDir)
+            
         if(Type==str('CSV')): 
             __OutputFolder=self.CSVDir+str(self.Zone)+'/'
             if not os.path.exists(__OutputFolder):
                 os.mkdir(__OutputFolder)
+            __OutputDir=__OutputFolder
+            if not os.path.exists(__OutputDir):
+                os.mkdir(__OutputDir)
         
-        __OutputDir=__OutputFolder+self.__DirectoryStrings[-1]+'/'
-        if not os.path.exists(__OutputDir):
-            os.mkdir(__OutputDir)
         return __OutputDir
 
     
@@ -392,13 +400,13 @@ class SaveData(object):
             Saves Lat Lon Data as CSV in a Given Format
         '''
         start_time=time.time()
-        __Information=[self.DateTime,self.SateliteName,self.Zone]  
+        Identifier=str(self.SateliteName)+'_'+str(Identifier)
         print('Saving '+str(Identifier)+'.csv')
         csvfile=self.OutputDir+str(Identifier)+'.csv'
         with open(csvfile,"w") as output:
             writer=csv.writer(output,lineterminator='\n')
             for index in range(0,np.shape(Data)[0]):
-                __Information[3:]=Data[index].tolist()
+                __Information=Data[index].tolist()
                 writer.writerow(__Information)
        
         print('')

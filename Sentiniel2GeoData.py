@@ -1,4 +1,4 @@
-from Sentiniel2Logger import Info,TiffReader,SaveData
+from Sentiniel2Logger import Info,TiffReader,SaveData,ViewData,TiffWritter
 import time,numpy as np,gc,scipy.signal
 from osgeo import gdal,osr
 
@@ -9,6 +9,8 @@ class GeoData(object):
         __InputFolder=__InfoObj.OutputDir('TIFF')
         __WaterMapFile=__InputFolder+'/4.1.1_WaterMap.tiff'
         Reader=TiffReader(Directory)
+        self.DateTime=__InfoObj.DateTime
+        print(str(self.DateTime))
         self.MapWater=Reader.GetTiffData(__WaterMapFile)
 
         __NoDataFile=__InfoObj.EdgeMask
@@ -16,7 +18,9 @@ class GeoData(object):
         self.GeoTransForm=__DataSet.GetGeoTransform()
         self.Projection=__DataSet.GetProjection()
         __DataSet=None
+        
         self.DataSaver=SaveData(Directory)
+        self.TiffWritter=TiffWritter(Directory)
 
     def __ConvolutedMap(self):
         print('Mapping ShoreLine')
@@ -24,9 +28,12 @@ class GeoData(object):
         start_time = time.time()
         __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
         __ConvolutedData=scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
-        __ConvolutedData[__ConvolutedData<1]=0
+        __ConvolutedData[__ConvolutedData<=0]=np.nan
         __ConvolutedData[__ConvolutedData>0]=1
-        self.__Map_ShoreLine=np.argwhere(__ConvolutedData>0)                                              #change this condition for testing
+        
+        self.TiffWritter.SaveArrayToGeotiff(__ConvolutedData,'5.0.1_MAP_SHORE')
+
+        self.__Map_ShoreLine=np.argwhere(__ConvolutedData==1)                                              #change this condition for testing
         self.__TotalDataPoints=np.shape(self.__Map_ShoreLine)[0]
         #Cleanup
         __ConvolutedData=None
@@ -68,4 +75,5 @@ class GeoData(object):
         self.__ConvolutedMap()
         self.__PixelToSpaceCoordinate()
         self.__SpaceCoordinateToLatLon()
-        self.DataSaver.SaveDataAsCSV('LatLonData',np.column_stack((self.__LatitudeData,self.__LongitudeData)))
+        self.DataSaver.SaveDataAsCSV(str(self.DateTime),np.column_stack((self.__LatitudeData,self.__LongitudeData)))
+       

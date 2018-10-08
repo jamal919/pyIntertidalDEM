@@ -61,8 +61,9 @@ def ModuleRun(directory):
 def SetRun(directory):
     
     DataPath=directory
-    #Zones=os.listdir(directory)
-    Zones=['T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QCK', 'T46QBL']
+    Zones=os.listdir(directory)
+    #Zones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
+    #Zones=['T45QXE']
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
         print('Executing Module for zone:'+str(zone))
@@ -81,6 +82,5 @@ if __name__=='__main__':
         raise Exception("Must be using Python 3")
         
     else:
+        #ModuleRun(directory) 
         SetRun(directory)
-
-        #ModuleRun(directory)             
