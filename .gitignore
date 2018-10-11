@@ -105,5 +105,10 @@ venv.bak/
 
 #folder_log
 /Output_log/*
-/Extracode/*
 .vscode/
+/__pycache__/*
+/DataPreprocess/WaterMask__FIXED/*
+/DataPreprocess/Zone/*
+/DataPreprocess/Analysis/*
+/DataPreprocess/WaterMask/*
+/RiverOutLine/*
