@@ -1,62 +1,86 @@
 #!/usr/bin/env python3
-
-from Sentiniel2Info import displayInfo
-from Sentiniel2Logger import Log,DebugLog
-from Sentiniel2Preprocessor import Preprocessor
-from Sentiniel2RGBProcessor import RGBProcessor
+from Sentiniel2ChannelData import BandData
+from Sentiniel2HSVData import HSVData
+from Sentiniel2Processor import Processor
 from Sentiniel2DataFilter import DataFilter
 from Sentiniel2GeoData import GeoData
 import matplotlib.pyplot as plt,numpy as np,argparse,time
-from termcolor import colored
-import os
+import os,psutil,sys,gc    
 
-testCase1="/home/ansary/Sentiniel2/Data/20171130/SENTINEL2B_20171130-042157-149_L2A_T46QCK_D_V1-4"
-testCase2="/home/ansary/Sentiniel2/Data/20180224/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D/SENTINEL2B_20180224-045147-074_L2A_T45QYE_D_V1-5"  
-directory=testCase1
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
+args = parser.parse_args()
+directory=args.Dir
+
+def SaveRGB(directory):
+    BandDataObj=BandData(directory)
+    BandDataObj.Data()
+
+def SaveHUEVALUE(directory):
+    HSVDataObj=HSVData(directory)
+    HSVDataObj.HueValueRGB()
+
+def SaveIsWater(directory):
+    ProcessorObj=Processor(directory)
+    ProcessorObj.GetBinaryWaterMap()
+
+def SaveWaterMap(directory):
+    DataFilterObj=DataFilter(directory)
+    DataFilterObj.FilterWaterMap()
+
+def SaveLatLon(directory):
+    GeoDataObj=GeoData(directory)
+    GeoDataObj.ShoreLine()
+
+
 
 
 def ModuleRun(directory):
     start_time=time.time()
 
-    Logger=Log(directory)            #Logger Object
+    SaveRGB(directory)
+    SaveHUEVALUE(directory)
+    SaveIsWater(directory)
+    #SaveWaterMap(directory)
+    #SaveLatLon(directory)
 
-    InfoObj=displayInfo(directory)   #Info
-
-    Files=InfoObj.DisplayFileList()
     
-    preprocess=Preprocessor(Files,directory)      #Preprocessor Object
-
-    RGBData=preprocess.GetRGBData()
-
-    Logger.DebugPlot(RGBData,'QKL_RGB')
+    print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
     
-    ProcessRGB=RGBProcessor(RGBData,directory)    #RGBprocessor Object
-
-    IsWater=ProcessRGB.GetWaterMap()
-
-    NoData=Logger.GetNoDataCorrection()
-
-    IsWater[NoData==1]=0
+    pid = os.getpid()
     
-    Filter=DataFilter(directory,IsWater)
-
-    WaterMap=Filter.FilterWaterMap()
-
-    Logger.DebugPlot(WaterMap,'WaterMap')
-
-    Geo=GeoData(directory,WaterMap)
+    py = psutil.Process(pid)
     
-    LatLon=Geo.GetShoreLineGeoData()
-    
-    #Logger.DebugPrint(LatLon,'Lat Lon')
+    memoryUse = py.memory_info()[0]/(2**30)  # memory use in GB
 
-    #Identifier='ShoreLine_LatLon'
+    print('memory use(in GB):', memoryUse)
     
-    #Logger.SaveDataAsKML(Identifier,LatLon)
-    
-    print(colored("Total Elapsed Time: %s seconds " % (time.time() - start_time),'green'))
 
-    plt.show()
+def SetRun(directory):
     
+    DataPath=directory
+    Zones=os.listdir(directory)
+    #Zones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
+    #Zones=['T45QXE']
+    for zone in Zones:
+        DataPath=DataPath+str(zone)+'/'
+        print('Executing Module for zone:'+str(zone))
+        DataFolders=os.listdir(path=DataPath)
+        for df in DataFolders:
+            
+            dirc=DataPath+df+'/'
+            ModuleRun(dirc)
+            gc.collect()
+        DataPath=directory
+
+
+
 if __name__=='__main__':
-    ModuleRun(directory)
+    if float(str(sys.version_info[0])+'.'+str(sys.version_info[1])) < 3.6:
+        raise Exception("Must be using Python 3")
+        
+    else:
+        #ModuleRun(directory) 
+        SetRun(directory)
