@@ -1,31 +1,12 @@
-# s2_bob_dem
-#Modules Used
-from termcolor import colored          #Visualization ease
+  USEAGE: $./main.py  /path/to/unzipped/directory
 
-import argparse                        #Commandline agrument
+  Python--3.6.6
 
-from osgeo import gdal,osr             #GeoTiff file processing
+    Name             Version         Use                                      
+--------------     -------------    ---------------------------
+    argparse        1.4.0           Commandline agrument          
+    OSGEO/GDAL      2.2.2           GeoTiff file processing        
+    matplotlib      2.2.3           Plotting
+    numpy           1.15.1          Array manupulation
+    scipy           1.1.0           Convolution,Filtering
 
-import matplotlib.pyplot as plt        #Image/Graphical Visualization
-
-import sys                             #System 
-
-import numpy as np                     #Array manupulation ease
-
-import time                            #Time profiling
-
-import gc                              #Garbage Collection
-
-import matplotlib                      #HSV
-
-import scipy.signal                    #Convulation
-
-import simplekml                       #kml output
-
-import os                              #Directory Access 
-
-import shapefile                       #shapefile output 
-
-import scipy.misc		       #Image saving
-
-import csv			       #CSV saving

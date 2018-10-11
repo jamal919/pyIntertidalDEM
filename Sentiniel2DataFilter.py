@@ -1,14 +1,25 @@
 import numpy as np,scipy.signal,scipy.ndimage,time 
-from Sentiniel2Logger import Log
-from termcolor import colored
-
+from Sentiniel2Logger import TiffReader,Info,TiffWritter,ViewData
 class DataFilter(object):
-    def __init__(self,Directory,Data):
-        self.Directory=Directory
-        self.Data=Data
-        self.__Logger=Log(self.Directory)
+    '''
+        This class is designed to only consider filtering those regions which are near the ocean
+        i.e-- Regions where Major connected water body exists 
 
-    def __SegmentFeatures(self,Features,Thresh):
+        THIS CLASS IS SPECIFICLY DESIGNED FOR DEM
+    '''
+    def __init__(self,Directory):
+        __InfoObj=Info(Directory)
+        __InputFolder=__InfoObj.OutputDir('TIFF')
+        __IsWaterFile=__InputFolder+'/3.1.5 Binary Water Map.tiff'
+        Reader=TiffReader(Directory)
+        self.TiffWritter=TiffWritter(Directory)
+        self.Data=Reader.GetTiffData(__IsWaterFile)
+        self.__Inan=np.isnan(self.Data)
+        self.DataViewer=ViewData(Directory)
+        
+    def __FilterLandFeatures(self,MAP):
+        Features=1-MAP
+        Thresh=10000
         __SignificantData=np.zeros(np.shape(self.Data))
         __Labeled,_=scipy.ndimage.measurements.label(Features)
         _, __CountsOfFeature = np.unique(__Labeled, return_counts=True)
@@ -18,23 +29,32 @@ class DataFilter(object):
             __SignificantData[__Labeled==sigF]=1
         return __SignificantData
 
-    def __DetectWater(self):
+    
+
+    
+    def __DetectWaterFixed(self):
+        LabeledData,_=scipy.ndimage.measurements.label(self.Data)
+        Value,PixelCount=np.unique(LabeledData,return_counts=True)
+        MaxPixel=np.amax(PixelCount[Value>0])
+        MaxVal=Value[PixelCount==MaxPixel]
+        WF=np.zeros(self.Data.shape)
+        WF[LabeledData==MaxVal[0]]=1
         
-        __SignificantWaterData=self.__SegmentFeatures(self.Data,100000) #Water Data
-        
-        __LabeledWater,_=scipy.ndimage.measurements.label(__SignificantWaterData)
-       
-        __LandData=np.ones(np.shape(self.Data))
-        __LandData[__LabeledWater>0]=0
-        __SignificantLandData=self.__SegmentFeatures(__LandData,10000)  #Land Data
-        
-        self.__MapWater=np.zeros(np.shape(self.Data))
-        self.__MapWater[__SignificantLandData==0]=1
-        
+        WaterMap=self.__FilterLandFeatures(WF)
+
+        return WaterMap
+    
     def FilterWaterMap(self):
         start_time=time.time()
-        self.__Logger.PrintLogStatus('Filtering Water Map')
-        self.__DetectWater()
-        print(colored("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time),'green'))
-        return self.__MapWater
+        print('Filtering Water Map')
+        MapWater=self.__DetectWaterFixed()
+        MapWater=1-MapWater
+        MapWater[self.__Inan]=np.nan
+        
+        
+        self.TiffWritter.SaveArrayToGeotiff(MapWater,'4.1.1_WaterMap')
+        self.DataViewer.PlotWithGeoRef(MapWater,'4.1.1_WaterMap_Fixed_Thresh')
+        
+        
+        print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
         
