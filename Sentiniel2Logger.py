@@ -52,7 +52,7 @@ class Info(object):
         self.SateliteName=self.__IdentifierStrings[0]
         self.Zone=self.__IdentifierStrings[3]
         ##Later    
-        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/WaterMask/'+str(self.Zone)+'__WaterMask.tiff'
+        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/FinalWaterMasks/'+str(self.Zone)+'__Filtered.tiff'
        
 
     def OutputDir(self,Type):

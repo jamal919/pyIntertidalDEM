@@ -110,5 +110,7 @@ venv.bak/
 /DataPreprocess/WaterMask__FIXED/*
 /DataPreprocess/Zone/*
 /DataPreprocess/Analysis/*
-/DataPreprocess/WaterMask/*
+/DataPreprocess/WaterMask__demistd/*
+/DataPreprocess/FinalWaterMasks/*
+
 /RiverOutLine/*
