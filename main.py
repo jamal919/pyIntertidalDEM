@@ -42,8 +42,8 @@ def ModuleRun(directory):
 
     #SaveRGB(directory)
     #SaveHUEVALUE(directory)
-    SaveIsWater(directory)
-    #SaveWaterMap(directory)
+    #SaveIsWater(directory)
+    SaveWaterMap(directory)
     #SaveLatLon(directory)
 
     
@@ -62,9 +62,9 @@ def SetRun(directory):
     
     DataPath=directory
     Zones=os.listdir(directory)
-    DoneZones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
-    for dz in DoneZones:
-        Zones.remove(str(dz))
+    Zones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
+    #for dz in DoneZones:
+    #    Zones.remove(str(dz))
 
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
