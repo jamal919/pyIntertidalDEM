@@ -42,7 +42,7 @@ class Info(object):
        
         self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
 
-        self.EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
+        self.EdgeMask=str(self.directory)+'MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
 
         __Date=self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
         
