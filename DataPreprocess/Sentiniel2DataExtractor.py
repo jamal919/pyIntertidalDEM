@@ -25,7 +25,7 @@ def CreateDirectories(Zones):
     directory=input('Enter The Directory You want to Unzip The Data#')
     directory=directory+'Unzipped Data/'
     if not os.path.exists(directory):
-            os.mkdir(directory)
+        os.mkdir(directory)
     ZoneDirs=[]
     for zone in Zones:
         DirFolder=directory+str(zone)+'/'
