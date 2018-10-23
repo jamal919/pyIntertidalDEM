@@ -16,7 +16,7 @@ def genmask(wkdir,prepdir,dir=None,nstd=0.5,water=10000,land=5000,png=False):
         OutDir=os.path.join(prepdir,'WaterMask','')
         if not os.path.exists(OutDir):
                 os.mkdir(OutDir)
-        if dir:
+        if dir!=None:
             OutDir=os.path.join(OutDir, str(dir),'')
             if not os.path.exists(OutDir):
                 os.mkdir(OutDir)
