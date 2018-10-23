@@ -1,86 +1,57 @@
-#!/usr/bin/env python3
-from Sentiniel2ChannelData import BandData
-from Sentiniel2HSVData import HSVData
-from Sentiniel2Processor import Processor
-from Sentiniel2DataFilter import DataFilter
-from Sentiniel2GeoData import GeoData
-import matplotlib.pyplot as plt,numpy as np,argparse,time
-import os,psutil,sys,gc    
+# -*- coding: utf-8 -*-
+import os
+import preprep
+import utils
+import improc
+
+indatadir = '/media/ansary/PMAISONGDE/T45QWE/'
+wkdir = '/media/ansary/PMAISONGDE/Data/'
+prepdir='/media/ansary/My Passport/'
+improcdir='/media/ansary/My Passport/'
+
+
+# Preprocessing
+prepdir = os.path.join(prepdir, 'PreProcessed','')
+if not os.path.exists(prepdir):
+    os.mkdir(prepdir)
+
+#preprep.ingest(indatadir, wkdir)
+#preprep.genstat(...)
+#preprep.genmask(wkdir,prepdir,dir='DEMISTD_10k_5K',nstd=0.5,water=10000,land=5000,png=True)
+'''
+#ImageProcessing
+improcdir = os.path.join(improcdir, 'ProcessedImages')
+if not os.path.exists(improcdir):
+    os.mkdir(improcdir)
+
+DataPath=wkdir
+Zones=os.listdir(wkdir)
+for zone in Zones:
+    DataPath=str(os.path.join(wkdir,zone,''))
+    print(DataPath)
+    DataFolders=os.listdir(DataPath)
+    #for df in DataFolders:
+        #directory=DataPath+df+'/'
+
+        #improc.construct_channels(directory,improcdir,tiff=True, png=True)
+        #improc.make_watermap(nhue=0.4, nvalue=5.0, tiff=True, png=True)
+        #improc.remove_blob(nwater = 50000, nland = 10000)
+        #improc.extract_shoreline()
+
+'''
 
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
-args = parser.parse_args()
-directory=args.Dir
-
-def SaveRGB(directory):
-    BandDataObj=BandData(directory)
-    BandDataObj.Data()
-
-def SaveHUEVALUE(directory):
-    HSVDataObj=HSVData(directory)
-    HSVDataObj.HueValueRGB()
-
-def SaveIsWater(directory):
-    ProcessorObj=Processor(directory)
-    ProcessorObj.GetBinaryWaterMap()
-
-def SaveWaterMap(directory):
-    DataFilterObj=DataFilter(directory)
-    DataFilterObj.FilterWaterMap()
-
-def SaveLatLon(directory):
-    GeoDataObj=GeoData(directory)
-    GeoDataObj.ShoreLine()
 
 
 
 
-def ModuleRun(directory):
-    start_time=time.time()
 
-    SaveRGB(directory)
-    SaveHUEVALUE(directory)
-    SaveIsWater(directory)
-    #SaveWaterMap(directory)
-    #SaveLatLon(directory)
+#utils testing
+#dirc='/media/ansary/PMAISONGDE/Data/T45QYE/SENTINEL2B_20180512-043429-820_L2A_T45QYE_D_V1-7/' 
+#Dfile='/media/ansary/PMAISONGDE/Data/T45QYE/SENTINEL2B_20180512-043429-820_L2A_T45QYE_D_V1-7/SENTINEL2B_20180512-043429-820_L2A_T45QYE_D_V1-7_FRE_B8.tif'
 
-    
-    print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
-    
-    pid = os.getpid()
-    
-    py = psutil.Process(pid)
-    
-    memoryUse = py.memory_info()[0]/(2**30)  # memory use in GB
-
-    print('memory use(in GB):', memoryUse)
-    
-
-def SetRun(directory):
-    
-    DataPath=directory
-    Zones=os.listdir(directory)
-    #Zones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
-    #Zones=['T45QXE']
-    for zone in Zones:
-        DataPath=DataPath+str(zone)+'/'
-        print('Executing Module for zone:'+str(zone))
-        DataFolders=os.listdir(path=DataPath)
-        for df in DataFolders:
-            
-            dirc=DataPath+df+'/'
-            ModuleRun(dirc)
-            gc.collect()
-        DataPath=directory
-
-
-
-if __name__=='__main__':
-    if float(str(sys.version_info[0])+'.'+str(sys.version_info[1])) < 3.6:
-        raise Exception("Must be using Python 3")
-        
-    else:
-        #ModuleRun(directory) 
-        SetRun(directory)
+#utils.infotest(dirc)
+#utils.TiffReaderTest(Dfile)
+#utils.TiffWriterTest()
+#utils.PlottingTest()
