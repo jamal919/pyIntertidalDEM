@@ -20,9 +20,9 @@ class HSVData(object):
         self.TiffWritter=TiffWriter()
         self.__PNGFLAG=False
         if PNGdir!=None:
-            self.DataViewer=DataPlotter(self.GreenDataFile,str(PNGdir))
+            self.__DataViewer=DataPlotter(self.GreenDataFile,str(PNGdir))
             self.__PNGFLAG=True
-       
+            self.PNGDIR=PNGdir
     def HueValueRGB(self):
         '''
             Hue and Value Channel Data Are computed by Pekel et al. (2014) as follows:
@@ -63,7 +63,7 @@ class HSVData(object):
 
             #2.1.1 RGB
             
-            self.DataViewer.PlotWithGeoRef(RGB,'2.1.1 RGB')
+            self.__DataViewer.PlotWithGeoRef(RGB,'2.1.1 RGB')
         
         
         iN=np.isnan(R)
@@ -107,5 +107,5 @@ class HSVData(object):
         #2.2.2 Value Normalized Pekel
         self.TiffWritter.SaveArrayToGeotiff(Max,'2.2.2 Value Normalized Pekel',self.GreenDataFile,self.TIFFDATADIR)
         if self.__PNGFLAG:
-            self.DataViewer.PlotWithGeoRef(Hue,'2.2.1_HUE_Normalized_Pekel')
-            self.DataViewer.PlotWithGeoRef(Max,'2.2.2 Value Normalized Pekel')
+            self.__DataViewer.PlotWithGeoRef(Hue,'2.2.1_HUE_Normalized_Pekel')
+            self.__DataViewer.PlotWithGeoRef(Max,'2.2.2 Value Normalized Pekel')
