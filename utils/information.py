@@ -20,7 +20,7 @@ class Info(object):
         
         __Time=self.__DateTimeStamp[1][0:2]+'-'+self.__DateTimeStamp[1][2:4]+'-'+self.__DateTimeStamp[1][4:]
         
-        self.DateTime=__Date+' '+__Time
+        self.DateTime=__Date+'_'+__Time
         
         self.SateliteName=self.__IdentifierStrings[0]
         
