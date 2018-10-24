@@ -9,8 +9,11 @@ class HSVData(object):
     '''
         The purpose of this class is to compute Hue and Value channel Data from RGB
     '''
-    def __init__(self,InputFolder,PNGdir=None):
-        self.TIFFDATADIR=InputFolder
+    def __init__(self,directory,improcdir,preprocdir,png=False):
+        self.__InfoObj=Info(directory)
+        self.__InfoObj.DefineDiectoriesAndReferences(improcdir,preprocdir,png=png)
+
+        InputFolder=self.__InfoObj.MainDir
         #INPUT RGB
         self.RedDataFile=InputFolder+'1.2.2 Red A.tiff'
         self.GreenDataFile=InputFolder+'1.3.2 Green A.tiff'
@@ -18,11 +21,11 @@ class HSVData(object):
         
         self.TiffReader=TiffReader()
         self.TiffWritter=TiffWriter()
-        self.__PNGFLAG=False
-        if PNGdir!=None:
-            self.__DataViewer=DataPlotter(self.GreenDataFile,str(PNGdir))
-            self.__PNGFLAG=True
-            self.PNGDIR=PNGdir
+        
+        self.__pngFlag=png
+        if self.__pngFlag:
+            self.__DataViewer=DataPlotter(self.__InfoObj.ReferenceGeotiff,self.__InfoObj.PNGOutDir)
+
     def HueValueRGB(self):
         '''
             Hue and Value Channel Data Are computed by Pekel et al. (2014) as follows:
@@ -52,7 +55,7 @@ class HSVData(object):
         B=self.TiffReader.GetTiffData(self.BlueDataFile)
         
         
-        if self.__PNGFLAG:
+        if self.__pngFlag:
             [row,col]=R.shape
             
             RGB=np.empty([row,col,3])
@@ -102,10 +105,10 @@ class HSVData(object):
         Max=(Max-np.nanmin(Max))/(np.nanmax(Max)-np.nanmin(Max)) #norm
 
         #2.2.1 HUE Normalized Pekel
-        self.TiffWritter.SaveArrayToGeotiff(Hue,'2.2.1_HUE_Normalized_Pekel',self.GreenDataFile,self.TIFFDATADIR)
+        self.TiffWritter.SaveArrayToGeotiff(Hue,'2.2.1_HUE_Normalized_Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         
         #2.2.2 Value Normalized Pekel
-        self.TiffWritter.SaveArrayToGeotiff(Max,'2.2.2 Value Normalized Pekel',self.GreenDataFile,self.TIFFDATADIR)
-        if self.__PNGFLAG:
+        self.TiffWritter.SaveArrayToGeotiff(Max,'2.2.2 Value Normalized Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
+        if self.__pngFlag:
             self.__DataViewer.PlotWithGeoRef(Hue,'2.2.1_HUE_Normalized_Pekel')
             self.__DataViewer.PlotWithGeoRef(Max,'2.2.2 Value Normalized Pekel')

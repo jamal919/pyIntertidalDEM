@@ -2,41 +2,43 @@
 from utils.tiffwriter import TiffWriter
 from utils.tiffreader import TiffReader
 from utils.dataplotter import DataPlotter
-
+from utils.information import Info
 import numpy as np
 class Processor(object):
     '''
         Process the Hue and Value channel to construct a binary waterMap
     '''
-    def __init__(self,DataDir,MaskDir,nhue,nvalue,PNGDIR=None):
+    def __init__(self,directory,improcdir,preprocdir,nhue,nvalue,png=False):
+        self.__InfoObj=Info(directory)
+        self.__InfoObj.DefineDiectoriesAndReferences(improcdir,preprocdir,png=png)
         
+        self.__pngFlag=png
+        if self.__pngFlag:
+            self.__DataViewer=DataPlotter(self.__InfoObj.ReferenceGeotiff,self.__InfoObj.PNGOutDir)
+        
+        self.InputFolder=self.__InfoObj.MainDir
+        
+        self.WMdir=self.__InfoObj.ReferenceGeotiff
 
         self.__NHUE=nhue
-
         self.__NVALUE=nvalue
-        
-        self.InputFolder=DataDir
-        
-        self.WMdir=MaskDir
         
         self.TiffReader=TiffReader()
         self.TiffWritter=TiffWriter()
-        self.__REFGTIFF=self.InputFolder+"2.2.1_HUE_Normalized_Pekel.tiff"
-        self.PNGFLAG=False
-        if PNGDIR!=None:
-            self.PNGFLAG=True
-            self.DataViewer=DataPlotter(self.__REFGTIFF,PNGDIR)
+        
+
+
      ##Saving Necessary Results
 
     def __SaveChannelData(self,Data,Identifier,SaveGeoTiff=False):
         '''
             Save's the Channel data as TIFF and PNG
         '''
-        if self.PNGFLAG:
-            self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
+        if self.__pngFlag:
+            self.__DataViewer.PlotWithGeoRef(Data,str(Identifier))
         
         if(SaveGeoTiff==True):
-            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier),self.__REFGTIFF,self.InputFolder)
+            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier),self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         
         __Data=None
 

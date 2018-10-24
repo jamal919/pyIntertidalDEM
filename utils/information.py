@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
+import sys
 class Info(object):
     '''
         The purpose of this class is to collect useable data from the input data
@@ -26,7 +28,7 @@ class Info(object):
         
         self.Zone=self.__IdentifierStrings[3]
         
-        #self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/WaterMask/'+str(self.Zone)+'__WaterMask.tiff'
+        
        
 
     
@@ -81,6 +83,40 @@ class Info(object):
 
         self.__Files=[RedBandFile,GreenBandFile,BlueBandFile,SWIRBandB11,CloudMask10m,CloudMask20m]
 
+    
+    def DefineDiectoriesAndReferences(self,ProcessedDataPath,PreprocessedDataPath,png=False):
+        MASKDIR=os.path.join(PreprocessedDataPath,'WaterMask','')
+        if not os.path.exists(PreprocessedDataPath):
+            print('Water Mask Directory Not Found!')
+            print('Preprocess the data to create WaterMap for the zone')
+            sys.exit(1)
+
+        MASKFILE=str(os.path.join(MASKDIR,self.Zone+'.tiff'))
+        
+        if not os.path.isfile(MASKFILE):
+            print('Water Mask File  Not Found for zone:'+self.Zone)
+            sys.exit(1)
+        
+        
+        self.__OD=ProcessedDataPath
+
+        self.ReferenceGeotiff=MASKFILE         #For TiffSaving And Plotting
+
+        self.MainDir=os.path.join(ProcessedDataPath,self.Zone,self.DateTime+'_'+self.SateliteName,'')
+        
+        self.PNGOutDir=os.path.join(self.MainDir,'QucikLookPngFiles','')
+
+        ODZ=os.path.join(self.__OD,self.Zone,'')
+        if not os.path.exists(ODZ):
+            os.mkdir(ODZ)
+        ODZI=os.path.join(ODZ,self.DateTime+'_'+self.SateliteName,'')
+        if not os.path.exists(ODZI):
+            os.mkdir(ODZI)
+        if png:
+            ODZIP=os.path.join(ODZI,'QucikLookPngFiles','')
+            if not os.path.exists(ODZIP):
+                os.mkdir(ODZIP)
+   
     
     def DisplayFileList(self):
         '''
