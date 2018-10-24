@@ -127,6 +127,7 @@ class WaterMaskCreator(object):
     def CreateWaterMask(self):
     
         Zones=os.listdir(self.Directory)
+        
         for zone in Zones:
             self.Identifier=str(zone)
             print('*Executing for Zone:'+str(zone))
