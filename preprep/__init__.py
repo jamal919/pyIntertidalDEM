@@ -2,6 +2,7 @@
 from __future__ import print_function
 from .extractor import DataExtractor
 from .watermask_generator import WaterMaskCreator 
+from .statistics_generator import STATGen
 
 import os 
 def ingest(indatadir, wkdir):
@@ -31,3 +32,10 @@ def genmask(wkdir,prepdir,dir=None,nstd=0.5,water=10000,land=5000,png=False):
         WaterMaskCreatorObj.CreateWaterMask()
     except:
         print('WaterMask Generation Failed')
+
+def genstat(wkdir,prepdir):
+    try:
+        STATGenObj=STATGen(wkdir,prepdir)
+        STATGenObj.PlotMonthlyData()
+    except:
+        print('Generating Statistics Failed')

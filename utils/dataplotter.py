@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from osgeo import osr
 from .tiffreader import TiffReader
+from mpl_toolkits.basemap import Basemap
 
 class DataPlotter(object):
 
@@ -95,3 +96,26 @@ class DataPlotter(object):
         plt.clf()
         
         plt.close()
+
+    def plotInMap(self,data):
+        print('Plotting in Map ref')
+        cmap='GnBu'
+        LatMax=np.amax(self.__Lats)
+        LatMin=np.amin(self.__Lats)
+        LonMax=np.amax(self.__Lons)
+        LonMin=np.amin(self.__Lons)
+        extent=[LatMin,LatMax,LonMin,LonMax] #LL=0,2 UR=1,3
+        
+        savename=self.OUTdir+'test.png'
+
+        plotbound = extent
+        _, ax = plt.subplots(figsize=(9, 9))
+        ax = Basemap(llcrnrlon=plotbound[0], llcrnrlat=plotbound[2], urcrnrlon=plotbound[1],
+                    urcrnrlat=plotbound[3], projection='merc', resolution='f')
+        img = ax.imshow(data, extent=extent, origin='upper', cmap=cmap, vmax=1, vmin=0)
+        ax.drawparallels(circles=np.arange(np.round(plotbound[2], 1), np.round(plotbound[3], 2), 0.2), labels=[True, False, False, True], dashes=[2, 2])
+        ax.drawmeridians(meridians=np.arange(np.round(plotbound[0], 1), np.round(plotbound[1], 2), 0.2), labels=[True, False, False, True], dashes=[2, 2])
+        ax.colorbar(img, location='right')
+        print('Saving figure')
+        plt.savefig(savename)
+        plt.show()
