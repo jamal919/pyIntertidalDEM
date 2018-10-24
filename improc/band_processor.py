@@ -12,23 +12,16 @@ class BandData(object):
     '''
         The purpose of this class is to Process the Band data
     '''
-    def __init__(self,Directory,OutDir,PNGFLAG=False):
+    def __init__(self,directory,improcdir,preprocdir,png=False):
         
-        InfoObj=Info(Directory)
-        Files=InfoObj.DisplayFileList()
-        OutDir=str(os.path.join(OutDir,InfoObj.Zone,''))
-        if not os.path.exists(OutDir):
-            os.mkdir(OutDir)
-
-        INDENTIFIER=str(InfoObj.SateliteName)+'_'+str(InfoObj.DateTime)
-        self.TIFFSAVEDIR=os.path.join(OutDir,INDENTIFIER,'')
-        if not os.path.exists(self.TIFFSAVEDIR):
-            os.mkdir(self.TIFFSAVEDIR)
-
-
+        self.__InfoObj=Info(directory)
+        Files=self.__InfoObj.DisplayFileList()
+        self.__InfoObj.DefineDiectoriesAndReferences(improcdir,preprocdir,png=png)
         
-       
-      
+        self.__pngFlag=png
+        if self.__pngFlag:
+            self.__DataViewer=DataPlotter(self.__InfoObj.ReferenceGeotiff,self.__InfoObj.PNGOutDir)
+            
         
         #Files to be used
         self.__RedBandFile=Files[0]
@@ -43,13 +36,7 @@ class BandData(object):
         self.TiffReader=TiffReader()
         self.TiffWritter=TiffWriter()
 
-        self.PNGFlag=PNGFLAG
-        if self.PNGFlag:
-            PNGdir=os.path.join(OutDir,INDENTIFIER,'QuickLookPNGs','')
-            if not os.path.exists(PNGdir):
-                os.mkdir(PNGdir)
-            self.DataViewer=DataPlotter(self.__GreenBandFile,PNGdir)
-            self.PNGDIR_FINAL=PNGdir
+        
 
    #-----------------------------------------------------------------------------------------------------------------     
    ##Section-- Cloud masking
@@ -167,11 +154,11 @@ class BandData(object):
         '''
             Save's the Channel data as TIFF and PNG
         '''
-        if self.PNGFlag:
-            self.DataViewer.PlotWithGeoRef(Data,str(Identifier))
+        if self.__pngFlag:
+            self.__DataViewer.PlotWithGeoRef(Data,str(Identifier))
         
         if(SaveGeoTiff==True):
-            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier),self.__GreenBandFile,self.TIFFSAVEDIR)
+            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier),self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         
         __DATA=None
     
