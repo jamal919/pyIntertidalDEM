@@ -45,11 +45,10 @@ if not os.path.exists(improcdir):
 
 
 def preprocessing():
-    preprep.ingest(indatadir, wkdir)
+    #preprep.ingest(indatadir, wkdir)
     #preprep.genstat(...)
     preprep.genmask(wkdir,prepdir,dir=additionalDirectory,nstd=stdfactor,water=MaskWater,land=MaskLand,png=prepWmaskPNGflag)
-
-
+    
 def processing():
     DataPath=wkdir
     Zones=os.listdir(wkdir)
@@ -60,14 +59,14 @@ def processing():
         for df in DataFolders:
             directory=str(os.path.join(DataPath,df,''))
 
-            improc.construct_channels(directory,improcdir,prepdir,png=False)
-            improc.make_watermap(directory,improcdir,prepdir,nhue=0.5,nvalue=5.0,png=False)
-            improc.remove_blob(directory,improcdir,prepdir,nwater=50000,nland=10000,png=True)
-            #improc.extract_shoreline()
+            improc.construct_channels(directory,improcdir,prepdir,png=procChannelPNGflag)
+            improc.make_watermap(directory,improcdir,prepdir,nhue=hue_channel_scaling_factor,nvalue=value_channel_scaling_factor,png=procWaterMapPngFlag)
+            improc.remove_blob(directory,improcdir,prepdir,nwater=blob_removal_Water,nland=blob_removal_land,png=procblobRemovalpngFlag)
+            improc.extract_shoreline(directory,improcdir,prepdir)
 
 if __name__=='__main__':
-    #preprocessing()
-    processing()
+    preprocessing()
+    #processing()
 
 
 
