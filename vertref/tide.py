@@ -3,10 +3,15 @@ from __future__ import print_function
 import utide 
 import numpy as np
 import datetime
+import os
+import pandas as pd
+import matplotlib.dates as mdates
 # Time series input
 # Harmonic analysis using utide.solve
 # Save the amplitude and phase for the constituents
 # CSV or netCDF
+
+
 
 class Reader(object):
     def __init__(self):
@@ -22,7 +27,7 @@ class Reader(object):
     def read_refmar(self,path):
         time=[]
         elev=[]
-        lat=[]
+        
         with open(path) as f:
             lines = f.readlines()
             for i in range (0,len(lines)):
@@ -45,12 +50,12 @@ class Reader(object):
                     elev.append(HEIGHT)
                 
                 elif str(line).find('# Latitude: ')!=-1:
-                    dat=float(str(line).replace('# Latitude: ',''))
-                    lat.append(dat)
+                    lat=float(str(line).replace('# Latitude: ',''))
+                    
         
         return time,elev,lat
-
-
+    
+    
 class TimeSeries(object):
     def __init__(self):
         self.time = None
@@ -60,14 +65,13 @@ class TimeSeries(object):
 
     def load(self, file,ts):
         self.time, self.elev, self.lat = self.reader.read_refmar(file)
-        #self.time=np.array(self.time)
+        self.time=mdates.date2num(self.time)
         self.elev=np.array(self.elev)
         setattr(ts,'time',self.time)
         setattr(ts,'elev',self.elev)
         setattr(ts,'lat',self.lat)
         return ts
-
-
+    
 
 class Analyzer(object):
     def __init__(self,file):
@@ -78,7 +82,9 @@ class Analyzer(object):
        
         self.ha = utide.solve(self.ts.time, self.ts.elev,lat=self.ts.lat,method='ols',conf_int='MC')
         
-        print(self.ha['keys'])
+        print(self.ha['A'])
+    
+    
 
 class Predictor(object):
     def __init__(self):

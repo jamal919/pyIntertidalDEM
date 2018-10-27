@@ -36,7 +36,7 @@ DeltaicZones=['T45QYE','T45QWE','T45QXE','T46QCK','T46QBL','T46QBK']
 ##---------------------------------------------------------------------------------------------------------------------------------
 ##Vertref
 dem_data_dir='/media/ansary/PMAISONGDE/DEM_DATA/DATAFILES/'     # Dem refmar data directory 
-dem_output_dir='/media/ansary/PMAISONGDE/'                          # Saving Intermediate data for vertical referencing
+vertrefdir='/media/ansary/PMAISONGDE/'                          # Saving Intermediate data for vertical referencing
 
 
 # Preprocessing directory creation
@@ -48,6 +48,10 @@ if not os.path.exists(prepdir):
 improcdir = os.path.join(improcdir, 'ProcessedData')
 if not os.path.exists(improcdir):
     os.mkdir(improcdir)
+#Vertical reference directory creation
+vertrefdir=os.path.join(vertrefdir,'VerticalReferencing','')
+if not os.path.exists(vertrefdir):
+    os.mkdir(vertrefdir)
 
 
 def preprocessing():
@@ -81,4 +85,4 @@ if __name__=='__main__':
     #preprocessing()
     #processing()
     #utils.create_rivermaps(wkdir,improcdir,prepdir)
-    vertref.save_constituents(dem_data_dir,dem_output_dir)
+    vertref.save_constituents(dem_data_dir,vertrefdir)
