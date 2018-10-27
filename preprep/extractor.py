@@ -5,6 +5,7 @@ import zipfile
 import time
 from glob import glob
 import improc
+
 class DataExtractor(object):
     def __init__(self, indir, outdir):
         self.InputDir = indir
@@ -15,14 +16,13 @@ class DataExtractor(object):
     
     def __ListZones(self):
         AllZones=[]
-        for Path in glob(os.path.join(self.InputDir, '**/*.zip'),recursive=True):
+        for Path in glob(os.path.join(self.InputDir, '**/*.zip'), recursive=True):
             File = os.path.basename(Path).replace('.zip', '')
             Zones = File.split('_')[3]
             AllZones.append(Zones)
             
         ZoneSet=set(AllZones)
-        self.Zones=list(ZoneSet)
-        
+        self.Zones=list(ZoneSet)   
     
     def __CreateZoneDirectories(self):
         self.ZoneDirs=[]
@@ -43,7 +43,6 @@ class DataExtractor(object):
                 ZipFileUnex.extractall(str(self.ZoneDirs[i]))
                 ZipFileUnex.close()
                 print('Time Taken:' + str(time.time()-start_time))
-
                         
     def StartExtracting(self):
         self.__ListZones()
