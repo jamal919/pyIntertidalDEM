@@ -3,7 +3,7 @@ import os
 import preprep
 import utils
 import improc
-
+import vertref
 ##----------------------------------------------Section:Parameters-------------------------------------------
 ##-----------------------------------------------------------------------------------------------------------
 indatadir = '/media/ansary/PMAISONGDE/none at the moment/'          # Directoty of Zipped Data
@@ -34,8 +34,9 @@ procblobRemovalpngFlag=False                                        # Save png w
 
 DeltaicZones=['T45QYE','T45QWE','T45QXE','T46QCK','T46QBL','T46QBK']   
 ##---------------------------------------------------------------------------------------------------------------------------------
-
-
+##Vertref
+dem_data_dir='/media/ansary/PMAISONGDE/DEM_DATA/DATAFILES/'     # Dem refmar data directory 
+dem_output_dir='/media/ansary/PMAISONGDE/'                          # Saving Intermediate data for vertical referencing
 
 
 # Preprocessing directory creation
@@ -79,4 +80,5 @@ def testSingleDataProcess(directory):
 if __name__=='__main__':
     #preprocessing()
     #processing()
-    utils.create_rivermaps(wkdir,improcdir,prepdir)
+    #utils.create_rivermaps(wkdir,improcdir,prepdir)
+    vertref.save_constituents(dem_data_dir,dem_output_dir)
