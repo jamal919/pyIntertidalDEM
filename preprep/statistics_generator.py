@@ -4,6 +4,7 @@ import os
 import numpy as np
 import calendar
 import matplotlib.pyplot as plt
+
 class STATGen(object):
     def __init__(self,wkdir,prepdir):
         self.__DataDir=wkdir

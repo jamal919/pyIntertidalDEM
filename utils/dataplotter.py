@@ -97,7 +97,7 @@ class DataPlotter(object):
         
         plt.close()
 
-    def plotInMap(self,data):
+    def plotInMap(self,data,Identifier,plotimdt=False):
         print('Plotting in Map ref')
         cmap='GnBu'
         LatMax=np.amax(self.__Lats)
@@ -106,7 +106,7 @@ class DataPlotter(object):
         LonMin=np.amin(self.__Lons)
         extent=[LatMin,LatMax,LonMin,LonMax] #LL=0,2 UR=1,3
         
-        savename=self.OUTdir+'test.png'
+        savename=self.OUTdir+str(Identifier)+'.png'
 
         plotbound = extent
         _, ax = plt.subplots(figsize=(9, 9))
@@ -118,4 +118,7 @@ class DataPlotter(object):
         ax.colorbar(img, location='right')
         print('Saving figure')
         plt.savefig(savename)
-        plt.show()
+        if (plotimdt==True):
+            plt.show()
+        plt.clf()
+        plt.close() 

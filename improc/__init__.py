@@ -5,6 +5,7 @@ from .binarymap_processor import Processor
 from .filter import DataFilter
 from .latlon import GeoData
 
+
 import sys
 import os
 def construct_channels(directory,improcdir,preprocdir,png=False):
@@ -35,3 +36,4 @@ def extract_shoreline(directory,improcdir,preprocdir):
         GeoDataObj.ShoreLine()
     except:
         print('Shoreline Extraction Failed')
+
