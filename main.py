@@ -85,4 +85,4 @@ if __name__=='__main__':
     #preprocessing()
     #processing()
     #utils.create_rivermaps(wkdir,improcdir,prepdir)
-    vertref.save_constituents(dem_data_dir,vertrefdir)
+    directory=None

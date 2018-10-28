@@ -6,6 +6,7 @@ import datetime
 import os
 import pandas as pd
 import matplotlib.dates as mdates
+import csv
 # Time series input
 # Harmonic analysis using utide.solve
 # Save the amplitude and phase for the constituents
@@ -74,7 +75,9 @@ class TimeSeries(object):
     
 
 class Analyzer(object):
-    def __init__(self,file):
+    def __init__(self,file,Outdir):
+        self.__Identifier=str(file).split('/')[-1]+'.csv'
+        self.__fileoutdir=os.path.join(Outdir,self.__Identifier)
         self.__TimeseriesObj = TimeSeries()
         self.ts=self.__TimeseriesObj.load(file,self.__TimeseriesObj)
     
@@ -82,25 +85,8 @@ class Analyzer(object):
        
         self.ha = utide.solve(self.ts.time, self.ts.elev,lat=self.ts.lat,method='ols',conf_int='MC')
         
-        print(self.ha['A'])
+        
     
-    
 
-class Predictor(object):
-    def __init__(self):
-        pass
 
-    def listStation(self):
-        # Listing available stations where the constituents were calculated
-        pass
-
-    def findClosest(self):
-        # Find closest station correspods to a given lat long
-        pass
-
-    def calcWL(self):
-        # Load closest station constituent values
-        # calculate WL for a given time
-        # return WL
-        pass
     
