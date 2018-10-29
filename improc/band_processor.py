@@ -155,8 +155,8 @@ class BandData(object):
             Save's the Channel data as TIFF and PNG
         '''
         if self.__pngFlag:
-            self.__DataViewer.PlotWithGeoRef(Data,str(Identifier))
-        
+            #self.__DataViewer.PlotWithGeoRef(Data,str(Identifier))
+            self.__DataViewer.plotInMap(Data,Identifier)
         if(SaveGeoTiff==True):
             self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier),self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         

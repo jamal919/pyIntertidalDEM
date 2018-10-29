@@ -123,11 +123,12 @@ class WaterMaskCreator(object):
             Ref=os.path.join(self.OutPutDir,str(self.Identifier)+'.tiff')
             DataPlotterOBJ=DataPlotter(str(Ref),self.PNGDir)
             DataPlotterOBJ.PlotWithGeoRef(WF,self.Identifier)
+            DataPlotterOBJ.plotInMap(WF,self.Identifier)
 
     def CreateWaterMask(self):
     
         Zones=os.listdir(self.Directory)
-        
+        Zones=['T46QCK']
         for zone in Zones:
             self.Identifier=str(zone)
             print('*Executing for Zone:'+str(zone))

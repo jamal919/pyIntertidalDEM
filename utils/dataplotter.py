@@ -116,7 +116,8 @@ class DataPlotter(object):
         ax.drawparallels(circles=np.arange(np.round(plotbound[2], 1), np.round(plotbound[3], 2), 0.2), labels=[True, False, False, True], dashes=[2, 2])
         ax.drawmeridians(meridians=np.arange(np.round(plotbound[0], 1), np.round(plotbound[1], 2), 0.2), labels=[True, False, False, True], dashes=[2, 2])
         ax.colorbar(img, location='right')
-        print('Saving figure')
+        print('Saving figure',str(Identifier))
+        plt.title(str(Identifier))
         plt.savefig(savename)
         if (plotimdt==True):
             plt.show()
