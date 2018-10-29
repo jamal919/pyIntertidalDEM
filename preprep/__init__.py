@@ -33,6 +33,7 @@ def genmask(wkdir,prepdir,dir=None,nstd=0.5,water=10000,land=5000,png=False):
     except:
         print('WaterMask Generation Failed')
 
+
 def genstat(wkdir,prepdir):
     try:
         STATGenObj=STATGen(wkdir,prepdir)

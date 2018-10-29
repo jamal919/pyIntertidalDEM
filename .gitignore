@@ -103,6 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+
 #folder_log
 .vscode/
 /__pycache__/*

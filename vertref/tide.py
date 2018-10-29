@@ -12,8 +12,6 @@ import csv
 # Save the amplitude and phase for the constituents
 # CSV or netCDF
 
-
-
 class Reader(object):
     def __init__(self):
         __Data=None
