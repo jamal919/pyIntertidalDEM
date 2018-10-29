@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 from __future__ import print_function
 
 print('Checking Dependency status:')
@@ -97,4 +99,4 @@ finally:
     pass
 
 print('Done!')
-print('Proceed to ex')
+print('Proceed to execute main.py')

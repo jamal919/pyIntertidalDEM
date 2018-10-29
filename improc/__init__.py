@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from .band_processor import BandData
 from .HSV_processor import HSVData
 from .binarymap_processor import Processor

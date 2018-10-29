@@ -6,6 +6,7 @@ import time
 from glob import glob
 import improc
 
+
 class DataExtractor(object):
     def __init__(self, indir, outdir):
         self.InputDir = indir

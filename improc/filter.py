@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import print_function
 from utils.tiffwriter import TiffWriter
 from utils.tiffreader import TiffReader
 from utils.dataplotter import DataPlotter
