@@ -24,9 +24,9 @@ def make_watermap(directory,improcdir,preprocdir,nhue=0.4,nvalue=5.0,png=False):
     except:
         print('WaterMap creation Failed')
 
-def remove_blob(directory,improcdir,preprocdir,nwater=50000,nland=10000,png=True):
+def remove_blob(directory,improcdir,preprocdir,nwater=50000,nland=10000,png=False):
     try:
-        DataFilterObj=DataFilter(directory,improcdir,preprocdir,nwater=50000,nland=10000,png=True)
+        DataFilterObj=DataFilter(directory,improcdir,preprocdir,nwater=50000,nland=10000,png=False)
         DataFilterObj.FilterWaterMap()
     except:
         print('Filtering Failed')

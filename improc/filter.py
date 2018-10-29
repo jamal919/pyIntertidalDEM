@@ -12,7 +12,7 @@ class DataFilter(object):
 
         THIS CLASS IS SPECIFICLY DESIGNED FOR DEM
     '''
-    def __init__(self,directory,improcdir,preprocdir,nwater=50000,nland=10000,png=True):
+    def __init__(self,directory,improcdir,preprocdir,nwater=50000,nland=10000,png=False):
         self.__InfoObj=Info(directory)
         self.__InfoObj.DefineDiectoriesAndReferences(improcdir,preprocdir,png=png)
         
@@ -70,7 +70,7 @@ class DataFilter(object):
         
         self.TiffWritter.SaveArrayToGeotiff(MapWater,'4.1.1_WaterMap',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         if self.__pngFlag:
-            self.__DataViewer.PlotWithGeoRef(MapWater,'4.1.1_WaterMap_Fixed_Thresh')
+            self.__DataViewer.plotInMap(MapWater,'4.1.1_WaterMap_Fixed_Thresh')
         
         
         print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))

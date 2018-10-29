@@ -66,7 +66,7 @@ class HSVData(object):
 
             #2.1.1 RGB
             
-            self.__DataViewer.PlotWithGeoRef(RGB,'2.1.1 RGB')
+            self.__DataViewer.plotInMap(RGB,'2.1.1 RGB')
         
         
         iN=np.isnan(R)
@@ -110,5 +110,5 @@ class HSVData(object):
         #2.2.2 Value Normalized Pekel
         self.TiffWritter.SaveArrayToGeotiff(Max,'2.2.2 Value Normalized Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         if self.__pngFlag:
-            self.__DataViewer.PlotWithGeoRef(Hue,'2.2.1_HUE_Normalized_Pekel')
-            self.__DataViewer.PlotWithGeoRef(Max,'2.2.2 Value Normalized Pekel')
+            self.__DataViewer.plotInMap(Hue,'2.2.1_HUE_Normalized_Pekel')
+            self.__DataViewer.plotInMap(Max,'2.2.2 Value Normalized Pekel')
