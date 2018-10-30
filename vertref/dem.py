@@ -51,13 +51,20 @@ class Dem(object):
         y=point[1]
         x_btm, y_btm = btm(x, y) # find position in BTM
         node=[x_btm,y_btm]
-        dist_mat = distance.cdist([node], nodes)
+        
+        xs=nodes[:,0]
+        ys=nodes[:,1]
+        
+        xs_btm,ys_btm=btm(xs,ys)
+        
+        nodes_btm=np.column_stack((xs_btm,ys_btm))
+       
+        dist_mat = distance.cdist([node], nodes_btm)
         
         closest_dist = dist_mat.min()
+        
         closest_ind = dist_mat.argmin()
-        #closest_ind=np.argwhere(dist_mat==closest_dist)
-        #if closest_ind!=0:
-            #print(closest_ind)
+       
         
         timeInfo=self.__time
         latInfo=x
@@ -85,11 +92,11 @@ class Dem(object):
             for point in points:
 
                 Information=self.__GetInformation(point,nodes)
-
+               
                 writer.writerow(Information)
 
         print('Done saving Information!(time, lon, lat, nnlon, nnlat, distance, height)')
-
+        
     def __FinddatFile(self,Path,zone):
         pathstr=str(Path).split('/')
         identifier=str(pathstr[-1]).replace('.csv','')
