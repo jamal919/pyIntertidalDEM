@@ -8,11 +8,6 @@ import os
 import scipy.ndimage
 from osgeo import gdal,osr
 import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
-args = parser.parse_args()
-directory=args.Dir
-
 
 ##Read DataSet
 def ReadTiffData(File):
@@ -67,6 +62,14 @@ def SaveArrayToGeotiff(Array,DIRGTIFF,Identifier):
 
     if str(Identifier).find('WaterMask__demistd')!=-1:
         OutDir=OutDir+'WaterMask__demistd/'
+
+    if str(Identifier).find('WaterMask')!=-1:
+        OutDir=OutDir+'WaterMask/'
+        if not os.path.exists(OutDir):
+            os.mkdir(OutDir)
+    
+    if str(Identifier).find('WaterMask__FIXED')!=-1:
+        OutDir=OutDir+'WaterMask__FIXED/'
         if not os.path.exists(OutDir):
             os.mkdir(OutDir)
     
@@ -107,7 +110,6 @@ def GetDecimalsWithEndBit(MaxValue):
     return results
 
 
-
 def ProcessAlpha(Directory):
     DirectoryStrings=str(Directory).split('/')             #split the directory to extract specific folder
         
@@ -136,7 +138,41 @@ def ProcessAlpha(Directory):
     return B11
     
 def CombineZoneData(directory,Zones):    
+    SWIRB12File=str(Directory)+str(DirectoryStrings[-1])+'_FRE_B12.tif'
+    CloudMask20m=str(Directory)+'/MASKS/'+str(DirectoryStrings[-1])+'_CLM_R2.tif'
+    print('Processing Alpha Data:'+str(DirectoryStrings[-1]))
+    B11=GetTiffData(SWIRB11File)
+    B12=GetTiffData(SWIRB12File)
+    CLM=GetTiffData(CloudMask20m)
 
+    B11=CloudMaskCorrection(B11,CLM)
+    B12=CloudMaskCorrection(B12,CLM)
+
+    B11=np.array(B11.repeat(2,axis=0).repeat(2,axis=1))
+    B12=np.array(B12.repeat(2,axis=0).repeat(2,axis=1))
+    
+    B11=B11.astype(np.float)
+    B12=B12.astype(np.float)
+    
+    
+    iPosB11=(B11==-10000)
+    iPosB12=(B12==-10000)
+
+    B11[iPosB11]=AllData[iPosB11]
+    B12[iPosB11]=AllData[iPosB12]
+    
+
+    B11=(B11-np.nanmin(B11))/(np.nanmax(B11)-np.nanmin(B11))
+    B12=(B12-np.nanmin(B12))/(np.nanmax(B12)-np.nanmin(B12))
+
+    Alpha=B11+B12
+
+    Alpha=(Alpha-np.nanmin(Alpha))/(np.nanmax(Alpha)-np.nanmin(Alpha))
+    
+    return Alpha
+    
+    
+def main(directory,Zones):    
     DataPath=directory
     
     for zone in Zones:
@@ -193,9 +229,7 @@ def FilterWaterMasks(Zones):
 def CreateWaterMask(Zones,Manual_check=False,PlotHist=False):
     Png_Dir=str(os.getcwd())+'/Analysis/'
     if not os.path.exists(Png_Dir):
-        os.mkdir(Png_Dir)    
-    
-    
+        os.mkdir(Png_Dir)
     
     for zone in Zones:
         print('*Executing for Zone:'+str(zone))
@@ -209,6 +243,7 @@ def CreateWaterMask(Zones,Manual_check=False,PlotHist=False):
         plt.figure('0.5*STD threshold WaterMask:'+str(zone))
         plt.title('0.5*STD threshold WaterMask:'+str(zone))
         plt.imshow(WM_STD)
+
         #plt.show()
         plt.savefig(Png_Dir+str(zone)+'__0.5STD.png')
         plt.clf()
@@ -289,6 +324,11 @@ def CreateWaterMask(Zones,Manual_check=False,PlotHist=False):
 
 
 if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
+    args = parser.parse_args()
+    directory=args.Dir  
+  
     Zones=os.listdir(directory)
     CombineZoneData(directory,Zones)
     CreateWaterMask(Zones)

@@ -60,4 +60,3 @@ class DataFilter(object):
         
         
         print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
-        
