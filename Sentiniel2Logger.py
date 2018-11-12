@@ -42,7 +42,7 @@ class Info(object):
        
         self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
 
-        self.EdgeMask=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
+        self.EdgeMask=str(self.directory)+'MASKS/'+self.__DirectoryStrings[-1]+'_EDG_R1.tif'
 
         __Date=self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
         
@@ -51,8 +51,8 @@ class Info(object):
         self.DateTime=__Date+' '+__Time
         self.SateliteName=self.__IdentifierStrings[0]
         self.Zone=self.__IdentifierStrings[3]
-        ##Later    
-        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/WaterMask/'+str(self.Zone)+'__WaterMask.tiff'
+        ##Later
+        self.WaterMaskDir=str(os.getcwd())+'/DataPreprocess/FinalWaterMasks/'+str(self.Zone)+'__Filtered.tiff'
        
 
     def OutputDir(self,Type):
