@@ -34,17 +34,14 @@ def SaveLatLon(directory):
     GeoDataObj=GeoData(directory)
     GeoDataObj.ShoreLine()
 
-
-
-
 def ModuleRun(directory):
     start_time=time.time()
-
+    
     SaveRGB(directory)
     SaveHUEVALUE(directory)
     SaveIsWater(directory)
-    #SaveWaterMap(directory)
-    #SaveLatLon(directory)
+    SaveWaterMap(directory)
+    SaveLatLon(directory)
 
     
     print("Total Elapsed Time: %s seconds " % (time.time() - start_time))
@@ -52,7 +49,6 @@ def ModuleRun(directory):
     pid = os.getpid()
     
     py = psutil.Process(pid)
-    
     memoryUse = py.memory_info()[0]/(2**30)  # memory use in GB
 
     print('memory use(in GB):', memoryUse)
@@ -62,8 +58,10 @@ def SetRun(directory):
     
     DataPath=directory
     Zones=os.listdir(directory)
-    #Zones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
-    #Zones=['T45QXE']
+    Zones=[ 'T46QCK','T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QBL']
+    #for dz in DoneZones:
+    #    Zones.remove(str(dz))
+    
     for zone in Zones:
         DataPath=DataPath+str(zone)+'/'
         print('Executing Module for zone:'+str(zone))

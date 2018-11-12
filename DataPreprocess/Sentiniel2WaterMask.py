@@ -7,9 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import scipy.ndimage
 from osgeo import gdal,osr
-
-
-
+import argparse
 
 ##Read DataSet
 def ReadTiffData(File):
@@ -56,6 +54,15 @@ def SaveArrayToGeotiff(Array,DIRGTIFF,Identifier):
         OutDir=OutDir+'Zone/'
         if not os.path.exists(OutDir):
             os.mkdir(OutDir)
+            
+    if str(Identifier).find('WaterMask__FIXED')!=-1:
+        OutDir=OutDir+'WaterMask__FIXED/'
+        if not os.path.exists(OutDir):
+            os.mkdir(OutDir)
+
+    if str(Identifier).find('WaterMask__demistd')!=-1:
+        OutDir=OutDir+'WaterMask__demistd/'
+
     if str(Identifier).find('WaterMask')!=-1:
         OutDir=OutDir+'WaterMask/'
         if not os.path.exists(OutDir):
@@ -67,7 +74,7 @@ def SaveArrayToGeotiff(Array,DIRGTIFF,Identifier):
             os.mkdir(OutDir)
     
     if str(Identifier).find('Filtered')!=-1:
-        OutDir=OutDir+'Filtered/'
+        OutDir=OutDir+'FinalWaterMasks/'
         if not os.path.exists(OutDir):
             os.mkdir(OutDir)
     
@@ -103,13 +110,34 @@ def GetDecimalsWithEndBit(MaxValue):
     return results
 
 
-
-def ProcessAlpha(Directory,AllData):
+def ProcessAlpha(Directory):
     DirectoryStrings=str(Directory).split('/')             #split the directory to extract specific folder
         
     DirectoryStrings=list(filter(bool,DirectoryStrings))
 
     SWIRB11File=str(Directory)+str(DirectoryStrings[-1])+'_FRE_B11.tif'
+    CloudMask20m=str(Directory)+'/MASKS/'+str(DirectoryStrings[-1])+'_CLM_R2.tif'
+    print('Processing Alpha Data:'+str(DirectoryStrings[-1]))
+    B11=GetTiffData(SWIRB11File)
+    CLM=GetTiffData(CloudMask20m)
+
+    B11=CloudMaskCorrection(B11,CLM)
+    
+    B11=np.array(B11.repeat(2,axis=0).repeat(2,axis=1))
+    
+    B11=B11.astype(np.float)
+    
+    
+    iPosB11=(B11==-10000)
+    
+    B11[iPosB11]=np.nan
+    
+    B11=(B11-np.nanmin(B11))/(np.nanmax(B11)-np.nanmin(B11))
+    
+    
+    return B11
+    
+def CombineZoneData(directory,Zones):    
     SWIRB12File=str(Directory)+str(DirectoryStrings[-1])+'_FRE_B12.tif'
     CloudMask20m=str(Directory)+'/MASKS/'+str(DirectoryStrings[-1])+'_CLM_R2.tif'
     print('Processing Alpha Data:'+str(DirectoryStrings[-1]))
@@ -145,7 +173,6 @@ def ProcessAlpha(Directory,AllData):
     
     
 def main(directory,Zones):    
-
     DataPath=directory
     
     for zone in Zones:
@@ -155,71 +182,54 @@ def main(directory,Zones):
         DirGtiff=DataPath+str(DataFolders[0])+'/'+str(DataFolders[0])+'_FRE_B8.tif'#10m resolution Size (10980,10980)
         Gtiff=GetTiffData(DirGtiff)
        
-        All=np.zeros(Gtiff.shape)
+        All=np.empty(Gtiff.shape)
+        All=All.astype(np.float)
+        All[:]  = np.nan
+
+        Holder = np.empty((Gtiff.shape[0], Gtiff.shape[1], 2), dtype=np.float)
 
         for df in DataFolders:
             dirc=DataPath+df+'/'
-            Alpha=ProcessAlpha(dirc,All)
-            All=All+Alpha
-            All=(All-np.nanmin(All))/(np.nanmax(All)-np.nanmin(All))
+            Alpha=ProcessAlpha(dirc)
+            Holder[:, :, 0] = All
+            Holder[:, :, 1] = Alpha
+            All = np.nanmean(Holder, axis=-1, keepdims=False)
         
+        All = (All-np.nanmin(All))/(np.nanmax(All)-np.nanmin(All))
         DataPath=directory
-        
         SaveArrayToGeotiff(All,DirGtiff,str(zone)+'__Zone')
         
         
 def FilterWaterMasks(Zones):
+    Png_Dir=str(os.getcwd())+'/Analysis/Filtered/'
+    if not os.path.exists(Png_Dir):
+        os.mkdir(Png_Dir)
     for zone in Zones:
         print('*Executing for Zone:'+str(zone))
-        ZFile=str(os.getcwd())+'/WaterMask__FIXED/'+str(zone)+'__WaterMask__FIXED.tiff'
+        ZFile=str(os.getcwd())+'/WaterMask__demistd/'+str(zone)+'__WaterMask__demistd.tiff'
         Data=GetTiffData(ZFile)
-        
-        plt.figure(str(zone)+':WaterMask')
-        plt.title(str(zone)+':WaterMask')
+        Land=1-Data
+        Thresh=5000
+        LabeledData,_=scipy.ndimage.measurements.label(Land)
+        _,PixelCount=np.unique(LabeledData,return_counts=True)
+        __SignificantFeatures=np.argwhere(PixelCount>Thresh).ravel()
+        __SignificantFeatures=__SignificantFeatures[__SignificantFeatures>0]
+        for sigF in __SignificantFeatures:
+            Land[LabeledData==sigF]=0
+        Data[Land==1]=1
+        plt.figure('0.5*STD threshold WaterMask FILTERED:'+str(zone))
+        plt.title('0.5*STD threshold WaterMask FILTERED:'+str(zone))
         plt.imshow(Data)
-        plt.show()
+        #plt.show()
+        plt.savefig(Png_Dir+str(zone)+'__0.5STD.png')
         plt.clf()
         plt.close()
-        Thresh=int(input('Select A threshold to filter out smaller noise data:'))
-        LabeledData,_=scipy.ndimage.measurements.label(Data)
-        Value,PixelCount=np.unique(LabeledData,return_counts=True)
+        SaveArrayToGeotiff(Data,ZFile,str(zone)+'__Filtered')
         
-        
-        
-        SIGpc=(PixelCount>Thresh) 
-        SIGVal=Value[SIGpc]
-        SIGFTR=PixelCount[SIGpc]
-        SIGD=np.argsort(SIGFTR)[::-1]
-        print(SIGFTR)
-        
-        conF='y'    
-        for indice in SIGD:
-            plt.figure(str(zone)+':Labebled Data Value='+str(SIGVal[indice]))
-            plt.title(str(zone)+':Labebled Data Count='+str(SIGFTR[indice]))
-            WF=np.zeros(Data.shape)
-            WF[LabeledData==SIGVal[indice]]=1
-            plt.imshow(WF)
-            plt.show()
-            plt.clf()
-            plt.close()
-            conF=str(input('Continiue To add water region?(y/n)'))
-            if conF=='n':
-                print('Saving Final WaterMask For:'+str(zone))
-                SaveArrayToGeotiff(WF,ZFile,str(zone)+'__WaterMask')
-                break 
-        
-def CreateWaterMask(Zones):
+def CreateWaterMask(Zones,Manual_check=False,PlotHist=False):
     Png_Dir=str(os.getcwd())+'/Analysis/'
     if not os.path.exists(Png_Dir):
         os.mkdir(Png_Dir)
-    
-    
-    textfile_path=str(os.getcwd())+'/Analysis/Analysis.txt'
-    
-    with open(textfile_path, 'a') as textfile:
-        textfile.write("|ZONE            Fixed                 0.5*STD\n")
-        textfile.write("|---------------------------------------------------------------------------------------------------------------------------\n")
-    
     
     for zone in Zones:
         print('*Executing for Zone:'+str(zone))
@@ -233,52 +243,93 @@ def CreateWaterMask(Zones):
         plt.figure('0.5*STD threshold WaterMask:'+str(zone))
         plt.title('0.5*STD threshold WaterMask:'+str(zone))
         plt.imshow(WM_STD)
+
+        #plt.show()
         plt.savefig(Png_Dir+str(zone)+'__0.5STD.png')
         plt.clf()
         plt.close()
-    
-        HData=GetTiffData(ZFile)
-        sFlag='n'
-        while True:
+        if PlotHist:
             
-            WM_FIXED=np.zeros(HData.shape)
-            
-            fixedThresh=float(input('Max thresh for watermasking:'))
-            
-            WM_FIXED[HData<=fixedThresh]=1
-            
-            plt.figure('Fixed threshold WaterMask of Zone:'+str(zone))
-            plt.title('Full Water Region:'+str(zone)+':'+str(fixedThresh))
-            plt.imshow(WM_FIXED)
-            plt.show()
+            DrawData=GetTiffData(ZFile)
+            plt.figure('Histogram of:'+str(zone))
+            plt.title('Histogram of:'+str(zone))
+            Value,Count=np.unique(DrawData,return_counts=True)
+            Count=Count[Value<=2*np.nanmean(DrawData)]
+            Value=Value[Value<=2*np.nanmean(DrawData)]
+            plt.plot(Value,Count)
+            plt.axvline(x=0.5*np.nanstd(DrawData))
+            plt.axvline(x=np.nanmean(DrawData))
+            plt.xlabel('Values')
+            plt.ylabel('Count of pixels')
+            plt.xticks((0.5*np.nanstd(DrawData),np.nanmean(DrawData),2*np.nanmean(DrawData),np.nanstd(DrawData)),('0.5STD','MEAN',str(2*np.nanmean(DrawData)),str(np.nanstd(DrawData))))
+            plt.savefig(Png_Dir+str(zone)+'__Histogram_DPLOT.png')
             plt.clf()
-            plt.close() 
+            plt.close()
             
-            sFlag=str(input('Finalize WaterMask?(y/n)'))
+            plt.figure('Histogram of:'+str(zone))
+            plt.title('Histogram of:'+str(zone))
+            Value,Count=np.unique(Data,return_counts=True)
+            plt.plot(Value,Count)
+            
+            plt.axvspan(0, 0.5*np.nanstd(Data), facecolor='#2ca02c', alpha=0.5)
+            plt.xlabel('Values')
+            plt.ylabel('Count of pixels')
+            plt.savefig(Png_Dir+str(zone)+'__Histogram.png')
+            plt.clf()
+            plt.close()
+            
 
-            if(sFlag=='y'):
+        if Manual_check==True:
+            textfile_path=str(os.getcwd())+'/Analysis/Analysis.txt'
+    
+            with open(textfile_path, 'a') as textfile:
+                textfile.write("|ZONE            Fixed                 0.5*STD\n")
+                textfile.write("|------------------------------------------------------\n")
+            HData=GetTiffData(ZFile)
+            sFlag='n'
+            while True:
+                
+                WM_FIXED=np.zeros(HData.shape)
+                
+                fixedThresh=float(input('Max thresh for watermasking:'))
+                
+                WM_FIXED[HData<=fixedThresh]=1
+                
                 plt.figure('Fixed threshold WaterMask of Zone:'+str(zone))
                 plt.title('Full Water Region:'+str(zone)+':'+str(fixedThresh))
                 plt.imshow(WM_FIXED)
-                plt.savefig(Png_Dir+str(zone)+'__Final.png',bbox_inches='tight')
+                plt.show()
                 plt.clf()
                 plt.close() 
-                break
-        print('Saving Fixed threshold WaterMask For:'+str(zone))
-        SaveArrayToGeotiff(WM_FIXED,ZFile,str(zone)+'__WaterMask__FIXED')
+                
+                sFlag=str(input('Finalize WaterMask?(y/n)'))
+
+                if(sFlag=='y'):
+                    plt.figure('Fixed threshold WaterMask of Zone:'+str(zone))
+                    plt.title('Full Water Region:'+str(zone)+':'+str(fixedThresh))
+                    plt.imshow(WM_FIXED)
+                    plt.savefig(Png_Dir+str(zone)+'__Final.png',bbox_inches='tight')
+                    plt.clf()
+                    plt.close() 
+                    break
+            print('Saving Fixed threshold WaterMask For:'+str(zone))
+            SaveArrayToGeotiff(WM_FIXED,ZFile,str(zone)+'__WaterMask__FIXED')
+            
+            with open(textfile_path, 'a') as textfile:
+                textfile.write('|'+str(zone)+'          '+str(fixedThresh)+'          '+str(STDthresh)+"\n")
         
-        with open(textfile_path, 'a') as textfile:
-            textfile.write('|'+str(zone)+'          '+str(fixedThresh)+'          '+str(STDthresh)+"\n")
+        else:
+            SaveArrayToGeotiff(WM_STD,ZFile,str(zone)+'__WaterMask__demistd')
 
 
 
 if __name__=='__main__':
-    #directory=input('The Directory of the Data:')
-    directory='/media/ansary/PMAISONGDE/Data/'
+    parser = argparse.ArgumentParser()
+    parser.add_argument("Dir", help="Directory of Uncompressed Data",type=str)
+    args = parser.parse_args()
+    directory=args.Dir  
+  
     Zones=os.listdir(directory)
-    Done=['T45QYE','T45RXK']
-    for dz in Done:
-        Zones.remove(str(dz))
-    #main(directory,Zones)
-    #CreateWaterMask(Zones)
+    CombineZoneData(directory,Zones)
+    CreateWaterMask(Zones)
     FilterWaterMasks(Zones)

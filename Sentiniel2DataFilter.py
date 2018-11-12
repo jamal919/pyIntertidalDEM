@@ -33,12 +33,15 @@ class DataFilter(object):
 
     
     def __DetectWaterFixed(self):
-        LabeledData,_=scipy.ndimage.measurements.label(self.Data)
-        Value,PixelCount=np.unique(LabeledData,return_counts=True)
-        MaxPixel=np.amax(PixelCount[Value>0])
-        MaxVal=Value[PixelCount==MaxPixel]
         WF=np.zeros(self.Data.shape)
-        WF[LabeledData==MaxVal[0]]=1
+        
+        LabeledData,_=scipy.ndimage.measurements.label(self.Data)
+        _,PixelCount=np.unique(LabeledData,return_counts=True)
+        Thresh=50000
+        __SignificantFeatures=np.argwhere(PixelCount>=Thresh).ravel()
+        __SignificantFeatures=__SignificantFeatures[__SignificantFeatures>0]
+        for sigF in __SignificantFeatures:
+            WF[LabeledData==sigF]=1
         
         WaterMap=self.__FilterLandFeatures(WF)
 
@@ -57,4 +60,3 @@ class DataFilter(object):
         
         
         print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
-        
