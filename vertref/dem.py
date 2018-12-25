@@ -14,7 +14,6 @@ class Dem(object):
        self.__outdir=vertrefdir
 
     def listStation(self,zone):
-        
         lats=[]
         lons=[]
         stationfiledir=os.path.join(self.__wldir,str(zone),str(zone)+'.dat')
@@ -31,7 +30,6 @@ class Dem(object):
         return nodes
 
     def __GetPoints(self,csvfile):
-
         lats=[]
         lons=[]
         with open(csvfile) as f:
