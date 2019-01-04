@@ -147,6 +147,7 @@ class Dem(object):
             nodes = self.listStation(zone)
             
             for fname in glob(os.path.join(self.__csvdir, str(zone), '*', '*.csv')):
+                print(zone, os.path.basename(fname))
                 datfile = self.__FinddatFile(fname, zone)
                 self.heightdata = self.__findHeights(datfile)
                 self.findClosest(nodes, fname)
