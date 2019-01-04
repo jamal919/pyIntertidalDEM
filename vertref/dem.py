@@ -41,22 +41,22 @@ class Dem(object):
         to, this function finds the corresponding file with waterlevel information.
         Currently, the waterlevel are expected to be in yyyymmddhhmmss.csv format.
         '''
-        pathstr=os.path.basename(fname)
-        identifier=pathstr.replace('.csv','')
-        identifier=str(identifier).replace('5.0.','')
-        date=str(identifier).split('_')[0]
-        time=str(identifier).split('_')[1]
-        self.__FILEIdent=identifier
-        day=date.split('-')[0]
-        month=date.split('-')[1]
-        year=date.split('-')[2]
+        pathstr = os.path.basename(fname)
+        identifier = pathstr.replace('.csv','')
+        identifier = str(identifier).replace('5.0.','')
+        date = str(identifier).split('_')[0]
+        time = str(identifier).split('_')[1]
+        self.__FILEIdent = identifier
+        day = date.split('-')[0]
+        month = date.split('-')[1]
+        year = date.split('-')[2]
 
-        hour=time.split('-')[0]
-        minute=time.split('-')[1]
-        seconds=time.split('-')[2]
+        hour = time.split('-')[0]
+        minute = time.split('-')[1]
+        seconds = time.split('-')[2]
         
-        datIdentifier=year+month+day+hour+minute+seconds #name of dat file
-        datfile=os.path.join(self.__wldir,str(zone),str(datIdentifier)+'.dat')
+        datIdentifier = year+month+day+hour+minute+seconds #name of dat file
+        datfile = os.path.join(self.__wldir,str(zone),str(datIdentifier)+'.dat')
         return datfile
 
     def __findHeights(self, datfile):
