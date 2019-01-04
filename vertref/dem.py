@@ -9,9 +9,17 @@ from pyproj import Proj
 
 class Dem(object):
     def __init__(self, shorelinedir, waterleveldir, vertrefdir):
-       self.__csvdir = shorelinedir 
-       self.__wldir = waterleveldir
-       self.__outdir = vertrefdir
+        '''
+        The Dem object is expected to load the shorelines, vertically reference
+        with proper water level and finally return the Dem developed from the 
+        consjunction of water level and shoreline information.
+
+        Currently the implementation loads the water level, vertically reference
+        it and store the single vertically referenced file. 
+        '''
+        self.__csvdir = shorelinedir 
+        self.__wldir = waterleveldir
+        self.__outdir = vertrefdir
 
     def __create_out_dir(self,zone):
         '''
