@@ -6,4 +6,4 @@ from glob import glob
 
 def set_water_levels(shorelinedir, waterleveldir, vertrefdir):
         DemObj = Dem(shorelinedir, waterleveldir, vertrefdir)
-        DemObj.setVertRef()
+        DemObj.set_vetical_heights()
