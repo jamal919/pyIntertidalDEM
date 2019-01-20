@@ -165,8 +165,8 @@ if __name__=='__main__':
     The setting below is for debugging purpose. It is expected to be removed 
     entirely in the course of refactoring of the codebase.
     '''
-    shorelinedir = '/run/media/khan/Workbench/Projects/Sentinel2/T46QCK/Analysis/ImageProcessing'
-    waterleveldir = '/run/media/khan/Workbench/Projects/Sentinel2/T46QCK/Analysis/VerticalReferencing/WaterLevels'
-    vertrefdir = '/run/media/khan/Workbench/Projects/Sentinel2/T46QCK/Analysis/VerticalReferencing'
+    shorelinedir = '/run/media/khan/Workbench/Projects/Sentinel2/Workbench/Analysis/ImageProcessing'
+    waterleveldir = '/run/media/khan/Workbench/Projects/Sentinel2/Workbench/Analysis/VerticalReferencing/WaterLevels'
+    vertrefdir = '/run/media/khan/Workbench/Projects/Sentinel2/Workbench/Analysis/VerticalReferencing'
     dem = Dem(shorelinedir=shorelinedir, waterleveldir=waterleveldir, vertrefdir=vertrefdir)
     dem.set_vetical_heights()
