@@ -10,7 +10,7 @@ import improc
 class DataExtractor(object):
     def __init__(self, indir, outdir):
         self.InputDir = indir
-        self.DataDir = os.path.join(outdir, 'Data')
+        self.DataDir = outdir
         
         if not os.path.exists(self.DataDir):
             os.mkdir(self.DataDir)
