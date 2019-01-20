@@ -9,8 +9,9 @@ import setuptools
 
 setuptools.setup(
     name='pyIntertidalDEM',
-    version='0.1',
-    author='MJUK and NA',
+    version='1.0',
+    author='Jamal Khan',
+    contributor='Nazmuddoha Ansary',
     author_email='jamal.khan@legos.obs-mip.fr',
     description='Intertidal DEM generation Package',
     packages=setuptools.find_packages(),
