@@ -1,14 +1,23 @@
 # -*- coding: utf-8 -*-
+'''
+Vertical referencing using simulated or observed water levels. This module 
+provides classes to make water level predictions using utide, vertically
+reference the shorelines using predicted water levels, and production of final
+merged DEM product. 
+
+Author: khan
+Email: jamal.khan@legos.obs-mip.fr
+'''
 from __future__ import print_function
 import numpy as np
-import os
-from glob import glob
 from scipy.spatial import distance
-import csv
 from pyproj import Proj
+from glob import glob
+import csv
+import os
 
 class Dem(object):
-    def __init__(self, shorelinedir, waterleveldir, vertrefdir):
+    def __init__(self, improc_dir, waterlevel_dir, vertref_dir):
         '''
         The Dem object is expected to load the shorelines, vertically reference
         with proper water level and finally return the Dem developed from the 
@@ -17,9 +26,9 @@ class Dem(object):
         Currently the implementation loads the water level, vertically reference
         it and store the single vertically referenced file. 
         '''
-        self.__csvdir = shorelinedir 
-        self.__wldir = waterleveldir
-        self.__outdir = vertrefdir
+        self.__csvdir = improc_dir 
+        self.__wldir = waterlevel_dir
+        self.__outdir = vertref_dir
 
     def __create_out_dir(self,zone):
         '''
@@ -143,30 +152,16 @@ class Dem(object):
                 information = self.__get_information(point,nodes)
                 writer.writerow(information)
 
-    def set_vetical_heights(self):
+    def set_vetical_heights(self, zone):
         '''
         set_vetical_heights assembles a dem out of the given shoreline directory and water 
         level information. 
         '''
-        zones = os.listdir(self.__csvdir)
+        self.__create_out_dir(zone)
+        nodes = self.__list_wl_nodes(zone)
         
-        for zone in zones:
-            self.__create_out_dir(zone)
-            nodes = self.__list_wl_nodes(zone)
-            
-            for fname in glob(os.path.join(self.__csvdir, str(zone), '*', '*.csv')):
-                datfile = self.__find_dat_file(fname, zone)
-                print(zone, os.path.basename(datfile))
-                self.heightdata = self.__find_heights(datfile)
-                self.__find_closest(nodes, fname)
-
-if __name__=='__main__':
-    '''
-    The setting below is for debugging purpose. It is expected to be removed 
-    entirely in the course of refactoring of the codebase.
-    '''
-    shorelinedir = '/run/media/khan/Workbench/Projects/Sentinel2/Workbench/Analysis/ImageProcessing'
-    waterleveldir = '/run/media/khan/Workbench/Projects/Sentinel2/Workbench/Analysis/VerticalReferencing/WaterLevels'
-    vertrefdir = '/run/media/khan/Workbench/Projects/Sentinel2/Workbench/Analysis/VerticalReferencing'
-    dem = Dem(shorelinedir=shorelinedir, waterleveldir=waterleveldir, vertrefdir=vertrefdir)
-    dem.set_vetical_heights()
+        for fname in glob(os.path.join(self.__csvdir, str(zone), '*', '*.csv')):
+            datfile = self.__find_dat_file(fname, zone)
+            print(zone, os.path.basename(datfile))
+            self.heightdata = self.__find_heights(datfile)
+            self.__find_closest(nodes, fname)
