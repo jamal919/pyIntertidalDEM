@@ -163,7 +163,7 @@ class WaterMask(object):
         SWIRB11File=str(os.path.join(Directory,str(DirectoryStrings[-1])+'_FRE_B11.tif'))  
         CloudMask20m=str(os.path.join(Directory,'MASKS',str(DirectoryStrings[-1])+'_CLM_R2.tif'))
        
-        print('Processing Alpha Data:'+str(DirectoryStrings[-1]))
+        print('\t|- {:s}'.format(DirectoryStrings[-1]))
         
         B11=self.TiffReader.GetTiffData(SWIRB11File)
         CLM=self.TiffReader.GetTiffData(CloudMask20m)
@@ -239,6 +239,6 @@ class WaterMask(object):
     def generate(self, zones):
         for zone in zones:
             self.Identifier=str(zone)
-            print('Executing for Zone:'+str(zone))
-            Data=self.__CombineAlpha(zone)
+            print('* Mask Generation - Zone: {:s}'.format(zone))
+            Data = self.__CombineAlpha(zone)
             self.__FilterWaterMask(Data)

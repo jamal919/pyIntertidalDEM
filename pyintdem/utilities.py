@@ -46,18 +46,20 @@ class Info(object):
         '''
             Displays information about the data
         '''
+        _satellite = self.__IdentifierStrings[0]
+        _date = self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
+        _time = self.__DateTimeStamp[1][0:2]+':'+self.__DateTimeStamp[1][2:4]+':'+self.__DateTimeStamp[1][4:]+':'+self.__DateTimeStamp[2]
+        _product = self.__IdentifierStrings[2]
+        _zone = self.__IdentifierStrings[3]
+        _version = self.__IdentifierStrings[5]+self.__IdentifierStrings[4]
+        print('* {:s} {:s} {:s} {:s} : {:s} {:s}'.format(_satellite, _zone, _product, _version, _date, _time,))
         
-        print('    Satelite Name  :'+ self.__IdentifierStrings[0])
-        
-        print('             Date  :'+ self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4])
-        
-        print('             Time  :'+ self.__DateTimeStamp[1][0:2]+':'+self.__DateTimeStamp[1][2:4]+':'+self.__DateTimeStamp[1][4:]+':'+self.__DateTimeStamp[2])
-        
-        print('     Product Type  :'+ self.__IdentifierStrings[2])
-        
-        print('Geographical Zone  :'+ self.__IdentifierStrings[3])
-        
-        print('    Metadata Type  :'+ self.__IdentifierStrings[4]+' Version:'+self.__IdentifierStrings[5])
+        # print('    Satelite Name  :'+ self.__IdentifierStrings[0])
+        # print('             Date  :'+ self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4])
+        # print('             Time  :'+ self.__DateTimeStamp[1][0:2]+':'+self.__DateTimeStamp[1][2:4]+':'+self.__DateTimeStamp[1][4:]+':'+self.__DateTimeStamp[2])
+        # print('     Product Type  :'+ self.__IdentifierStrings[2])
+        # print('Geographical Zone  :'+ self.__IdentifierStrings[3])
+        # print('    Metadata Type  :'+ self.__IdentifierStrings[5]+self.__IdentifierStrings[4])
         
     def __DataFileList(self):
 
@@ -77,19 +79,12 @@ class Info(object):
             The two Cloud masks contains cloud information for 10m and 20m resolutions 
         '''
         BlueBandFile=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B2.tif'
-        
         RedBandFile=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B4.tif'
-
         GreenBandFile=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B8.tif'
-
         SWIRBandB11=str(self.directory)+'/'+self.__DirectoryStrings[-1]+'_FRE_B11.tif'
-
         CloudMask10m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R1.tif'
-        
         CloudMask20m=str(self.directory)+'/MASKS/'+self.__DirectoryStrings[-1]+'_CLM_R2.tif'
         
-        
-
         self.__Files=[RedBandFile,GreenBandFile,BlueBandFile,SWIRBandB11,CloudMask10m,CloudMask20m]
 
     
@@ -221,15 +216,9 @@ class TiffWriter(object):
         '''
         self.OutputDir=str(OutputDirectory)+'/'                 
         
-        self.GeoTiffDir=ReferenceGeoTiffDir           
-    
-        self.__ProjectionAndTransfromData()        # Gets projection and geotransform
-
-        print('*Saving '+str(Identifier)+'.tiff')
-        start_time=time.time()
-        
-        GeoTiffFileName = str(Identifier)+'.tiff'   # Output geotiff file name according to identifier
-        
+        self.GeoTiffDir=ReferenceGeoTiffDir
+        self.__ProjectionAndTransfromData() # Gets projection and geotransform
+        GeoTiffFileName = str(Identifier)+'.tiff' # Output geotiff file name according to identifier
         Driver = gdal.GetDriverByName('GTiff')
         OutputDataset = Driver.Create(self.OutputDir+GeoTiffFileName,np.shape(Array)[0],np.shape(Array)[1], 1,gdal.GDT_Float32)
         OutputDataset.GetRasterBand(1).WriteArray(Array)
@@ -237,7 +226,6 @@ class TiffWriter(object):
         OutputDataset.SetProjection(self.__Projection)
         OutputDataset.FlushCache()
         OutputDataset=None
-        print("Elapsed Time(GeoTiff Saving): %s seconds " % (time.time() - start_time))
 
 class DataPlotter(object):
 
@@ -246,19 +234,16 @@ class DataPlotter(object):
     '''
 
     def __init__(self,ReferenceGeoTiffDir,OutputDir):
-        
-        __NoDataFile=ReferenceGeoTiffDir #Reference 
-        
-        Reader=TiffReader()
+        __NoDataFile = ReferenceGeoTiffDir #Reference 
+        Reader = TiffReader()
+        self.OUTdir = OutputDir
        
-        self.OUTdir=OutputDir
-       
-        __DataSet=Reader.ReadTiffData(__NoDataFile)
-        GeoTransForm=__DataSet.GetGeoTransform()
-        Projection=__DataSet.GetProjection()
-        __DataSet=Reader.GetTiffData(__NoDataFile)
-        [row,col]=np.shape(__DataSet)
-        __DataSet=None
+        __DataSet = Reader.ReadTiffData(__NoDataFile)
+        GeoTransForm = __DataSet.GetGeoTransform()
+        Projection = __DataSet.GetProjection()
+        __DataSet = Reader.GetTiffData(__NoDataFile)
+        [row,col] = np.shape(__DataSet)
+        __DataSet = None
 
         xdiff=1000
         ydiff=1000
@@ -267,94 +252,110 @@ class DataPlotter(object):
         xps=np.arange(0,ceilx*xdiff,xdiff)
         yps=np.arange(0,ceily*ydiff,ydiff)
         
-        [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=GeoTransForm
-        __pixel_Coordinate_X=xps
-        __pixel_Coordinate_y=yps
-        __Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
-        __Space_coordinate_Y= __rotation_2* __pixel_Coordinate_X +    __pixel_height* __pixel_Coordinate_y + __y_offset
+        [__x_offset, __pixel_width, __rotation_1, __y_offset, __rotation_2, __pixel_height] = GeoTransForm
+        __pixel_Coordinate_X = xps
+        __pixel_Coordinate_y = yps
+        __Space_coordinate_X = __pixel_width*__pixel_Coordinate_X+__rotation_1*__pixel_Coordinate_y+__x_offset
+        __Space_coordinate_Y = __rotation_2*__pixel_Coordinate_X + __pixel_height*__pixel_Coordinate_y+__y_offset
         
-        ##get CRS from dataset
-        __Coordinate_Reference_System=osr.SpatialReference()                     #Get Co-ordinate reference
-        __Coordinate_Reference_System.ImportFromWkt(Projection)                  #projection reference
+        ## get CRS from dataset
+        # Get Co-ordinate reference
+        __Coordinate_Reference_System = osr.SpatialReference()
+        # projection reference
+        __Coordinate_Reference_System.ImportFromWkt(Projection)                  
 
         ## create lat/long CRS with WGS84 datum<GDALINFO for details>
-        __Coordinate_Reference_System_GEO=osr.SpatialReference()
-        __Coordinate_Reference_System_GEO.ImportFromEPSG(4326)                   # 4326 is the EPSG id of lat/long CRS
+        __Coordinate_Reference_System_GEO = osr.SpatialReference()
+        # 4326 is the EPSG id of lat/long CRS
+        __Coordinate_Reference_System_GEO.ImportFromEPSG(4326) 
 
-        __Transform_term = osr.CoordinateTransformation(__Coordinate_Reference_System, __Coordinate_Reference_System_GEO)
-        Latitude=np.zeros(np.shape(yps)[0])
-        Longitude=np.zeros(np.shape(xps)[0])
+        __Transform_term = osr.CoordinateTransformation(
+            __Coordinate_Reference_System, 
+            __Coordinate_Reference_System_GEO
+        )
+        Latitude = np.zeros(np.shape(yps)[0])
+        Longitude = np.zeros(np.shape(xps)[0])
         for idx in range(0,np.shape(yps)[0]):
-            (__latitude_point, __longitude_point, _ ) = __Transform_term.TransformPoint(__Space_coordinate_X[idx], __Space_coordinate_Y[idx])
-            Latitude[idx]=__latitude_point
-            Longitude[idx]=__longitude_point
-        self.__XPS=xps
-        self.__YPS=yps
-        self.__Lats=np.round(Latitude,decimals=4) 
-        self.__Lons=np.round(Longitude,decimals=4)
+            (__latitude_point, __longitude_point, _ ) = __Transform_term.TransformPoint(
+                __Space_coordinate_X[idx],
+                __Space_coordinate_Y[idx]
+            )
+            Latitude[idx] = __latitude_point
+            Longitude[idx] = __longitude_point
+        self.__XPS = xps
+        self.__YPS = yps
+        self.__Lats = np.round(Latitude, decimals=4) 
+        self.__Lons = np.round(Longitude, decimals=4)
 
     
-    def PlotWithGeoRef(self,Variable,VariableIdentifier,PlotImdt=False):
-        
+    def PlotWithGeoRef(self, Variable, VariableIdentifier, pltshow=False):
         '''
             Plots the data with Geo reference
         '''
-
-
-        print('plotting data:'+VariableIdentifier)
-        low=np.nanmin(Variable)
-        high=np.nanmax(Variable)
-        
-        V=np.linspace(low,high,10,endpoint=True)
-        
+        gdal.UseExceptions()
+        low = np.nanmin(Variable)
+        high = np.nanmax(Variable)
+        V = np.linspace(low, high, 10, endpoint=True)
         plt.figure(VariableIdentifier)
-            
         plt.title(VariableIdentifier)
-        
         plt.grid(True)
-
-        plt.xticks(self.__XPS,self.__Lats)
-
-        plt.yticks(self.__YPS,self.__Lons)
-   
+        plt.xticks(self.__XPS, self.__Lats)
+        plt.yticks(self.__YPS, self.__Lons)
         plt.imshow(Variable)
-
         plt.colorbar(ticks=V)
-
         
-        plt.savefig(self.OUTdir+VariableIdentifier+'.png')
+        savename = os.path.join(self.OUTdir, '{:s}.png'.format(VariableIdentifier))
+        plt.savefig(savename)
         
-        if (PlotImdt==True):
-            plt.show() 
+        if (pltshow==True):
+            plt.show()
         
-        #clear memory
+        # clear memory
         plt.clf()
-        
         plt.close()
 
-    def plotInMap(self,data,Identifier,plotimdt=False):
-        print('Plotting in Map ref')
-        cmap='GnBu'
-        LatMax=np.amax(self.__Lats)
-        LatMin=np.amin(self.__Lats)
-        LonMax=np.amax(self.__Lons)
-        LonMin=np.amin(self.__Lons)
-        extent=[LatMin,LatMax,LonMin,LonMax] #LL=0,2 UR=1,3
+    def plotInMap(self, data, Identifier, cmap='binary_r', rgb=False, colorbar=False, pltshow=False):
+        cmap = cmap
+        LatMax = np.amax(self.__Lats)
+        LatMin = np.amin(self.__Lats)
+        LonMax = np.amax(self.__Lons)
+        LonMin = np.amin(self.__Lons)
+        extent = [LatMin,LatMax,LonMin,LonMax] #LL=0,2 UR=1,3
         
-        savename=self.OUTdir+str(Identifier)+'.png'
+        savename = os.path.join(self.OUTdir, '{:s}.png'.format(str(Identifier)))
 
         plotbound = extent
-        _, ax = plt.subplots(figsize=(9, 9))
-        ax = Basemap(llcrnrlon=plotbound[0], llcrnrlat=plotbound[2], urcrnrlon=plotbound[1],
-                    urcrnrlat=plotbound[3], projection='merc', resolution='c')
-        img = ax.imshow(data, extent=extent, origin='upper', cmap=cmap, vmax=1, vmin=0)
-        ax.drawparallels(circles=np.arange(np.round(plotbound[2], 1), np.round(plotbound[3], 2), 0.2), labels=[True, False, False, True], dashes=[2, 2])
-        ax.drawmeridians(meridians=np.arange(np.round(plotbound[0], 1), np.round(plotbound[1], 2), 0.2), labels=[True, False, False, True], dashes=[2, 2])
-        ax.colorbar(img, location='right')
-        print('Saving figure',str(Identifier))
-        plt.title(str(Identifier))
+        fig, ax = plt.subplots(figsize=(9, 9))
+        m = Basemap(
+            llcrnrlon=plotbound[0], 
+            llcrnrlat=plotbound[2], 
+            urcrnrlon=plotbound[1],
+            urcrnrlat=plotbound[3], 
+            projection='merc', 
+            resolution='c',
+            ax=ax
+        )
+        if rgb:
+            img = m.imshow(data, extent=extent, origin='upper')
+        else:
+            img = m.imshow(data, extent=extent, origin='upper', cmap=cmap)
+        m.drawparallels(
+            circles=np.arange(np.round(plotbound[2], 1), np.round(plotbound[3], 2), 0.2), 
+            labels=[True, False, False, True], 
+            dashes=[2, 2]
+        )
+        m.drawmeridians(
+            meridians=np.arange(np.round(plotbound[0], 1), np.round(plotbound[1], 2), 0.2), 
+            labels=[True, False, False, True], 
+            dashes=[2, 2]
+        )
+
+        if colorbar:
+            m.colorbar(img, location='right')
+        
         plt.savefig(savename)
-        if (plotimdt==True):
+        
+        if (pltshow==True):
             plt.show()
         plt.clf()
         plt.close()

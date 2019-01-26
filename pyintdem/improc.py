@@ -20,6 +20,8 @@ from .utilities import TiffReader
 from .utilities import DataPlotter
 from .utilities import Info
 
+np.seterr(all='ignore') # set to 'warn' for debugging
+
 class BandData(object):
     '''
         The purpose of this class is to Preprocess the individual Band data
@@ -31,24 +33,21 @@ class BandData(object):
         self.__InfoObj.DefineDiectoriesAndReferences(improcdir,preprocdir,png=png)
         
         self.__pngFlag=png
+        
         if self.__pngFlag:
             self.__DataViewer=DataPlotter(self.__InfoObj.ReferenceGeotiff,self.__InfoObj.PNGOutDir)
             
         
         #Files to be used
-        self.__RedBandFile=Files[0]
-        self.__GreenBandFile=Files[1]
-        self.__BlueBandFile=Files[2]
-
-        self.__SWIRB11=Files[3]
-        
-        self.__CloudMask10mFile=Files[4]
-        self.__CloudMask20mFile=Files[5]
+        self.__RedBandFile = Files[0]
+        self.__GreenBandFile = Files[1]
+        self.__BlueBandFile = Files[2]
+        self.__SWIRB11 = Files[3]
+        self.__CloudMask10mFile = Files[4]
+        self.__CloudMask20mFile = Files[5]
        
-        self.TiffReader=TiffReader()
-        self.TiffWritter=TiffWriter()
-   
-   ##Section-- Cloud masking
+        self.TiffReader = TiffReader()
+        self.TiffWritter = TiffWriter()
     
     def __CloudMaskCorrection(self,BandData,MaskData,Identifier):
         
@@ -71,13 +70,12 @@ class BandData(object):
             > Get the decimal numbers that ends with 1 upto the maximum value
             > Set the pixels contains these decimals to negative Reflectance and return the data file  
         
-        '''
-        print('Processing Cloud Mask With:'+Identifier)                                                                               
+        '''                                                                            
         
         __Decimals=self.__GetDecimalsWithEndBit(np.amax(MaskData))
 
         for v in range(0,len(__Decimals)):
-            BandData[MaskData==__Decimals[v]]=-10000                #Exclude data point Identifier= - Reflectance value
+            BandData[MaskData==__Decimals[v]]=-10000 # NaN values
         
         return BandData 
     
@@ -98,15 +96,14 @@ class BandData(object):
         
         return __results
         
-    #-------------------------------------------------------------------------------------------------------------------
     #Section- Preprocessing
 
     def __NanConversion(self,Data):
         '''
             Converts negative Relfectance values(Cloud and No data values) to Nan
         '''
-        Data=Data.astype(np.float)
-        Data[Data==-10000]=np.nan
+        Data = Data.astype(np.float)
+        Data[Data==-10000] = np.nan
         return Data
 
     def __NormalizeData(self,Data):
@@ -117,7 +114,7 @@ class BandData(object):
             > Data Normalized=-------------
                                 Max - Min
         '''        
-        Data=(Data-np.nanmin(Data))/(np.nanmax(Data)-np.nanmin(Data))
+        Data = (Data-np.nanmin(Data))/(np.nanmax(Data)-np.nanmin(Data))
         return Data
     
 
@@ -130,16 +127,12 @@ class BandData(object):
             > Upsample Data
         '''
         __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask        
-        Data=self.__CloudMaskCorrection(Data,__CloudMask20m,'SWIR Band 20m')
-
-        Data=self.__NanConversion(Data)
-
-        Data=self.__NormalizeData(Data)
-
-        Data=np.array(Data.repeat(2,axis=0).repeat(2,axis=1))
+        Data = self.__CloudMaskCorrection(Data,__CloudMask20m,'SWIR Band 20m')
+        Data = self.__NanConversion(Data)
+        Data = self.__NormalizeData(Data)
+        Data = np.array(Data.repeat(2,axis=0).repeat(2,axis=1))
 
         return Data
-
 
     def __PreprocessChannel(self,Data):
         '''
@@ -150,38 +143,31 @@ class BandData(object):
         '''
         __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask       
         Data=self.__CloudMaskCorrection(Data,__CloudMask10m,'RGB Band 10m')
-
         Data=self.__NanConversion(Data)
-
         Data=self.__NormalizeData(Data)
 
         return Data
 
-    ##Saving Necessary Results
-
-    def __SaveChannelData(self,Data,Identifier,SaveGeoTiff=False):
+    def __SaveChannelData(self, Data, Identifier, SaveGeoTiff=False):
         '''
             Save's the Channel data as TIFF and PNG
         '''
         if self.__pngFlag:
-            #self.__DataViewer.PlotWithGeoRef(Data,str(Identifier))
-            self.__DataViewer.plotInMap(Data,Identifier)
+            self.__DataViewer.plotInMap(Data, Identifier)
         if(SaveGeoTiff==True):
-            self.TiffWritter.SaveArrayToGeotiff(Data,str(Identifier),self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
+            self.TiffWritter.SaveArrayToGeotiff(
+                Data,str(Identifier),
+                self.__InfoObj.ReferenceGeotiff,
+                self.__InfoObj.MainDir
+            )
         
         __DATA=None
-    
-
-
-
-
-    #Section Main
 
     def __CreateAlphaChannel(self):
         '''
             Combine SWIR bands to create Alpha channel
         '''
-        B11=self.TiffReader.GetTiffData(self.__SWIRB11) #Read
+        B11=self.TiffReader.GetTiffData(self.__SWIRB11)
        
         B11=self.__PreprocessAlpha(B11)
         
@@ -268,9 +254,13 @@ class BandData(object):
             **
                 
         '''
+        print('\t|- Preparing Alpha channel')
         self.__CreateAlphaChannel()
+        print('\t|- Preparing Red channel')
         self.__ProcessRedChannel()
+        print('\t|- Preparing Green channel')
         self.__ProcessGreenChannel()
+        print('\t|- Preparing Blue channel')
         self.__ProcessBlueChannel()
 
 
@@ -317,7 +307,7 @@ class HSVData(object):
 
         '''
 
-        print('Computing Hue and Value channel from RGB data')
+        print('\t|- Computing Hue and Value channel from RGB data')
         
         R=self.TiffReader.GetTiffData(self.RedDataFile)
         G=self.TiffReader.GetTiffData(self.GreenDataFile)
@@ -335,19 +325,32 @@ class HSVData(object):
 
             #2.1.1 RGB
             
-            self.__DataViewer.plotInMap(RGB,'2.1.1 RGB')
+            self.__DataViewer.plotInMap(data=RGB, Identifier='2.1.1 RGB', rgb=True)
         
+        # inan = np.isnan(R)
+        # max_rgb = np.maximum(np.maximum(R, G), B)
+        # min_rgb = np.maximum(np.maximum(R, G), B)
+        # value = max_rgb
+        # saturation = (value - min_rgb)/value
         
+        # hue = np.empty(np.shape(R))
+        # hue[np.where(value==min_rgb)] = 0
+        # hue[np.where(value==R)] = (60*((G[np.where(value==R)]-B[np.where(value==R)])/(value[np.where(value==R)]-min_rgb[np.where(value==R)]))+360)%360
+        # hue[np.where(value==G)] = 60*(B[np.where(value==G)]-R[np.where(value==G)])/(value[np.where(value==G)]-min_rgb[np.where(value==G)])+120
+        # hue[np.where(value==B)] = 60*(R[np.where(value==B)]-G[np.where(value==B)])/(value[np.where(value==B)]-min_rgb[np.where(value==B)])+240
+        # hue[inan] = np.nan
+        # value[inan] = np.nan
+        # saturation[inan] = np.nan
+        # hue = (hue-np.nanmin(hue))/(np.nanmax(hue)-np.nanmin(hue))
+        # value = (value-np.nanmin(value))/(np.nanmax(value)-np.nanmin(value))
+
         iN=np.isnan(R)
         Hue=np.empty(np.shape(R))
 
         Max=np.maximum(np.maximum(R,G),B) ##Val
         Max[iN]=np.nan
 
-        
-
         Min=np.minimum(np.minimum(R,G),B) ##min
-
         Min[iN]=np.nan 
         
         #Max==Min segment
@@ -357,21 +360,22 @@ class HSVData(object):
         Hue[iZ]=0
 
         iV=(Chroma>0)
+
         #Max=Red
         iR=(R==Max) & iV
         Hue[iR]=((60*((G[iR]-B[iR])/(Max[iR]-Min[iR])))+360) % 360
+
         #Max=Green
         iG=(G==Max) & iV
         Hue[iG]=(60*((B[iG]-R[iG])/(Max[iG]-Min[iG])))+120
+
         #Max=Blue
         iB=(B==Max) & iV
         Hue[iB]=(60*((B[iB]-R[iB])/(Max[iB]-Min[iB])))+240
-
         Hue[iN]=np.nan
-        
         Hue=(Hue-np.nanmin(Hue))/(np.nanmax(Hue)-np.nanmin(Hue))
         
-        Max=(Max-np.nanmin(Max))/(np.nanmax(Max)-np.nanmin(Max)) #norm
+        Max = (Max-np.nanmin(Max))/(np.nanmax(Max)-np.nanmin(Max)) #norm
 
         #2.2.1 HUE Normalized Pekel
         self.TiffWritter.SaveArrayToGeotiff(Hue,'2.2.1_HUE_Normalized_Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
@@ -424,38 +428,27 @@ class WaterMap(object):
         '''
             Reading Saved data and forming a data mask from Alpha Data
         '''
-        
-        print('Getting Value Data')
         __File=self.InputFolder+"2.2.2 Value Normalized Pekel.tiff"
         self.Value=self.TiffReader.GetTiffData(__File)
         
-        print('Getting Hue Data')
         __File=self.InputFolder+"2.2.1_HUE_Normalized_Pekel.tiff"
         self.Hue=self.TiffReader.GetTiffData(__File)
     
     def __CreateWaterMask(self): 
         '''
             A thresh hold is selected for which Alpha is clipped to 0 to form a water mask
-        '''   
-        print('Getting Alpha Channel')
+        '''
         __File=self.InputFolder+"1.1.2 Alpha Band N.tiff"
         Alpha=self.TiffReader.GetTiffData(__File)
         
-        
-        print('Creating WaterMask')
         self.iNan=np.isnan(Alpha)
-
-        self.WaterMask=self.TiffReader.GetTiffData(self.WMdir)  
-        
+        self.WaterMask=self.TiffReader.GetTiffData(self.WMdir)
         self.WaterMask[self.iNan]=np.nan
     
     def __MaskHueValue(self):
-        print('Masking Value Channel with water mask')
         MasKedValue=np.copy(self.Value)
         MasKedValue[self.WaterMask==0]=np.nan
         self.__SaveChannelData(MasKedValue,'3.1.1 Masked Value Channel')
-
-        print('Inverse Masking Value Channel with water mask')
         MasKedHue=np.copy(self.Hue)
         MasKedHue[self.WaterMask==1]=np.nan
         self.__SaveChannelData(MasKedHue,'3.1.3 Inversed Masked Hue Channel')
@@ -470,7 +463,6 @@ class WaterMap(object):
                T_value is Median of I_value 
                S_value is standard deviation of I_value
         '''
-        print('Calculating Binary Water Value Channel')
         T=np.nanmedian(self.Value[self.WaterMask==1])     #Median 
         S=np.nanstd(self.Value[self.WaterMask==1])      #standard deviation
         
@@ -480,7 +472,7 @@ class WaterMap(object):
         c1=T+n*S
         c2=T-n*S
 
-        print('T='+str(T)+'   S='+str(S)+'     n='+str(n)+'     c1='+str(c1)+'        c2='+str(c2))
+        print('\t|\t|- Hue channel: T = {:.3f}, S = {:.3f}, n = {:.3f}, c1 = {:.3f}, c2 = {:.3f}'.format(T, S, n, c1, c2))
 
         self.BW_Value=np.zeros(self.Value.shape)
         self.BW_Value[(self.Value<c1) & (self.Value>c2) ]=1
@@ -501,7 +493,6 @@ class WaterMap(object):
                T hue is Median of I Hue 
                S hue is standard deviation of I HUe
         '''
-        print('Calculating Binary Water Hue Channel')
         T=np.nanmedian(self.Hue[self.WaterMask==0])       #Median 
         S=np.nanstd(self.Hue[self.WaterMask==0])          #standard deviation
         
@@ -511,7 +502,7 @@ class WaterMap(object):
         c1=T+n*S
         c2=T-n*S
 
-        print('T='+str(T)+'   S='+str(S)+'     n='+str(n)+'     c1='+str(c1)+'        c2='+str(c2))
+        print('\t|\t|- Value Channel : T = {:.3f}, S = {:.3f}, n = {:.3f}, c1 = {:.3f}, c2 = {:.3f}'.format(T, S, n, c1, c2))
 
         self.BW_Hue=np.ones(self.Hue.shape)
         self.BW_Hue[(self.Hue<c1) & (self.Hue>c2) ]=0
@@ -541,6 +532,7 @@ class WaterMap(object):
             > Birany Hue Water
             > And operation
         '''
+        print('\t|- Binary water map')
         self.__LoadHueValue()
         self.__CreateWaterMask()
         self.__MaskHueValue()
@@ -584,9 +576,6 @@ class FeatureFilter(object):
         for sigF in __SignificantFeatures:
             __SignificantData[__Labeled==sigF]=1
         return __SignificantData
-
-    
-
     
     def __DetectWaterFixed(self):
         WF=np.zeros(self.Data.shape)
@@ -604,22 +593,16 @@ class FeatureFilter(object):
         return WaterMap
     
     def FilterWaterMap(self):
-        start_time=time.time()
-        print('Filtering Water Map')
+        print('\t|- Filtering water map')
         MapWater=self.__DetectWaterFixed()
         MapWater=1-MapWater
         MapWater[self.__Inan]=np.nan
-        
         
         self.TiffWritter.SaveArrayToGeotiff(MapWater,'4.1.1_WaterMap',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         if self.__pngFlag:
             self.__DataViewer.plotInMap(MapWater,'4.1.1_WaterMap_Fixed_Thresh')
         
-        
-        print("Total Elapsed Time(Segmentation): %s seconds " % (time.time() - start_time))
-        
 class Shoreline(object):
-
     def __init__(self,directory,improcdir,preprocdir):
         self.__InfoObj=Info(directory)
         self.__InfoObj.DefineDiectoriesAndReferences(improcdir,preprocdir)
@@ -636,27 +619,20 @@ class Shoreline(object):
         self.GeoTransForm=__DataSet.GetGeoTransform()
         self.Projection=__DataSet.GetProjection()
         __DataSet=None
-        
-    
-        
 
     def __ConvolutedMap(self):
-        print('Mapping ShoreLine')
         [self.__row,self.__col]=np.shape(self.MapWater)
-        start_time = time.time()
         __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
         __ConvolutedData=scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
         __ConvolutedData[__ConvolutedData<=0]=np.nan
         __ConvolutedData[__ConvolutedData>0]=1
-        
-        
 
-        self.__Map_ShoreLine=np.argwhere(__ConvolutedData==1)                                              #change this condition for testing
+        self.__Map_ShoreLine=np.argwhere(__ConvolutedData==1) #change this condition for testing
         self.__TotalDataPoints=np.shape(self.__Map_ShoreLine)[0]
+        
         #Cleanup
         __ConvolutedData=None
         gc.collect()
-        print("Total Elapsed Time(Convolution): %s seconds " % (time.time() - start_time))
     
     def __PixelToSpaceCoordinate(self):
         [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=self.GeoTransForm
@@ -664,15 +640,15 @@ class Shoreline(object):
         __pixel_Coordinate_y=self.__Map_ShoreLine[:,0]
         self.__Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
         self.__Space_coordinate_Y= __rotation_2* __pixel_Coordinate_X +    __pixel_height* __pixel_Coordinate_y + __y_offset
+        
         #shift to the center of the pixel
         self.__Space_coordinate_X +=__pixel_width  / 2.0
         self.__Space_coordinate_Y +=__pixel_height / 2.0
     
     def __SpaceCoordinateToLatLon(self):
-        start_time=time.time()
         ##get CRS from dataset
-        __Coordinate_Reference_System=osr.SpatialReference()                     #Get Co-ordinate reference
-        __Coordinate_Reference_System.ImportFromWkt(self.Projection)             #projection reference
+        __Coordinate_Reference_System=osr.SpatialReference() #Get Co-ordinate reference
+        __Coordinate_Reference_System.ImportFromWkt(self.Projection) #projection reference
 
         ## create lat/long CRS with WGS84 datum<GDALINFO for details>
         __Coordinate_Reference_System_GEO=osr.SpatialReference()
@@ -686,27 +662,21 @@ class Shoreline(object):
             
             self.__LatitudeData[indice]=__latitude_point
             self.__LongitudeData[indice]=__longitude_point
-        print('')
-        print("Total Elapsed Time(SpaceCoords to Lat Lon): %s seconds " % (time.time() - start_time))
 
     def __SaveDataAsCSV(self,Data):
         '''
             Saves Lat Lon Data as CSV in a Given Format
         '''
-        start_time=time.time()
         Identifier=self.__InfoObj.DateTime
-        print('Saving '+str(Identifier)+'.csv')
         csvfile=self.__InfoObj.MainDir+'5.0.'+str(Identifier)+'.csv'
         with open(csvfile,"w") as output:
             writer=csv.writer(output,lineterminator='\n')
             for index in range(0,np.shape(Data)[0]):
                 __Information=Data[index].tolist()
                 writer.writerow(__Information)
-       
-        print('')
-        print("Elapsed Time(CSV Saving): %s seconds " % (time.time() - start_time))
 
     def generate(self):
+        print('\t|- Mapping ShoreLine')
         self.__ConvolutedMap()
         self.__PixelToSpaceCoordinate()
         self.__SpaceCoordinateToLatLon()
