@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function
 import os
@@ -8,29 +8,32 @@ from pyintdem import improc
 from pyintdem import vertref
 
 # Directory Settings
-input_dir = '/run/media/khan/Sentinel2/Testing/RawData' # Zip Data
-output_dir = '/run/media/khan/Sentinel2/Testing/Analysis' # Output
+raw_data_dir = '/run/media/khan/Sentinel2/RawData' # Zip Data
+input_dir='/run/media/khan/PMAISONGDE/Analysis'
+output_dir = '/run/media/khan/Sentinel2/Analysis' # Output
 
 # Directory of saving unzipped data
-data_dir = os.path.join(output_dir, 'Data') 
+data_dir = os.path.join(input_dir, 'Data') 
 prep_dir = os.path.join(output_dir, 'Preprocess') 
 improc_dir = os.path.join(output_dir, 'Shorelines') 
 vertref_dir = os.path.join(output_dir, 'Referencing') 
 waterlevel_dir = os.path.join(output_dir, 'WaterLevels')
 
-for dloc in [data_dir, prep_dir, improc_dir, vertref_dir, waterlevel_dir]:
+for dloc in [input_dir, output_dir, data_dir, prep_dir, improc_dir, vertref_dir, waterlevel_dir]:
     if not os.path.exists(dloc):
         os.mkdir(dloc)
 
 if __name__=='__main__':
     # list of zones
-    zones = ['T46QBL']
+    zones = ['T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QCK', 'T46QBL', 'T46QCL']
+    zones = ['T46QBL', 'T46QCL']
+    zones = ['T46QCK']
 
-    # Data Extraction
-    zip_extractor = preprep.DataExtractor(input_dir=input_dir, output_dir=data_dir)
-    zip_extractor.list_zones(debug=False)
-    for zone in zones:
-        zip_extractor.extract(zone)
+    # # Data Extraction
+    # zip_extractor = preprep.DataExtractor(input_dir=raw_data_dir, output_dir=data_dir)
+    # zip_extractor.list_zones(debug=False)
+    # for zone in zones:
+    #     zip_extractor.extract(zone)
 
     # Tile Statistics
     zip_stat = preprep.Stat(data_dir=data_dir, prep_dir=prep_dir)
@@ -100,11 +103,11 @@ if __name__=='__main__':
             )
             shoreline_generator.generate()
     
-    # Vertical referencing
-    for zone in zones:
-        dem_generator = vertref.Dem(
-            improc_dir=improc_dir,
-            waterlevel_dir=waterlevel_dir,
-            vertref_dir=vertref_dir
-        )
-        dem_generator.set_vetical_heights(zone=zone)
+    # # Vertical referencing
+    # for zone in zones:
+    #     dem_generator = vertref.Dem(
+    #         improc_dir=improc_dir,
+    #         waterlevel_dir=waterlevel_dir,
+    #         vertref_dir=vertref_dir
+    #     )
+    #     dem_generator.set_vetical_heights(zone=zone)
