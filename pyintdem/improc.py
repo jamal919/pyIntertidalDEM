@@ -22,6 +22,31 @@ from .utilities import Info
 
 np.seterr(all='ignore') # set to 'warn' for debugging
 
+class ImageProcessor(object):
+    def __init__(self, snap, saveto, by=['zone', 'date_time']):
+        self.saveto = saveto
+        self.snap = snap
+        if not os.path.exists(self.saveto):
+            os.mkdir(self.saveto)
+
+    def downscale(self, band='alpha'):
+        # Normalization, Downscaling, Synthetic Band
+        raise NotImplementedError()
+
+    def normalize(self, bands=['red', 'green', 'blue', 'alpha_ds']):
+        # Return normalized red, green, blue, alpha band
+        raise NotImplementedError()
+
+    def apply_alpha(self, on_bands=['red', 'green', 'blue'], alpha='alpha_ds'):
+        # Return 
+        raise NotImplementedError()
+
+    def rgb_2_hsv(self, red='red_a', green='green_a', blue='blue_a'):
+        raise NotImplementedError()
+
+    def apply_threshold(self, mask, nhue, nvalue):
+        raise NotImplementedError()
+
 class BandData(object):
     '''
         The purpose of this class is to Preprocess the individual Band data
@@ -126,8 +151,8 @@ class BandData(object):
             > Normalize Data
             > Upsample Data
         '''
-        __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask        
-        Data = self.__CloudMaskCorrection(Data,__CloudMask20m,'SWIR Band 20m')
+        # __CloudMask20m=self.TiffReader.GetTiffData(self.__CloudMask20mFile) #CloudMask        
+        # Data = self.__CloudMaskCorrection(Data,__CloudMask20m,'SWIR Band 20m')
         Data = self.__NanConversion(Data)
         Data = self.__NormalizeData(Data)
         Data = np.array(Data.repeat(2,axis=0).repeat(2,axis=1))
@@ -141,8 +166,8 @@ class BandData(object):
             > Nan convert negative reflectance values
             > Normalize Data
         '''
-        __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask       
-        Data=self.__CloudMaskCorrection(Data,__CloudMask10m,'RGB Band 10m')
+        # __CloudMask10m=self.TiffReader.GetTiffData(self.__CloudMask10mFile) #CloudMask       
+        # Data=self.__CloudMaskCorrection(Data,__CloudMask10m,'RGB Band 10m')
         Data=self.__NanConversion(Data)
         Data=self.__NormalizeData(Data)
 
@@ -185,7 +210,7 @@ class BandData(object):
         self.__SaveChannelData(RED,'1.2.1 Red C-N')
         
         RED=(1-self.Alpha)+(RED*self.Alpha)
-        self.__SaveChannelData(RED,'1.2.2 Red A',SaveGeoTiff=True)
+        self.__SaveChannelData(RED,'1.2.2 Red A', SaveGeoTiff=True)
         
     def __ProcessGreenChannel(self):
         GREEN=self.TiffReader.GetTiffData(self.__GreenBandFile)
@@ -285,6 +310,36 @@ class HSVData(object):
         if self.__pngFlag:
             self.__DataViewer=DataPlotter(self.__InfoObj.ReferenceGeotiff,self.__InfoObj.PNGOutDir)
 
+    @staticmethod
+    def rgb2hsv(r, g, b):
+        if np.any([np.isnan(r), np.isnan(g), np.isnan(b)]):
+            h = np.nan
+            s = np.nan
+            v = np.nan
+        else:
+            mx = np.max([r, g, b])
+            mn = np.min([r, g, b])
+            df = mx - mn
+            
+            if mx == mn:
+                h = 0
+            elif mx == r:
+                h = (60*((g-b)/df) + 360) % 360
+            elif mx == g:
+                h = (60*((b-r)/df) + 120) % 360
+            elif mx == b:
+                h = (60*((r-g)/df) + 240) % 360
+
+            if mx == 0:
+                s = 0
+            else:
+                s = df/mx
+
+            v = mx
+        
+        return(h, s, v)
+
+
     def HueValueRGB(self):
         '''
             Hue and Value Channel Data Are computed by Pekel et al. (2014) as follows:
@@ -309,40 +364,41 @@ class HSVData(object):
 
         print('\t|- Computing Hue and Value channel from RGB data')
         
-        R=self.TiffReader.GetTiffData(self.RedDataFile)
-        G=self.TiffReader.GetTiffData(self.GreenDataFile)
-        B=self.TiffReader.GetTiffData(self.BlueDataFile)
+        R = self.TiffReader.GetTiffData(self.RedDataFile)
+        G = self.TiffReader.GetTiffData(self.GreenDataFile)
+        B = self.TiffReader.GetTiffData(self.BlueDataFile)
         
         
-        if self.__pngFlag:
-            [row,col]=R.shape
+        # if self.__pngFlag:
+        #     [row,col]=R.shape
             
-            RGB=np.empty([row,col,3])
+        #     RGB=np.empty([row,col,3])
             
-            RGB[:,:,0]=R
-            RGB[:,:,1]=G
-            RGB[:,:,2]=B
+        #     RGB[:,:,0]=R
+        #     RGB[:,:,1]=G
+        #     RGB[:,:,2]=B
 
-            #2.1.1 RGB
+        #     #2.1.1 RGB
             
-            self.__DataViewer.plotInMap(data=RGB, Identifier='2.1.1 RGB', rgb=True)
+        #     self.__DataViewer.plotInMap(data=RGB, Identifier='2.1.1 RGB', rgb=True)
         
-        # inan = np.isnan(R)
-        # max_rgb = np.maximum(np.maximum(R, G), B)
-        # min_rgb = np.maximum(np.maximum(R, G), B)
-        # value = max_rgb
-        # saturation = (value - min_rgb)/value
+        # hue = np.empty(shape=R.shape)
+        # value = np.empty(shape=R.shape)
         
-        # hue = np.empty(np.shape(R))
-        # hue[np.where(value==min_rgb)] = 0
-        # hue[np.where(value==R)] = (60*((G[np.where(value==R)]-B[np.where(value==R)])/(value[np.where(value==R)]-min_rgb[np.where(value==R)]))+360)%360
-        # hue[np.where(value==G)] = 60*(B[np.where(value==G)]-R[np.where(value==G)])/(value[np.where(value==G)]-min_rgb[np.where(value==G)])+120
-        # hue[np.where(value==B)] = 60*(R[np.where(value==B)]-G[np.where(value==B)])/(value[np.where(value==B)]-min_rgb[np.where(value==B)])+240
-        # hue[inan] = np.nan
-        # value[inan] = np.nan
-        # saturation[inan] = np.nan
-        # hue = (hue-np.nanmin(hue))/(np.nanmax(hue)-np.nanmin(hue))
-        # value = (value-np.nanmin(value))/(np.nanmax(value)-np.nanmin(value))
+        # for i in np.arange(len(R)):
+        #     h, s, v = self.rgb2hsv(r=R[i], g=G[i], b=B[i])
+        #     hue[i] = h
+        #     value[i] = v
+
+
+        # # 2.2.1 HUE Normalized Pekel
+        # self.TiffWritter.SaveArrayToGeotiff(hue,'2.2.1_HUE_Normalized_Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
+        
+        # # 2.2.2 Value Normalized Pekel
+        # self.TiffWritter.SaveArrayToGeotiff(value,'2.2.2 Value Normalized Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
+        # if self.__pngFlag:
+        #     self.__DataViewer.plotInMap(hue,'2.2.1_HUE_Normalized_Pekel')
+        #     self.__DataViewer.plotInMap(value,'2.2.2 Value Normalized Pekel')
 
         iN=np.isnan(R)
         Hue=np.empty(np.shape(R))
@@ -480,7 +536,7 @@ class WaterMap(object):
         self.BW_Value=self.BW_Value.astype(np.float)
         self.BW_Value[self.iNan]=np.nan
         
-        self.__SaveChannelData(self.BW_Value,'3.1.2 Binary Water Value Channel')
+        self.__SaveChannelData(self.BW_Value,'3.1.2 Binary Water Value Channel', SaveGeoTiff=True)
     
     def __FormBinaryWaterHueChannel(self):
         
@@ -510,7 +566,7 @@ class WaterMap(object):
         self.BW_Hue=self.BW_Hue.astype(np.float)
         self.BW_Hue[self.iNan]=np.nan
         
-        self.__SaveChannelData(self.BW_Hue,'3.1.4 Binary Water Hue Channel')
+        self.__SaveChannelData(self.BW_Hue,'3.1.4 Binary Water Hue Channel', SaveGeoTiff=True)
         
     def __AndOperationWaterMap(self):
         IsWater=np.zeros(self.BW_Hue.shape)
@@ -622,15 +678,24 @@ class Shoreline(object):
 
     def __ConvolutedMap(self):
         [self.__row,self.__col]=np.shape(self.MapWater)
-        __Kernel=np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
-        __ConvolutedData=scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
-        __ConvolutedData[__ConvolutedData<=0]=np.nan
-        __ConvolutedData[__ConvolutedData>0]=1
+        __Kernel = np.array([[0,-1,0],[-1,4,-1],[0,-1,0]])
+        __ConvolutedData = scipy.signal.convolve2d(self.MapWater[1:self.__row-1,1:self.__col-1],__Kernel)
+        __ConvolutedData[__ConvolutedData<1] = np.nan
+        __ConvolutedData[__ConvolutedData>=1] = 1
 
-        self.__Map_ShoreLine=np.argwhere(__ConvolutedData==1) #change this condition for testing
+        # Cleaning out the edges
+        __ConvolutedData[:, 0:2] = np.nan
+        __ConvolutedData[:, -1] = np.nan
+        __ConvolutedData[:, -2] = np.nan
+        __ConvolutedData[0:2, :] = np.nan
+        __ConvolutedData[-1, :] = np.nan
+        __ConvolutedData[-2, :] = np.nan
+
+        # Mapping shorelines
+        self.__Map_ShoreLine=np.argwhere(__ConvolutedData==1)
         self.__TotalDataPoints=np.shape(self.__Map_ShoreLine)[0]
         
-        #Cleanup
+        # Memory Cleanup
         __ConvolutedData=None
         gc.collect()
     
@@ -638,21 +703,21 @@ class Shoreline(object):
         [__x_offset,__pixel_width,__rotation_1,__y_offset,__rotation_2,__pixel_height]=self.GeoTransForm
         __pixel_Coordinate_X=self.__Map_ShoreLine[:,1]
         __pixel_Coordinate_y=self.__Map_ShoreLine[:,0]
-        self.__Space_coordinate_X= __pixel_width * __pixel_Coordinate_X +   __rotation_1 * __pixel_Coordinate_y + __x_offset
-        self.__Space_coordinate_Y= __rotation_2* __pixel_Coordinate_X +    __pixel_height* __pixel_Coordinate_y + __y_offset
+        self.__Space_coordinate_X= __pixel_width*__pixel_Coordinate_X + __rotation_1 * __pixel_Coordinate_y + __x_offset
+        self.__Space_coordinate_Y= __rotation_2*__pixel_Coordinate_X + __pixel_height* __pixel_Coordinate_y + __y_offset
         
-        #shift to the center of the pixel
+        # shift to the center of the pixel
         self.__Space_coordinate_X +=__pixel_width  / 2.0
         self.__Space_coordinate_Y +=__pixel_height / 2.0
     
     def __SpaceCoordinateToLatLon(self):
         ##get CRS from dataset
-        __Coordinate_Reference_System=osr.SpatialReference() #Get Co-ordinate reference
-        __Coordinate_Reference_System.ImportFromWkt(self.Projection) #projection reference
+        __Coordinate_Reference_System=osr.SpatialReference() # Get Co-ordinate reference
+        __Coordinate_Reference_System.ImportFromWkt(self.Projection) # projection reference
 
         ## create lat/long CRS with WGS84 datum<GDALINFO for details>
         __Coordinate_Reference_System_GEO=osr.SpatialReference()
-        __Coordinate_Reference_System_GEO.ImportFromEPSG(4326)                   # 4326 is the EPSG id of lat/long CRS
+        __Coordinate_Reference_System_GEO.ImportFromEPSG(4326) # 4326 is the EPSG id of lat/long CRS
 
         __Transform_term = osr.CoordinateTransformation(__Coordinate_Reference_System, __Coordinate_Reference_System_GEO)
         self.__LatitudeData=np.zeros(self.__TotalDataPoints)
