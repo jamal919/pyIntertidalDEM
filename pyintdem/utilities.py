@@ -6,6 +6,7 @@ from osgeo import osr, gdal
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import time
+from datetime import datetime, timedelta
 import gc
 import sys
 import os
@@ -15,31 +16,18 @@ class Info(object):
         The purpose of this class is to collect useable data from the input data
     '''
 
-
     def __init__(self,directory):
-        self.directory=directory                                           #The directory that contains the files(MASKS and Band Files)
-        
-        self.__DirectoryStrings=str(self.directory).split('/')             #split the directory to extract specific folder
-        
+        self.directory=directory #The directory that contains the files(MASKS and Band Files)        
+        self.__DirectoryStrings=str(self.directory).split('/') #split the directory to extract specific folder
         self.__DirectoryStrings=list(filter(bool,self.__DirectoryStrings))
-        
-        self.__IdentifierStrings=self.__DirectoryStrings[-1].split('_')    #split the specific folder data identifiers
-       
-        self.__DateTimeStamp=self.__IdentifierStrings[1].split('-')        #Time stamp data 
+        self.__IdentifierStrings=self.__DirectoryStrings[-1].split('_') #split the specific folder data identifiers
+        self.__DateTimeStamp=self.__IdentifierStrings[1].split('-') #Time stamp data 
 
         __Date=self.__DateTimeStamp [0][6:]+'-'+self.__DateTimeStamp[0][4:6]+'-'+self.__DateTimeStamp[0][0:4]
-        
         __Time=self.__DateTimeStamp[1][0:2]+'-'+self.__DateTimeStamp[1][2:4]+'-'+self.__DateTimeStamp[1][4:]
-        
         self.DateTime=__Date+'_'+__Time
-        
         self.SateliteName=self.__IdentifierStrings[0]
-        
         self.Zone=self.__IdentifierStrings[3]
-        
-        
-       
-
     
     
     def __DisplayProductInformation(self):
@@ -314,7 +302,7 @@ class DataPlotter(object):
         plt.clf()
         plt.close()
 
-    def plotInMap(self, data, Identifier, cmap='binary_r', rgb=False, colorbar=False, pltshow=False):
+    def plotInMap(self, data, Identifier, cmap='binary', rgb=False, colorbar=False, pltshow=False):
         cmap = cmap
         LatMax = np.amax(self.__Lats)
         LatMin = np.amin(self.__Lats)
