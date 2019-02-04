@@ -22,31 +22,6 @@ from .utilities import Info
 
 np.seterr(all='ignore') # set to 'warn' for debugging
 
-class ImageProcessor(object):
-    def __init__(self, snap, saveto, by=['zone', 'date_time']):
-        self.saveto = saveto
-        self.snap = snap
-        if not os.path.exists(self.saveto):
-            os.mkdir(self.saveto)
-
-    def downscale(self, band='alpha'):
-        # Normalization, Downscaling, Synthetic Band
-        raise NotImplementedError()
-
-    def normalize(self, bands=['red', 'green', 'blue', 'alpha_ds']):
-        # Return normalized red, green, blue, alpha band
-        raise NotImplementedError()
-
-    def apply_alpha(self, on_bands=['red', 'green', 'blue'], alpha='alpha_ds'):
-        # Return 
-        raise NotImplementedError()
-
-    def rgb_2_hsv(self, red='red_a', green='green_a', blue='blue_a'):
-        raise NotImplementedError()
-
-    def apply_threshold(self, mask, nhue, nvalue):
-        raise NotImplementedError()
-
 class BandData(object):
     '''
         The purpose of this class is to Preprocess the individual Band data
@@ -371,26 +346,26 @@ class HSVData(object):
         
         # if self.__pngFlag:
         #     [row,col]=R.shape
-            
+        
         #     RGB=np.empty([row,col,3])
-            
+        
         #     RGB[:,:,0]=R
         #     RGB[:,:,1]=G
         #     RGB[:,:,2]=B
-
+            
         #     #2.1.1 RGB
             
         #     self.__DataViewer.plotInMap(data=RGB, Identifier='2.1.1 RGB', rgb=True)
-        
+
         # hue = np.empty(shape=R.shape)
         # value = np.empty(shape=R.shape)
-        
+            
         # for i in np.arange(len(R)):
         #     h, s, v = self.rgb2hsv(r=R[i], g=G[i], b=B[i])
         #     hue[i] = h
         #     value[i] = v
-
-
+        
+        
         # # 2.2.1 HUE Normalized Pekel
         # self.TiffWritter.SaveArrayToGeotiff(hue,'2.2.1_HUE_Normalized_Pekel',self.__InfoObj.ReferenceGeotiff,self.__InfoObj.MainDir)
         
