@@ -3,7 +3,11 @@
 Vertical referencing using simulated or observed water levels. This module 
 provides classes to make water level predictions using utide, vertically
 reference the shorelines using predicted water levels, and production of final
-merged DEM product. 
+merged DEM product.
+
+TODO: 
+    * Abstract worker functions
+    * Make it work for a given fileset
 
 Author: khan
 Email: jamal.khan@legos.obs-mip.fr
@@ -12,12 +16,13 @@ from __future__ import print_function
 import numpy as np
 from scipy.spatial import distance
 from pyproj import Proj
+from datetime import datetime
 from glob import glob
 import csv
 import os
 
 class Dem(object):
-    def __init__(self, improc_dir, waterlevel_dir, vertref_dir):
+    def __init__(self, improc_dir, waterlevel_dir, vertref_dir, dem_dir):
         '''
         The Dem object is expected to load the shorelines, vertically reference
         with proper water level and finally return the Dem developed from the 
@@ -29,10 +34,12 @@ class Dem(object):
         self.__csvdir = improc_dir 
         self.__wldir = waterlevel_dir
         self.__outdir = vertref_dir
+        self.__demdir = dem_dir
 
     def __create_out_dir(self,zone):
         '''
-        Creates the output directory for each zone at outdir location. 
+        Creates the output directory for each zone at outdir location.
+        TODO: Move it during actual file generation.
         '''
         self.outcsvdir = os.path.join(self.__outdir, zone) 
             
@@ -152,6 +159,22 @@ class Dem(object):
                 information = self.__get_information(point,nodes)
                 writer.writerow(information)
 
+    def list_times(self, zone):
+        '''
+        list_times list the processed tile names and list as times.dat for
+        predicting with model.
+        '''
+        time_file = os.path.join(self.__wldir, zone, 'times.dat')
+        if not os.path.exists(os.path.dirname(time_file)):
+            os.mkdir(os.path.dirname(time_file))
+
+        tile_folders = os.listdir(os.path.join(self.__csvdir, zone))
+        with open(file=time_file, mode='w') as f:
+            for tile_folder in tile_folders:
+                tile_time = tile_folder.split('_')[0:2]
+                tile_time = datetime.strptime(tile_time[0]+tile_time[1], '%d-%m-%Y%H-%M-%S')
+                f.write('{:s}\n'.format(tile_time.strftime('%Y/%m/%d %H:%M:%S')))
+
     def set_vetical_heights(self, zone):
         '''
         set_vetical_heights assembles a dem out of the given shoreline directory and water 
@@ -165,3 +188,15 @@ class Dem(object):
             print(zone, os.path.basename(datfile))
             self.heightdata = self.__find_heights(datfile)
             self.__find_closest(nodes, fname)
+
+    def merge_vertical_heights(self, zone):
+        '''
+        merge_vertical_heights merges vertically referenced shorelines with 
+        waterlevels
+        '''
+        dem_file = os.path.join(self.__demdir, '{:s}.csv'.format(zone))
+        with open(dem_file, mode='w') as f:
+            f.write('Date,lon,lat,nnlon,nnlat,nndist,z\n')
+            for fname in glob(os.path.join(self.__outdir, zone, '*.csv')):
+                fname_date = np.genfromtxt(fname=fname, dtype=None, delimiter=',', encoding='utf8')
+                np.savetxt(f, fname_date, fmt='%s', delimiter=',')
