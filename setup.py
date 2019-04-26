@@ -8,7 +8,7 @@ Setup for pyIntertidalDEM
 import setuptools
 
 setuptools.setup(
-    name='pyIntertidalDEM',
+    name='pyintdem',
     version='3.0',
     author='Jamal Khan',
     contributor='Nazmuddoha Ansary',
