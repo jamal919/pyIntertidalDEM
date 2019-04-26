@@ -19,10 +19,22 @@ class Band(object):
     def __init__(self, data=None, geotransform=None, projection=None, **kwargs):
         '''
         Band data class contains the information needed for a GeoTiff file. 
+
+        arguments:
+            data: array like
+                2D data array, default None
+            geotransform: string
+                geotransform information, default None
+            projection: string
+                projection information, default None
+
+        returns:
+            Band data: Band
         '''
         self.data = data
         self.geotransform = geotransform
         self.projection = projection
+        self.attrs = kwargs
 
     def read(self, fname, band=1):
         gdal.UseExceptions()
@@ -37,6 +49,12 @@ class Band(object):
     def set_missing(self, value, to=np.nan):
         '''
         set the missing value in data from value 
+
+        argument:
+            value: float like
+                Value to be replaced
+            to: float like
+                Values replaced by to
         '''
         if np.isnan(value):
             self.data[np.isnan(self.data)] = to
@@ -44,6 +62,16 @@ class Band(object):
             self.data[self.data == value] = to
 
     def upscale(self, factor, method='nearest'):
+        '''
+        increase the resolution with a factor.
+
+        argument:
+            factor: float like
+                Multiplication factor for upscaling the data resolution
+            method: string
+                Method to be used for interpolation. Currently only nearest
+                neighbour is available.
+        '''
         if method=='nearest':
             self.geotransform = (
                 self.geotransform[0],
@@ -59,6 +87,20 @@ class Band(object):
             raise NotImplementedError
 
     def normalize(self, method='minmax', std_factor=0.5, perc_threshold=95):
+        '''
+        normalize the data using a given method.
+
+        argument:
+            method: string
+                Method to be used for normalizing to 0 to 1 
+                    minmax - minimum maximum value
+                    std - mean and standard deviation selection and min/max
+                    perc - percentile selection and min/max
+            std_factor: float
+                std_factor to be used for `std` method
+            perc_threshold: float
+                perc_threshold to be used for `perc` method
+        '''
         if method=='minmax':
             self.data = (self.data - np.nanmin(self.data))/(np.nanmax(self.data)-np.nanmin(self.data))
             return(True)
@@ -82,7 +124,13 @@ class Band(object):
         Apply a mask 'by' on the band data - keeping the values presented by 1
         in mask 'by'. Set inverse to True for inversing masking.
 
-        # TODO: size check
+        argument:
+            by: Band
+                Mask band
+            inverse: boolean
+                Inverse masking
+
+        TODO: size check
         '''
         _data = copy.deepcopy(self.data)
         if isinstance(by, Band):
@@ -238,8 +286,17 @@ class Band(object):
     def clean(self, npixel, fillvalue, background=False):
         '''
         Clean the image below given pixel blob size (number of pixels) grouped
-        together. If reversed, the data will be reversed in first step.
+        together. If background, the data will be reversed in first step.
         Finally it returns a clean band.
+
+        argument:
+            npixel: int like
+                number of pixel to be use as the blob size
+            fillvalue: float like
+                value to be used on the selected blobs
+            background: boolean
+                if background=True, the data will be reversed at the first step
+                before applying the npixel blobs and then filled with fillvalue
         '''
         inan = np.isnan(self.data)
         if background:
@@ -550,6 +607,9 @@ class Band(object):
             raise NotImplementedError('In Band le: other datatype not implemented')
 
     def logical_and(self, other):
+        '''
+        Logical and connection of two Band data
+        '''
         if isinstance(other, Band):
             _data = np.logical_and(self.data, other.data)
             _data = _data.astype(float)
@@ -565,6 +625,9 @@ class Band(object):
             raise NotImplementedError('In Band logical_and: only Band data in implemented')
 
     def logical_or(self, other):
+        '''
+        Logical or of two Band data
+        '''
         if isinstance(other, Band):
             _data = np.logical_or(self.data, other.data)
             _data = _data.astype(float)
@@ -580,6 +643,9 @@ class Band(object):
             raise NotImplementedError('In Band logical_or: only Band data is implemented')
     
     def logical_not(self):
+        '''
+        Logical not of a Band
+        '''
         _data = np.logical_not(self.data)
         _data = _data.astype(float)
         _data[np.isnan(self.data)] = np.nan
@@ -595,6 +661,16 @@ class Band(object):
         '''
         Save band data to geotiff to location passed by `to` with datatype
         defined by `dtype`
+
+        argument:
+            fname: string
+                The filename to be saved
+            dtype: gdal data type
+                Gdal datatype to be used for saving, default `gdal.GDT_Float32`
+            epsg: epsg code
+                epsg code to reproject the data. `auto` saves the data to
+                original projection. Default `auto`
+
         '''
         row, col = self.data.shape
         
@@ -663,6 +739,12 @@ class Band(object):
     def to_netcdf(self, fname, epsg=4326):
         '''
         Save band data to netCDF4 file to location passed by `to`.
+
+        argument:
+            fname: string
+                filename to be used
+            epsg: epsg code
+                epsg code to reproject the data
         '''
         row, col = self.data.shape
 
@@ -736,7 +818,15 @@ class Band(object):
 
     def plot(self, title='Band', cmap='binary', saveto=None):
         '''
-        Plotting function with given title, cmap. If saveto loction is given
+        Plotting function with given title, cmap
+
+        argument:
+            title: string
+                Plot title
+            cmap: string, cmap
+                colormap name
+            saveto: string
+                saving location
         '''
         plt.figure()
         plt.imshow(self.data, cmap=cmap)
@@ -752,6 +842,14 @@ class RGB(object):
     def __init__(self, red, green, blue):
         '''
         RGB band using band using in the red-green-blue band.
+
+        argument:
+            red: Band
+                Red band to construct RGB
+            green: Band
+                Green band to construct RGB
+            blue: Band
+                Blue band to construct RGB
         '''
         try:
             # Type checking
@@ -820,7 +918,14 @@ class RGB(object):
     def to_hsv(self, method='matplotlib'):
         '''
         Convert the red-green-blue space to hue-saturation-value space and 
-        return the individual bands. 
+        return the individual bands.
+
+        argument:
+            method: string
+                method to be used to convert RGB to HSV.
+                    `matplotlib` uses the matplotlib routines
+                    `local` uses the local routine
+                default is `matplotlib` and the fastest option
         '''
         if method=='matplotlib':
             # TODO rgb values must be normalized
@@ -868,6 +973,15 @@ class RGB(object):
         return(value)
 
     def plot(self, title='RGB', saveto=None):
+        '''
+        Plot RGB data using title and saveto a locaiton
+
+        argument:
+            title: string
+                The title to be used in plotting
+            saveto: string
+                Save to the locaiton
+        '''
         plt.figure()
         plt.imshow(self.rgb)
         plt.colorbar()
