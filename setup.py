@@ -9,7 +9,7 @@ import setuptools
 
 setuptools.setup(
     name='pyIntertidalDEM',
-    version='2.0',
+    version='3.0',
     author='Jamal Khan',
     contributor='Nazmuddoha Ansary',
     author_email='jamal.khan@legos.obs-mip.fr',
