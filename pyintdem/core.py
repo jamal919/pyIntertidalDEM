@@ -737,11 +737,11 @@ class Band(object):
                     out_proj
                 )
                 print(self.geotransform)
-                (ulx, uly, ulz) = trans_coord.TransformPoint(
+                (ulx, uly, _) = trans_coord.TransformPoint(
                     self.geotransform[0], 
                     self.geotransform[3]
                 )
-                (lrx, lry, lrz) = trans_coord.TransformPoint(
+                (lrx, lry, _) = trans_coord.TransformPoint(
                     self.geotransform[0]+self.geotransform[1]*row,
                     self.geotransform[3]+self.geotransform[5]*col
                 )
