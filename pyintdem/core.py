@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
@@ -86,7 +86,7 @@ class Band(object):
         else:
             raise NotImplementedError
 
-    def normalize(self, method='minmax', std_factor=0.5, perc_threshold=95):
+    def normalize(self, method='minmax', std_factor=0.5, std_correction='high', perc_threshold=95):
         '''
         normalize the data using a given method.
 
@@ -94,10 +94,15 @@ class Band(object):
             method: string
                 Method to be used for normalizing to 0 to 1 
                     minmax - minimum maximum value
-                    std - mean and standard deviation selection and min/max
+                    std - mean and std removal of extreme
                     perc - percentile selection and min/max
             std_factor: float
                 std_factor to be used for `std` method
+            std_correction: string
+                Which side of the distribution the capping will be applied
+                    both - both size
+                    low - lower tail
+                    high - higher tail
             perc_threshold: float
                 perc_threshold to be used for `perc` method
         '''
@@ -108,8 +113,17 @@ class Band(object):
         elif method=='std':
             mu = np.nanmean(self.data)
             std = np.nanstd(self.data)
-            self.data[np.logical_and(self.data<(mu-std_factor*std), np.logical_not(np.isnan(self.data)))] = mu-std_factor*std
-            self.data[np.logical_and(self.data<(mu+std_factor*std), np.logical_not(np.isnan(self.data)))] = mu+std_factor*std
+
+            if std_correction=='both':
+                self.data[np.logical_and(self.data<(mu-std_factor*std), np.logical_not(np.isnan(self.data)))] = mu-std_factor*std
+                self.data[np.logical_and(self.data>(mu+std_factor*std), np.logical_not(np.isnan(self.data)))] = mu+std_factor*std
+            elif std_correction=='low':
+                self.data[np.logical_and(self.data<(mu-std_factor*std), np.logical_not(np.isnan(self.data)))] = mu-std_factor*std
+            elif std_correction=='high':
+                self.data[np.logical_and(self.data>(mu+std_factor*std), np.logical_not(np.isnan(self.data)))] = mu+std_factor*std
+            else:
+                raise NotImplementedError
+
             self.data = (self.data - np.nanmin(self.data))/(np.nanmax(self.data)-np.nanmin(self.data))
 
         elif method=='perc':
@@ -151,6 +165,27 @@ class Band(object):
             )
         else:
             raise NotImplementedError('In mask: mask must be a Band type')
+
+    @property
+    def min(self):
+        '''
+        Minimum value of the band data
+        '''
+        return(np.nanmin(self.data))
+
+    @property
+    def max(self):
+        '''
+        Maximum value of the band data
+        '''
+        return(np.nanmax(self.data))
+
+    @property
+    def mean(self):
+        '''
+        Mean value of the band data
+        '''
+        return(np.nanmean(self.data))
 
     @property
     def std(self):
@@ -279,7 +314,8 @@ class Band(object):
                     fname=saveto, 
                     X=xyout, 
                     fmt='%f', 
-                    delimiter=',', 
+                    delimiter=',',
+                    comments='',
                     header='lon,lat'
                 )
 
@@ -309,7 +345,6 @@ class Band(object):
         _, count = np.unique(labels, return_counts=True)
         retained_labels = np.argwhere(count>=npixel).ravel()
         retained_labels = retained_labels[retained_labels>0]
-        print(retained_labels)
 
         for label in retained_labels:
             data[labels==label] = fillvalue
