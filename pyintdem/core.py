@@ -1026,3 +1026,33 @@ class RGB(object):
         else:
             plt.savefig(saveto)
             plt.close()
+
+    def to_geotiff(self, fname, dtype=gdal.GDT_Float32, epsg='auto'):
+        '''
+        Save band data to geotiff to location passed by `to` with datatype
+        defined by `dtype`
+
+        argument:
+            fname: string
+                The filename to be saved
+            dtype: gdal data type
+                Gdal datatype to be used for saving, default `gdal.GDT_Float32`
+            epsg: epsg code
+                epsg code to reproject the data. `auto` saves the data to
+                original projection. Default `auto` (only option)
+
+        '''
+        row, col, nband = self.rgb.shape
+        
+        if epsg=='auto':
+            driver = gdal.GetDriverByName('GTiff')
+            gtiff = driver.Create(fname, row, col, nband, dtype)
+            gtiff.GetRasterBand(1).WriteArray(self.rgb[:, :, 0])
+            gtiff.GetRasterBand(2).WriteArray(self.rgb[:, :, 1])
+            gtiff.GetRasterBand(3).WriteArray(self.rgb[:, :, 2])
+            gtiff.SetGeoTransform(self.geotransform)
+            gtiff.SetProjection(self.projection)
+            gtiff.FlushCache()
+            gtiff = None
+        else:
+            raise NotImplementedError
