@@ -62,6 +62,7 @@ if __name__=='__main__':
             red.plot('Normalized Red', cmap='binary_r', saveto=os.path.join(snap_save, 'red_norm.png'))
             red = (red*alpha) + (alpha*-1+1)
             red.plot('Synthetic Red', cmap='binary_r', saveto=os.path.join(snap_save, 'red_synthetic.png'))
+            red.to_geotiff(fname=os.path.join(snap_save, 'red_synthetic.tif'))
 
             # Green
             green = Band()
@@ -72,6 +73,7 @@ if __name__=='__main__':
             green.plot('Normalized Green', cmap='binary_r', saveto=os.path.join(snap_save, 'green_norm.png'))
             green = (alpha*-1+1) + (green*alpha)
             green.plot('Synthetic Green', cmap='binary_r', saveto=os.path.join(snap_save, 'green_synthetic.png'))
+            green.to_geotiff(fname=os.path.join(snap_save, 'green_synthetic.tif'))
 
             # Blue
             blue = Band()
@@ -82,6 +84,7 @@ if __name__=='__main__':
             blue.plot('Normalized Blue', cmap='binary_r', saveto=os.path.join(snap_save, 'blue_norm.png'))
             blue = (alpha*-1+1) + (blue*alpha)
             blue.plot('Synthetic Blue', 'binary_r', saveto=os.path.join(snap_save, 'blue_synthetic.png'))
+            blue.to_geotiff(fname=os.path.join(snap_save, 'green_synthetic.tif'))
 
             # RGB HSV Conversion
             rgb = RGB(red=red, green=green, blue=blue)
@@ -91,8 +94,8 @@ if __name__=='__main__':
             del rgb
             hue.plot('Hue', cmap='binary_r', saveto=os.path.join(snap_save, 'hue.png'))
             value.plot('Value', cmap='binary_r', saveto=os.path.join(snap_save, 'value.png'))
-            # hue.to_geotiff(fname=os.path.join(snap_save, 'hue.tif'))
-            # value.to_geotiff(fname=os.path.join(snap_save, 'value.tif'))
+            hue.to_geotiff(fname=os.path.join(snap_save, 'hue.tif'))
+            value.to_geotiff(fname=os.path.join(snap_save, 'value.tif'))
 
             # Water masks
             watermask = Band()
@@ -128,12 +131,14 @@ if __name__=='__main__':
                     )
                 ).logical_not()
                 hue_bw.plot('Hue BW', saveto=os.path.join(snap_save, 'hue_bw_{:.1f}.png'.format(nhue)))
+                hue_bw.to_geotiff(fname=os.path.join(snap_save, 'hue_bw_{:.1f}.tif'.format(nhue)))
                 
                 # nvalue = 1.5
                 value_bw = (value<(value_median+nvalue*value_std)).logical_and(
                     value>(value_median-nvalue*value_std)
                 )
                 value_bw.plot('Value BW', saveto=os.path.join(snap_save, 'value_bw_{:.1f}.png'.format(nvalue)))
+                value_bw.to_geotiff(fname=os.path.join(snap_save, 'value_bw_{:.1f}.tif'.format(nvalue)))
 
                 bw = value_bw.logical_and(hue_bw)
                 del value_bw, hue_bw
@@ -144,7 +149,7 @@ if __name__=='__main__':
                 bw = bw.clean(npixel=10000, fillvalue=0, background=False) # Water
                 bw = bw.clean(npixel=10000, fillvalue=1, background=True) # Land
                 bw.plot('BW Clean', cmap='binary', saveto=os.path.join(snap_save, 'bw_clean_{:.1f}_{:.1f}.png'.format(nhue, nvalue)))
-                # bw.to_geotiff(fname=os.path.join(snap_save, 'bw_clean_{:.1f}_{:.1f}.tif'.format(nhue, nvalue)))
+                bw.to_geotiff(fname=os.path.join(snap_save, 'bw_clean_{:.1f}_{:.1f}.tif'.format(nhue, nvalue)))
 
                 # Shoreline mapping
                 shoreline = bw.convolute(
