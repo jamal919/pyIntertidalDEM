@@ -15,4 +15,5 @@ Step 2: See example.py for example analysis setup
 The result of this work is currenly being communicated.
 
 ## Documentation
+The need of a documentation (by XKCD)
 ![XKCD MANUAL](https://imgs.xkcd.com/comics/manuals.png)
