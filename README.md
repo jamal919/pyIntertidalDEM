@@ -13,3 +13,6 @@ Step 2: See example.py for example analysis setup
 
 ## Publications
 The result of this work is currenly being communicated.
+
+## Documentation
+![XKCD MANUAL](https://imgs.xkcd.com/comics/manuals.png)
