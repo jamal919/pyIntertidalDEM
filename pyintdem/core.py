@@ -9,7 +9,7 @@ from osgeo import osr, gdal
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcl
 from mpl_toolkits.basemap import Basemap
-import netCDF4
+from netCDF4 import Dataset
 import copy
 import os
 
@@ -804,7 +804,7 @@ class Band(object):
             del lonlat, meshxy, meshx, meshy
             
         try:
-            nc = netCDF4.Dataset(
+            nc = Dataset(
                 filename=fname, 
                 mode='w', 
                 clobber=True,
