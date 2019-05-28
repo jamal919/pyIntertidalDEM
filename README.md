@@ -12,8 +12,11 @@ Step 1: Run depcheck.py for checking for library and dependency error checks
 Step 2: See example.py for example analysis setup
 
 ## Publications
-The result of this work is currenly being communicated.
+The result of this work is currenly being communicated. Once published, the
+link will be posted here. 
 
 ## Documentation
-The need of a documentation (by XKCD)
+Currently the program is documented at source level and strongly believed that 
+the use of the program falls on the left side of the xkcd documentation spectram!
+
 ![XKCD MANUAL](https://imgs.xkcd.com/comics/manuals.png)
