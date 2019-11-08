@@ -692,6 +692,26 @@ class Band(object):
             )
         )
 
+    def nan_avg(self, other):
+        '''
+        Do a nan average with other.
+        '''
+        if isinstance(other, Band):
+            _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=np.float)
+            _data[:, :, 0] = self.data
+            _data[:, :, 1] = other.data
+            _data = np.nanmean(_data, axis=-1, keepdims=False)
+
+            return(
+                Band(
+                    data=_data,
+                    geotransform=self.geotransform,
+                    projection=self.projection
+                )
+            )
+        else:
+            raise NotImplementedError('In Band nan_avg: only Band data is implemented')
+
     def to_geotiff(self, fname, dtype=gdal.GDT_Float32, epsg='auto'):
         '''
         Save band data to geotiff to location passed by `to` with datatype
