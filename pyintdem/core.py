@@ -37,6 +37,17 @@ class Band(object):
         self.attrs = kwargs
 
     def read(self, fname, band=1):
+        '''
+        Read band data from a file.
+
+        arguments:
+            fname: string, file location
+            band: integer, band number
+
+        Raise an exception if data can not be read.
+
+        '''
+
         gdal.UseExceptions()
         try:
             dset = gdal.Open(fname, gdal.GA_ReadOnly)
@@ -868,6 +879,11 @@ class Band(object):
     def to_csv(self, to, crs='auto', drop_nan=False):
         '''
         Save band data to csv file
+
+        Arguments:
+            to: string, save location
+            crs: integer, crs id
+            drop_nan: boolean, if the nan_values should be removed from the csv
         '''
         raise NotImplementedError()
 
@@ -941,6 +957,16 @@ class RGB(object):
 
     @staticmethod
     def rgb2hsv(r, g, b):
+        '''
+        Local Implementation of RGB to HSV.
+        Arguments:
+            r: double, red value
+            g: double, green value
+            b: double, blue value
+            
+        returns:
+            (hue, saturation, value)
+        '''
         if np.any([np.isnan(r), np.isnan(g), np.isnan(b)]):
             h = np.nan
             s = np.nan
