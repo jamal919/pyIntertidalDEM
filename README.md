@@ -11,10 +11,11 @@ Step 3: See example_mask.py mask generation procedure.
 Step 4: See example_analysis.py for example analysis setup.
 
 ## Publications
-The result of this work is currenly being communicated. Once published, the
-link will be posted here. 
 
-## Documentation
+Khan, M. J. U., Ansary, M. N., Durand, F., Testut, L., Ishaque, M., Calmant, S., Krien, Y., Islam, A. S. & Papa, F. [High-Resolution Intertidal Topography from Sentinel-2 Multi-Spectral Imagery: Synergy between Remote Sensing and Numerical Modeling](https://doi.org/10.3390/rs11242888), Remote Sensing, MDPI AG, 2019, 11, 2888, doi:[10.3390/rs11242888](https://doi.org/10.3390/rs11242888)
+
+
+# Documentation
 Currently the program is documented at source level and strongly believed that 
 the use of the program falls on the left side of the xkcd documentation spectram!
 
