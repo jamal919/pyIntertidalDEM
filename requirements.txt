@@ -1,0 +1,11 @@
+numpy
+scipy
+osgeo
+matplotlib
+basemap
+zipfile
+utide
+csv
+glob
+gc
+
