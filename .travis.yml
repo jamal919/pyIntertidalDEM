@@ -7,3 +7,6 @@ python:
 install:
     - sudo apt-get update
     - sudo apt-get install gdal-bin libgdal-dev
+
+script:
+    - python setup.py install
