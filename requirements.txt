@@ -1,6 +1,6 @@
 numpy
 scipy
-osgeo
+gdal
 matplotlib
 basemap
 zipfile
@@ -8,4 +8,3 @@ utide
 csv
 glob
 gc
-
