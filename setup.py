@@ -22,9 +22,7 @@ setuptools.setup(
         'osgeo',
         'matplotlib',
         'basemap',
-        'zipfile',
-        'utide',
-        'glob'
+        'utide'
     ],
     include_package_data=True,
     url="https://github.com/jamal919/pyIntertidalDEM",
