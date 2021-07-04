@@ -4,8 +4,8 @@ pyIntertidalDEM is a set of libraries and procedures written in python to extrac
 These modules are developed in Python v3 environment and it is recommended to run the program in Python v3 rather than Python v2. Python v2 is going to be deprecated in 2020.
 
 ## Setup and Processing
-* Step 0: Download the source-code in a directory. You can install with `pip install .`
-* Step 1: Run depcheck.py for checking for library and dependency error checks
+* Step 0: Download the source-code in a directory.
+* Step 1: Create a conda environment from environment.yml file.
 * Step 2: See example_extract.py for a small example of extracting .zip archives
 * Step 3: See example_mask.py mask generation procedure.
 * Step 4: See example_analysis.py for example analysis setup.
