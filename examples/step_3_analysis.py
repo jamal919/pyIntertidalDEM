@@ -102,7 +102,7 @@ if __name__=='__main__':
             # Water masks
             watermask = Band()
             watermask.read(
-                fname=snap_file.watermask(loc=mask_dir),
+                fname=snap_file.watermask(loc=mask_dir, fmt='tif'),
                 band=1
                 )
             watermask.plot('Water Mask', cmap='binary_r', saveto=os.path.join(snap_save, 'watermask.png'))
