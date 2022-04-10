@@ -9,17 +9,26 @@ import setuptools
 
 setuptools.setup(
     name='pyintdem',
-    version='3.0',
     author='Jamal Khan',
     contributor='Nazmuddoha Ansary',
     author_email='jamal.khan@legos.obs-mip.fr',
     description='Intertidal DEM generation Package',
     packages=setuptools.find_packages(),
     license='MIT',
+    setup_requires=['setuptools-git-versioning', 'setuptools_scm'],
+    setuptools_git_versioning={
+        "enabled": True,
+        "template": "{tag}",
+        "dev_template": "{tag}.post{ccount}+git.{sha}",
+        "dirty_template": "{tag}.post{ccount}+git.{sha}.dirty",
+        "starting_version": "1.0"
+    },
+    python_requires='>=3.6',
+    use_scm_version=True,
     install_requires=[
         'numpy',
         'scipy',
-        'osgeo',
+        'gdal',
         'matplotlib',
         'basemap',
         'utide'
