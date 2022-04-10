@@ -62,7 +62,7 @@ class Sentinel2(object):
             version = _metadata[5]
         )
 
-    def watermask(self, loc, id=['zone'], fmt='tiff'):
+    def watermask(self, loc, id=['zone'], fmt='tif'):
         '''
         Return the location of the water mask based on the id and format fmt. 
         The id can be nested for a nested setup. The last element of the id will
