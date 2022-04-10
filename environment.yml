@@ -35,6 +35,8 @@ dependencies:
   - hdf4=4.2.13=h3ca952b_2
   - hdf5=1.10.2=hba1933b_1
   - icu=58.2=he6710b0_3
+  - importlib-metadata=4.8.1=py36h06a4308_0
+  - importlib_metadata=4.8.1=hd3eb1b0_0
   - intel-openmp=2020.2=254
   - ipykernel=5.3.4=py36h5ca1d4c_0
   - ipython=7.16.1=py36h5ca1d4c_0
@@ -44,7 +46,7 @@ dependencies:
   - jinja2=3.0.3=pyhd3eb1b0_0
   - jpeg=9b=h024ee3a_2
   - json-c=0.13.1=h1bed415_0
-  - jsonschema=3.0.2=py36_0
+  - jsonschema=3.2.0=pyhd3eb1b0_2
   - jupyter=1.0.0=py36_7
   - jupyter_client=7.1.2=pyhd3eb1b0_0
   - jupyter_console=6.4.3=pyhd3eb1b0_0
@@ -131,15 +133,19 @@ dependencies:
   - readline=7.0=h7b6447c_5
   - scipy=1.5.2=py36h0b6359f_0
   - send2trash=1.8.0=pyhd3eb1b0_1
-  - setuptools=52.0.0=py36h06a4308_0
+  - setuptools=58.0.4=py36h06a4308_0
+  - setuptools-scm=6.3.2=pyhd3eb1b0_0
+  - setuptools_scm=6.3.2=hd3eb1b0_0
   - sip=4.19.8=py36hf484d3e_0
   - six=1.15.0=py36h06a4308_0
   - sqlite=3.33.0=h62c20be_0
   - terminado=0.9.4=py36h06a4308_0
   - testpath=0.5.0=pyhd3eb1b0_0
   - tk=8.6.10=hbc83047_0
+  - tomli=1.2.2=pyhd3eb1b0_0
   - tornado=6.1=py36h27cfd23_0
   - traitlets=4.3.3=py36h06a4308_0
+  - typing_extensions=4.1.1=pyh06a4308_0
   - wcwidth=0.2.5=pyhd3eb1b0_0
   - webencodings=0.5.1=py36_1
   - wheel=0.36.2=pyhd3eb1b0_0
@@ -148,9 +154,12 @@ dependencies:
   - xerces-c=3.2.3=h780794e_0
   - xz=5.2.5=h7b6447c_0
   - zeromq=4.3.4=h2531618_0
+  - zipp=3.6.0=pyhd3eb1b0_0
   - zlib=1.2.11=h7b6447c_3
   - zstd=1.4.5=h9ceee32_0
   - pip:
     - cmocean==2.0
     - georaster==1.25
+    - utide==0.2.6
+    - git+https://github.com/jamal919/pyIntertidalDEM.git
 prefix: pyintdem
