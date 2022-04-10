@@ -20,7 +20,7 @@ Example scripts are provided showing various steps of the processing.
 ## Publications
 Khan, M. J. U., Ansary, M. N., Durand, F., Testut, L., Ishaque, M., Calmant, S., Krien, Y., Islam, A. S. & Papa, F. [High-Resolution Intertidal Topography from Sentinel-2 Multi-Spectral Imagery: Synergy between Remote Sensing and Numerical Modeling](https://doi.org/10.3390/rs11242888), Remote Sensing, MDPI AG, 2019, 11, 2888, doi:[10.3390/rs11242888](https://doi.org/10.3390/rs11242888)
 
-# Documentation
+## Documentation
 Currently the program is documented at source level and strongly believed that the use of the program falls on the left side of the xkcd documentation spectram!
 
 ![XKCD MANUAL](https://imgs.xkcd.com/comics/manuals.png)
