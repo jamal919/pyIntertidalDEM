@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 import os
 import gc
-import time
 import numpy as np
-import matplotlib.pyplot as plt
 from pyintdem.core import Band, RGB
 from pyintdem.data import Sentinel2
 
 # Directory Settings
-raw_data_dir = '/run/media/khan/Sentinel2/RawData' # Zip Data
 input_dir='/run/media/khan/Backup KE Maxelev'
-output_dir = '/run/media/khan/Backup KE Maxelev/Analysis_v3' # Output
 
 # Directory of saving unzipped data
+output_dir = '/run/media/khan/Backup KE Maxelev/Analysis_v3' # Output
+
 data_dir = os.path.join(input_dir, 'Data')
 mask_dir = os.path.join(output_dir, 'Masks') 
 improc_dir = os.path.join(output_dir, 'Shorelines') 
@@ -23,6 +20,11 @@ vertref_dir = os.path.join(output_dir, 'Referencing')
 waterlevel_dir = os.path.join(output_dir, 'WaterLevels')
 dem_dir = os.path.join(output_dir, 'DEM')
 
+for idir in [data_dir, mask_dir, improc_dir, vertref_dir, waterlevel_dir, dem_dir]:
+    if not os.path.exists(idir):
+        os.mkdir(idir)
+
+# Analysis starts
 zones = ['T45QWE', 'T45QXE', 'T45QYE', 'T46QBK', 'T46QCK', 'T46QBL', 'T46QCL']
 
 if __name__=='__main__':

@@ -1,23 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 import os
-import gc
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 from pyintdem.core import Band, RGB
 from pyintdem.data import Sentinel2
 
-# Directory Settings
+# Input setting
 input_dir='/run/media/khan/Backup KE Maxelev'
-output_dir = '/run/media/khan/Backup KE Maxelev/Analysis_v3' # Output
+data_dir = os.path.join(input_dir, 'Data')
 
 # Directory of saving unzipped data
-data_dir = os.path.join(input_dir, 'Data')
+output_dir = '/run/media/khan/Backup KE Maxelev/Analysis_v3' # Output
 save_dir = os.path.join(output_dir, 'Mask') 
 
+for idir in [output_dir, save_dir]:
+    if not os.path.exists(idir):
+        os.mkdir(idir)
+
+# Actual computation
 zones = os.listdir(data_dir)
 print(zones)
 zones = ['T45QWF', 'T45QXF', 'T45QYF']
