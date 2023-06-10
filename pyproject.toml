@@ -1,0 +1,37 @@
+# Upload using flit
+# Ref: https://pypi.org/project/flit/
+# Metadata ref: https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pyintdem"
+authors = [{name = "Jamal Khan", email = "jamal919@gmail.com"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+dynamic = ["version", "description"]
+requires-python = ">=3.7"
+keywords = ["sentinel2", "coastal", "intertidal", "dem", "imageprocessing"]
+dependencies = [
+    "xarray",
+    "numpy",
+    "scipy",
+    "requests",
+    "matplotlib",
+    "netcdf4",
+    "utide",
+    "cmocean",
+    "rioxarray",
+    "tqdm",
+    "pyproj",
+    "ipykernel"
+]
+
+[project.urls]
+Home = "https://jamalkhan.me/softwares/pyintertidaldem"
+Repo = "https://github.com/jamal919/pyIntertidalDEM"
+
+[tool.flit.sdist]
+exclude = ["docs", "examples", "notebooks", "scripts", "Dockerfile", "environment_*.yml", ".gitignore"]
