@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
 import numpy as np
 from scipy import signal as sps
 from scipy.ndimage import measurements as scm
 from osgeo import osr, gdal
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcl
-from mpl_toolkits.basemap import Basemap
 from netCDF4 import Dataset
 import copy
-import os
 
 gdal.UseExceptions()
 
@@ -53,7 +50,7 @@ class Band(object):
             dset = gdal.Open(fname, gdal.GA_ReadOnly)
             self.geotransform = dset.GetGeoTransform()
             self.projection = dset.GetProjectionRef()
-            self.data = dset.GetRasterBand(band).ReadAsArray().astype(np.float)
+            self.data = dset.GetRasterBand(band).ReadAsArray().astype(float)
         except:
             raise Exception('Band: read error!')
 
@@ -370,7 +367,6 @@ class Band(object):
             )
         )
 
-
     def __repr__(self):
         '''
         Print representation
@@ -415,7 +411,6 @@ class Band(object):
             return(Band.__add__(self, other))
         else:
             raise NotImplementedError('In Band radd: only int and float is implemented')
-
 
     def __sub__(self, other):
         '''

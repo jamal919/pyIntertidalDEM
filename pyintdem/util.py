@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-import numpy as np
+
 import zipfile
 import time
-from datetime import datetime
 from glob import glob
 import os
 
