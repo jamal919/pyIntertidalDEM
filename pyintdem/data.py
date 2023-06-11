@@ -10,14 +10,10 @@ TODO:
 Author: khan
 Email: jamal.khan@legos.obs-mip.fr
 '''
-from __future__ import print_function
-import numpy as np
-import zipfile
-import time
+
 from datetime import datetime
 from glob import glob
 import os
-from pprint import pprint
 
 class Sentinel2(object):
     def __init__(self, loc, datefmt='%Y%m%d-%H%M%S-%f'):
