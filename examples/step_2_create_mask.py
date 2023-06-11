@@ -13,7 +13,7 @@ data_dir = os.path.join(input_dir, 'Data')
 
 # Directory of saving unzipped data
 output_dir = '/run/media/khan/Backup KE Maxelev/Analysis_v3' # Output
-save_dir = os.path.join(output_dir, 'Mask') 
+save_dir = os.path.join(output_dir, 'Masks') 
 
 for idir in [output_dir, save_dir]:
     if not os.path.exists(idir):
