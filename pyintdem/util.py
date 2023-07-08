@@ -6,6 +6,11 @@ import time
 from glob import glob
 import os
 
+import logging
+logger = logging.getLogger(__name__)
+
+from tqdm import tqdm
+
 class Extractor(object):
     def __init__(self, input_dir, output_dir):
         '''
@@ -27,7 +32,7 @@ class Extractor(object):
         if not os.path.exists(self.output_dir):
             os.mkdir(self.output_dir)
 
-    def list_zones(self, debug=False):
+    def list_zones(self):
         '''
         List the zones available in the data files and store them to self.zones
 
@@ -46,16 +51,15 @@ class Extractor(object):
             finally:
                 self.zones[zone].append(fname)
         
-        if debug:
-            # Number of zones
-            if len(self.zones) <= 1:
-                print('We have found {:d} zone'.format(len(self.zones)))
-            else:
-                print('We have found {:d} zone(s)'.format(len(self.zones)))
+        # Number of zones
+        if len(self.zones) <= 1:
+            logger.debug('We have found {:d} zone'.format(len(self.zones)))
+        else:
+            logger.debug('We have found {:d} zone(s)'.format(len(self.zones)))
 
-            # Zone wise tile number
-            for zone in self.zones:
-                print('- {:s} : {:d} tiles'.format(zone, len(self.zones[zone])))
+        # Zone wise tile number
+        for zone in self.zones:
+            logger.debug('- {:s} : {:d} tiles'.format(zone, len(self.zones[zone])))
             
     def extract(self, zone):
         '''
@@ -69,20 +73,20 @@ class Extractor(object):
         try:
             assert zone in self.zones
         except AssertionError:
-            print('{:s} - Not found! Use list_zones method to list all tiles.'.format(zone))
+            logger.error('{:s} - Not found! Use list_zones method to list all tiles.'.format(zone))
         else:
             zone_dir = os.path.join(self.output_dir, zone)
-            print('|- Extracting {:d} {:s} tiles to - {:s}'.format(len(self.zones[zone]), zone, zone_dir))
+            logger.info('|- Extracting {:d} {:s} tiles to - {:s}'.format(len(self.zones[zone]), zone, zone_dir))
             
             if not os.path.exists(zone_dir):
                 os.mkdir(zone_dir)
 
-            for fname in self.zones[zone]:
+            for fname in tqdm(self.zones[zone], desc=zone):
                 start_time = time.time()
                 zfile = zipfile.ZipFile(file=fname)
                 zfile.extractall(zone_dir)
                 zfile.close()
-                print('\t|- Extracted : {zone_name:s} - {file_name:s} in {te:s}'.format(
+                logger.info('\t|- Extracted : {zone_name:s} - {file_name:s} in {te:s}'.format(
                     zone_name=zone,
                     file_name=os.path.basename(fname),
                     te=str(time.time()-start_time)

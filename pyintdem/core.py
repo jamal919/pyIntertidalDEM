@@ -703,7 +703,7 @@ class Band(object):
         Do a nan average with other.
         '''
         if isinstance(other, Band):
-            _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=np.float)
+            _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=float)
             _data[:, :, 0] = self.data
             _data[:, :, 1] = other.data
             _data = np.nanmean(_data, axis=-1, keepdims=False)
