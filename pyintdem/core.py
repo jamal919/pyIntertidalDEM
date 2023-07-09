@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcl
 from netCDF4 import Dataset
 import copy
+import warnings
 
 gdal.UseExceptions()
 
@@ -706,7 +707,10 @@ class Band(object):
             _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=float)
             _data[:, :, 0] = self.data
             _data[:, :, 1] = other.data
-            _data = np.nanmean(_data, axis=-1, keepdims=False)
+            
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                _data = np.nanmean(_data, axis=-1, keepdims=False)
 
             return(
                 Band(
