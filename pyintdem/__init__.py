@@ -8,4 +8,4 @@ shorelines from spectral images using  a ophisticated shoreline extraction algor
 These modules are developed in Python v3 environment.
 """
 
-__version__ = '1.1'
+__version__ = '1.2'
