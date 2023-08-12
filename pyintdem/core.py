@@ -721,6 +721,29 @@ class Band(object):
             )
         else:
             raise NotImplementedError('In Band nan_avg: only Band data is implemented')
+    
+    def nan_sum(self, other):
+        '''
+        Do a nan sum with other.
+        '''
+        if isinstance(other, Band):
+            _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=float)
+            _data[:, :, 0] = self.data
+            _data[:, :, 1] = other.data
+            
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                _data = np.nansum(_data, axis=-1, keepdims=False)
+
+            return(
+                Band(
+                    data=_data,
+                    geotransform=self.geotransform,
+                    projection=self.projection
+                )
+            )
+        else:
+            raise NotImplementedError('In Band nan_avg: only Band data is implemented')
 
     def to_geotiff(self, fname, dtype=gdal.GDT_Float32, epsg='auto'):
         '''
