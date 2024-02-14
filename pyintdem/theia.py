@@ -299,6 +299,7 @@ class TheiaAPI:
             result = self._search(
                 location=tile,
                 startDate=startDate,
+                completionDate=completionDate,
                 cloudCover=cloudCover,
                 productType=productType,
                 processingLevel=processingLevel,
