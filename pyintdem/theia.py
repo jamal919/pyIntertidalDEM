@@ -245,7 +245,7 @@ class TheiaAPI:
             logger.info('.pyintdemsecrets not found!')
             raise Exception(f'Secret file {secret_file.as_posix()} not found!')
 
-        config.read()
+        config.read(secret_file)
 
         try:
             user = config['THEIA']['USER']
