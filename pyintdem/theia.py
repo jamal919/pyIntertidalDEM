@@ -24,14 +24,24 @@ logger = logging.getLogger(__name__)
 class TheiaCoverage:
     def __init__(
             self,
-            bbox=None,
+            bbox=[-180, 180, -90, 90],
             shoreline=False,
             fname='theia_sentinel2.geojson', 
             url='https://umap.openstreetmap.fr/en/datalayer/154585/2949043/'):
+        """Filter list of tiles for a target `bbox`, over `shoreline` if needed
+
+        Args:
+            bbox (array, optional): Bounding box in [w, e, s, n]. Defaults to [-180, 180, -90, 90].
+            shoreline (bool, optional): Keep only the tiles crossing GSHHG shoreline. Defaults to False.
+            fname (str, optional): Local file to store the full geojson for future use. Defaults to 'theia_sentinel2.geojson'.
+            url (str, optional): Online source of the coverage. Defaults to 'https://umap.openstreetmap.fr/en/datalayer/154585/2949043/'.
+        """
         
         self.fname = fname
         self.url = url
         self.coverage = get_theia_coverage(url=self.url, fname=self.fname)
+
+        logger.info(f'Visit the Theia Sentinel-2 coverage at {self.url}')
         
         # Apply bbox filtering
         if bbox is not None:
@@ -48,17 +58,37 @@ class TheiaCoverage:
             self.filter_by_shoreline()
 
     def clear(self):
+        """Clear further selection and relaod with initial criteria
+        """
         self.coverage = self._get_coverage()
 
     def as_list(self, prefix='T'):
+        """Get a list of the selected tiles, with `prefix` if necessary.
+
+        Args:
+            prefix (str, optional): Prefix to add to each tilename. Useful for TheiaAPI. Defaults to 'T'.
+
+        Returns:
+            list: List of selected tiles
+        """
         tiles_list = [f'{prefix}{tile}' for tile in self.coverage.index]
         return tiles_list
     
     def filter_by_bbox(self, bbox_poly):
+        """Filter the coverage by a bbox_polygon
+
+        Args:
+            bbox_poly (shapely.Polygon): Polygon to filter the tiles in current coverage
+        """
         is_within = [tile.intersects(bbox_poly) for tile in self.coverage.geometry]
         self.coverage = self.coverage.loc[is_within]
 
     def filter_by_shoreline(self):
+        """Filter the coverage by keeping only over the shoreline
+
+        For shoreline, currently the cartopy.feature shoreline is used, which is GSHHG shoreline downloaded by cartopy's
+        internal downloader.
+        """
         goems_shorelines = self._shorelines_within_bbox()
 
         does_intersects = np.any(
@@ -68,6 +98,11 @@ class TheiaCoverage:
         self.coverage = self.coverage.loc[does_intersects]
 
     def _shorelines_within_bbox(self):
+        """Get a GeoDataFrame of the shorelines linestrings for the bbox defined in class
+
+        Returns:
+            GeoDataFrame: GeoDataFrame of the shorelines linestring within self.bbox
+        """
         coastline = list(cartopy.feature.COASTLINE.geometries())
         coastline_gdf = gpd.GeoDataFrame(geometry=coastline)
         is_within = [line.intersects(self.bbox) for line in coastline_gdf.geometry]
@@ -80,6 +115,19 @@ class TheiaCoverage:
             coastline=True,
             geom_kw={'facecolor':'red', 'edgecolor':'black', 'alpha':0.5, }, 
             text_kw={'ha':'center', 'color':'black', 'bbox':{'facecolor':'white', 'edgecolor':'black', 'alpha':0.75}}):
+        """Plot the current coverage
+
+        Args:
+            ax (cartopy.GeoAxes, optional): An axis to plot the map. Defaults to None.
+            coastline (bool, optional): Plot coastline or not. Defaults to True.
+            geom_kw (dict, optional): keywarded arguments to control geometry plotting. 
+                Defaults to {'facecolor':'red', 'edgecolor':'black', 'alpha':0.5, }.
+            text_kw (dict, optional): keywarded arguments to control the text. 
+                Defaults to {'ha':'center', 'color':'black', 'bbox':{'facecolor':'white', 'edgecolor':'black', 'alpha':0.75}}.
+
+        Returns:
+            cartopy.GeoAxes: Axes with plots of the selected tiles
+        """
         
         if ax is None:
             fig, ax = plt.subplots(subplot_kw={'projection':ccrs.PlateCarree()})
@@ -104,6 +152,15 @@ def get_theia_coverage(
         url='https://umap.openstreetmap.fr/en/datalayer/154585/2949043/', 
         fname='theia_sentinel2.geojson'
     ):
+    """Get the tiles available in theia
+
+    Args:
+        url (str, optional): Layer URL. Defaults to 'https://umap.openstreetmap.fr/en/datalayer/154585/2949043/'.
+        fname (str, optional): Local filename to save. Defaults to 'theia_sentinel2.geojson'.
+
+    Returns:
+        GeoDataFrame: GeoDataFrame with tile name as index and tile geometry
+    """
     
     fname = Path(fname)
     
@@ -132,6 +189,11 @@ def get_theia_coverage(
     return gdf
 
 def bbox2polygon(bbox):
+    """Converts a [w, e, s, n] bbox to a shapely.Polygon
+
+    Args:
+        bbox (shapely.Polygon): Polygon corresponding to the bbox
+    """
     w, e, s, n = bbox
     points = np.array([
         [w, s],
@@ -147,14 +209,33 @@ def bbox2polygon(bbox):
 
 
 class TheiaAPI:
-    def __init__(self, collection='SENTINEL2'):
-        self.server = "https://theia.cnes.fr/atdistrib"
+    def __init__(self, collection='SENTINEL2', server="https://theia.cnes.fr/atdistrib"):
+        """A simple API to query and download the SENTINEL2 collection from Theia server
+
+        Args:
+            collection (str, optional): Theia collection name. For now only SENTINEL2 is tested. Defaults to 'SENTINEL2'.
+            server (str, optional): Server url of the Theia Distribution center. Defaults to "https://theia.cnes.fr/atdistrib".
+        """
+        self.server = server
         self.collection = collection
         self.results = {}
         self.locations = {}
 
     @property
     def token(self):
+        """Returns the token from the server given the username and password
+
+        The username and password is stored at `home`/.pyintdemsecrets. 
+        
+        The file should contain the following - 
+        ```
+        [THEIA]
+        USER = your_theia_username
+        PASS = your_theia_password
+        ```
+
+        Go to https://theia.cnes.fr/atdistrib/rocket/#/home to create your account, if you do not have one. 
+        """
         config = configparser.ConfigParser()
 
         secret_file = Path.home() / '.pyintdemsecrets'
@@ -201,6 +282,17 @@ class TheiaAPI:
         processingLevel='LEVEL2A',
         maxRecords=500,
         **kwargs):
+        """Search in the THEIA repository for a list of tiles
+
+        Args:
+            tiles (list): List of tiles. Can be generated from TheiaCoverage, with prefix 'T', e.g., 'TXXYYY' format.
+            startDate (str, optional): Start date of the data. Defaults to '2016-01-01'.
+            completionDate (str, optional): End date of the data. Defaults to '2023-01-01'.
+            cloudCover (str, optional): Cloud cover range, needs to be in string. Defaults to '[0,3]'.
+            productType (str, optional): Product type. Defaults to 'REFLECTANCE' for SENTINEL-2.
+            processingLevel (str, optional): Processing level. Defaults to 'LEVEL2A'.
+            maxRecords (int, optional): Maximum number of records to query. Hard limit is 500, set by Theia.
+        """
         tiles = np.atleast_1d(tiles)
         results = {}
 
@@ -229,6 +321,17 @@ class TheiaAPI:
         maxRecords=500,
         **kwargs
         ):
+        """Search in the THEIA repository for a list of tiles
+
+        Args:
+            tiles (list): List of tiles. Can be generated from TheiaCoverage, with prefix 'T', e.g., 'TXXYYY' format.
+            startDate (str, optional): Start date of the data. Defaults to '2016-01-01'.
+            completionDate (str, optional): End date of the data. Defaults to '2023-01-01'.
+            cloudCover (str, optional): Cloud cover range, needs to be in string. Defaults to '[0,3]'.
+            productType (str, optional): Product type. Defaults to 'REFLECTANCE' for SENTINEL-2.
+            processingLevel (str, optional): Processing level. Defaults to 'LEVEL2A'.
+            maxRecords (int, optional): Maximum number of records to query. Hard limit is 500, set by Theia.
+        """
 
         user_params = locals()
         request_params = {}
@@ -259,6 +362,11 @@ class TheiaAPI:
 
     @property
     def summary(self):
+        """Create a summary GeoDataFrame with the count of acquistions for each tile
+
+        Returns:
+            GeoDataFrame: Summary of the tiles
+        """
         summary = {}
         geometry = []
 
@@ -283,6 +391,11 @@ class TheiaAPI:
 
     @property
     def extent(self):
+        """Extent of the current search result and selections
+
+        Returns:
+            bbox: Extent in the form of [w, e, s, n]
+        """
         geom_extents = np.vstack([geom.bounds for geom in self.summary.geometry])
         results_extent = [
             np.min(geom_extents[:, 0]),
@@ -294,6 +407,14 @@ class TheiaAPI:
         return results_extent
 
     def head(self, count=10):
+        """Returns a subset of selection with `count` number of acquisitions for each tile from the top of the list
+
+        Args:
+            count (int, optional): Tiles to keep. Defaults to 10.
+
+        Returns:
+            TheiaAPI: Selected results
+        """
         results = {}
         for tile in self.results:
             results[tile] = self.results[tile][0:count]
@@ -304,6 +425,14 @@ class TheiaAPI:
         return(self_object)
 
     def tail(self, count=10):
+        """Returns a subset of selection with `count` number of acquisitions for each tile from the bottom of the list
+
+        Args:
+            count (int, optional): Tiles to keep. Defaults to 10.
+
+        Returns:
+            TheiaAPI: Selected results
+        """
         results = {}
         for tile in self.results:
             results[tile] = self.results[tile][-count:]
@@ -314,6 +443,11 @@ class TheiaAPI:
         return(self_object)
 
     def drop_empty(self):
+        """Drop tiles that does not have any acquisions
+
+        Returns:
+            TheiaAPI: Selected results
+        """
         results = {}
         dropped = []
         for tile in self.results:
@@ -329,6 +463,13 @@ class TheiaAPI:
         return self_object, dropped
 
     def filter(self, filter_func):
+        """Filter using the `filter_func`
+
+        `filter_func` must receive only one argument, which is a data-record dictionary
+
+        Args:
+            filter_func (function): Arbitrary filter function
+        """
         results = {}
         for tile in self.results:
             results[tile] = list(filter(filter_func, self.results[tile]))
@@ -339,16 +480,48 @@ class TheiaAPI:
         return(self_object)
 
     def filter_date_range(self, start_date, end_date):
+        """Filter the search result with a date range from `start_date` to `end_date`
+
+        Args:
+            start_date (str): Date string in 'yyyy-mm-dd HH:MM:SS', or datetime object
+            end_date (str): Date string in 'yyyy-mm-dd HH:MM:SS', or datetime object
+        """
         filter_func = lambda result: is_within_date_range(result, start_date=start_date, end_date=end_date)
-        filtered_result = self.filter(filter_func)
-        return(filtered_result)
+        filtered_object = self.filter(filter_func)
+        
+        return(filtered_object)
 
     def filter_less_than(self, property_name, target_value):
-        filter_func = lambda result: less_than(result, name=property_name, target=target_value)
-        filtered_result = self.filter(filter_func)
-        return(filtered_result)
+        """Filter with arbitrary `property_name` from the data record when the value is less than `target_value`
 
-    def plot(self, ax=None):
+        Args:
+            property_name (str): A property name available in the data record
+            target_value (any): The target highest value of of the property
+        """
+        filter_func = lambda result: less_than(result, name=property_name, target=target_value)
+        filtered_object = self.filter(filter_func)
+        
+        return(filtered_object)
+
+    def plot(self, 
+        ax=None, 
+        coastline=True,
+        geom_kw={'facecolor':'red', 'edgecolor':'black', 'alpha':0.5, }, 
+        text_kw={'ha':'center', 'color':'black', 'bbox':{'facecolor':'white', 'edgecolor':'black', 'alpha':0.75}}):
+        """Plot the current search result summary
+
+        Args:
+            ax (cartopy.GeoAxes, optional): An axis to plot the map. Defaults to None.
+            coastline (bool, optional): Plot coastline or not. Defaults to True.
+            geom_kw (dict, optional): keywarded arguments to control geometry plotting. 
+                Defaults to {'facecolor':'red', 'edgecolor':'black', 'alpha':0.5, }.
+            text_kw (dict, optional): keywarded arguments to control the text. 
+                Defaults to {'ha':'center', 'color':'black', 'bbox':{'facecolor':'white', 'edgecolor':'black', 'alpha':0.75}}.
+
+        Returns:
+            cartopy.GeoAxes: Axes with plots of the selected tiles
+        """
+        
         summary = self.summary
 
         if ax is None:
@@ -356,31 +529,50 @@ class TheiaAPI:
         else:
             pass
 
-        ax.add_geometries(summary.geometry, crs=ccrs.PlateCarree(), facecolor='None')
+        ax.add_geometries(summary.geometry, crs=ccrs.PlateCarree(), **geom_kw)
 
         for (i, row) in summary.iterrows():
             xy = [row.geometry.centroid.x, row.geometry.centroid.y]
             count = row['count']
 
-            ax.annotate(text=count, xy=xy, ha='center')
+            ax.annotate(text=count, xy=xy, **text_kw)
 
-        ax.coastlines()
+        if coastline:
+            ax.coastlines()
+        
         ax.set_extent(self.extent)
 
         return ax
 
     def save(self, fname):
+        """Save search result to file `fname`
+
+        Args:
+            fname (str): Path to file
+        """
         with open(fname, 'w') as f:
             res_str = json.dumps(self.results)
             f.write(res_str)
 
     def load(self, fname):
+        """Load search result from file `fname`
+
+        Args:
+            fname (str): Path to file
+        """
         with open(fname, 'r') as f:
             res_data = json.load(f)
 
         self.results = res_data
 
     def download(self, savedir):
+        """Download the current search result to the `savedir` directory
+
+        The routine will automatically create folder for each individual tile
+
+        Args:
+            savedir (str): Path to directory where the files will be saved
+        """
         savedir = Path(savedir)
         for tile in self.results:
             tiledir = savedir / tile
@@ -389,13 +581,24 @@ class TheiaAPI:
                 tiledir.mkdir()
 
             for feature in self.results[tile]:
-                download(feature, tiledir, token=self.token, server=self.server, collection=self.collection)
+                token = self.token # Creating a token before each file download
+                download(feature, tiledir, token=token, server=self.server, collection=self.collection)
 
 
     def __repr__(self):
         return str(self.summary)
 
 def is_within_date_range(result, start_date, end_date):
+    """Test if the date in the `result` is within the `start_date` and `end_date`
+
+    Args:
+        result (datarecord): Tile data record received from Theia
+        start_date (str): Date in 'yyyy-mm-dd HH:MM:SS' for datetime object
+        end_date (str): Date in 'yyyy-mm-dd HH:MM:SS' for datetime object
+
+    Returns:
+        array: Boolean array
+    """
 
     filter_start_date = pd.to_datetime(start_date)
     filter_end_date = pd.to_datetime(end_date)
@@ -408,6 +611,16 @@ def is_within_date_range(result, start_date, end_date):
     return within
 
 def less_than(result, name, target):
+    """Test if the property with `name` is less than `target` value
+
+    Args:
+        result (datarecord): Tile data record received from Theia
+        name (str): Name of the property
+        target (any): Target value of the property
+
+    Returns:
+        array: Boolean array
+    """
     target_type = type(target)
     
     try: 
@@ -423,6 +636,15 @@ def less_than(result, name, target):
     return is_less_than
 
 def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2'):
+    """Download a THEIA data record `feature`
+
+    Args:
+        feature (datarecord): Theia datarecord
+        savedir (str): Path of directory where the file will be saved
+        token (str): Server token, see TheiaAPI().token
+        server (str, optional): Theia server. Defaults to "https://theia.cnes.fr/atdistrib".
+        collection (str, optional): Collection to download. Defaults to 'SENTINEL2'.
+    """
     featureid = feature['id'] # to download
     productid = feature['properties']['productIdentifier'] # to save to file
     fname = Path(savedir)/f'{productid}.zip'
@@ -446,3 +668,4 @@ def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", 
                 f.write(chunk)
             
             progress_bar.close()
+
