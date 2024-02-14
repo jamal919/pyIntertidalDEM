@@ -219,7 +219,6 @@ class TheiaAPI:
         self.server = server
         self.collection = collection
         self.results = {}
-        self.locations = {}
 
     @property
     def token(self):
@@ -258,14 +257,14 @@ class TheiaAPI:
         except KeyError:
             raise Exception(f'.pyintdemsecrets must contain PASS = <your_theia_password> in [THEIA] block')
 
-        res = requests.post(
-            url=f'{self.server}/services/authenticate/', 
-            data={'ident':user, 'pass':password})
-        
-        if res.ok:
-            logger.debug("Response received from authenticate service")
-        else:
-            raise res.error
+        try:
+            res = requests.post(
+                url=f'{self.server}/services/authenticate/', 
+                data={'ident':user, 'pass':password})
+            
+            res.raise_for_status()
+        except Exception as e:
+            raise Exception(f'Access token creation failed. Reponse from the server was: {res.json()}')
         
         if len(res.text) == 36:
             return(res.text)
