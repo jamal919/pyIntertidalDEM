@@ -437,6 +437,7 @@ class CopernicusAPI:
 
         # split online/offline
         online, _ = self.split_online()
+        online, dropped = online.drop_empty()
         logger.info('Downloading only online features')
         logger.info('Use CopernicusAPI.split_online() to get [online, offline]')
 
@@ -446,7 +447,7 @@ class CopernicusAPI:
             if not tiledir.exists():
                 tiledir.mkdir()
 
-            for feature in tqdm(self.results[tile], desc=f'Features in {tile}'):
+            for feature in tqdm(online.results[tile], desc=f'Features in {tile}'):
                 token = self.token # Creating a token before each file download
                 download(feature, tiledir, ext=ext, token=token, server=self.data_url)
 

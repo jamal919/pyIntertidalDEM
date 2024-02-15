@@ -169,9 +169,13 @@ class TheiaAPI:
             logger.debug('Ok response received')
             result = res.json()
             [(_, res_type), (_, res_props), (_, res_features)] = result.items()
+
+            # sorting with date
+            res_features.sort(key=lambda item: pd.to_datetime(item['properties']['startDate'][:-1]))
         else:
             logger.info('Non 200 response received, returning empty list')
             res_features = []
+
 
         return(res_features)
 
