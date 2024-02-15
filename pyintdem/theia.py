@@ -474,14 +474,25 @@ def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", 
         total_size = int(res.headers.get('content-length', 0))
         logger.info(f'total_size {total_size} bytes')
         
+        # Check existing file and if download is needed or not
+        download_needed = True
+        if fname.exists():
+            logger.info('File already exists')
+            if fname.stat().st_size == total_size:
+                download_needed = False
+                logger.info(f'Full file already downloaded')
+            else:
+                logger.info(f'Partial file, will be redownloaded')
+
+        # Actual download
+        if download_needed:
+            progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
+            with open(fname, 'wb') as f:
+                for chunk in tqdm(res.iter_content(chunk_size=8192)):
+                    progress_bar.update(len(chunk))
+                    f.write(chunk)
+                
+                progress_bar.close()
+
         res.raise_for_status()
-        
-        progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
-        
-        with open(fname, 'wb') as f:
-            for chunk in tqdm(res.iter_content(chunk_size=8192)):
-                progress_bar.update(len(chunk))
-                f.write(chunk)
-            
-            progress_bar.close()
 
