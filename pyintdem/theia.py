@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Polygon, shape
-from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +107,8 @@ class TheiaAPI:
         tiles = np.atleast_1d(tiles)
         results = {}
 
-        for tile in tqdm(tiles, desc='Searching Theia'):
+        logger.info(f'Searching copernicus server for {len(tiles)} tiles')
+        for tile in tiles:
             result = self._search(
                 location=tile,
                 startDate=startDate,
@@ -391,13 +391,13 @@ class TheiaAPI:
             savedir (str): Path to directory where the files will be saved
         """
         savedir = Path(savedir)
-        for tile in tqdm(self.results, desc='Theia'):
+        for tile in self.results:
             tiledir = savedir / tile
             
             if not tiledir.exists():
                 tiledir.mkdir()
 
-            for feature in tqdm(self.results[tile], desc=tile):
+            for feature in self.results[tile]:
                 token = self.token # Creating a token before each file download
                 download(feature, tiledir, token=token, ext=ext, server=self.server, collection=self.collection)
 
@@ -471,7 +471,7 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
     params = { 'issuerId':'theia' }
 
     with requests.get(url=url, headers=header, params=params, stream=True) as res:
-        logger.info(fname)
+        logger.info(fpath)
         logger.info(url)
 
         try:
@@ -485,9 +485,9 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
         
         # Check existing file and if download is needed or not
         download_needed = True
-        if fname.exists():
+        if fpath.exists():
             logger.info('File already exists')
-            if fname.stat().st_size == total_size:
+            if fpath.stat().st_size == total_size:
                 download_needed = False
                 logger.info(f'Full file already downloaded')
             else:
@@ -495,9 +495,11 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
 
         # Actual download
         if download_needed:
-            with open(fname, 'wb') as f, tqdm(total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+            logger.info(f'Started downloading {fname}')
+            with open(fpath, 'wb') as f:
                 for chunk in res.iter_content(chunk_size=8192):
-                    size = f.write(chunk)
-                    bar.update(size)
+                    f.write(chunk)
+            
+            logger.info(f'Finished downloading {fname}')
 
 

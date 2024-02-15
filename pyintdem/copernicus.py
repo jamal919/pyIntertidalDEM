@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests
-from configparser import ConfigParser
-import logging
-from shapely.geometry import shape, Polygon
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import pandas as pd
 import copy
-from pathlib import Path
-import numpy as np
 import json
+import logging
+from configparser import ConfigParser
+from pathlib import Path
+
+import cartopy.crs as ccrs
 import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import requests
+from shapely.geometry import Polygon, shape
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,8 @@ class CopernicusAPI:
         tiles = np.atleast_1d(tiles)
         results = {}
 
-        for tile in tqdm(tiles, desc='Searching Copernicus'):
+        logger.info(f'Searching copernicus server for {len(tiles)} tiles')
+        for tile in tiles:
             result = self._search(
                 location=tile,
                 startDate=startDate,
@@ -438,13 +439,13 @@ class CopernicusAPI:
         logger.info('Downloading only online features')
         logger.info('Use CopernicusAPI.split_online() to get [online, offline]')
 
-        for tile in tqdm(online.results, desc='Downloading Copernicus'):
+        for tile in online.results:
             tiledir = savedir / tile
             
             if not tiledir.exists():
                 tiledir.mkdir()
 
-            for feature in tqdm(self.results[tile], desc=tile):
+            for feature in self.results[tile]:
                 token = self.token # Creating a token before each file download
                 download(feature, tiledir, ext=ext, token=token, server=self.data_url)
 
@@ -526,7 +527,7 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
     with requests.get(url=url, headers=header, stream=True) as res:
         logger.info(fpath)
         logger.info(url)
-        
+
         try:
             total_size = res.headers.get('content-length')
             logger.info(f'Size of the file {total_size} bytes')
@@ -548,8 +549,11 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
 
         # Actual download
         if download_needed:
-            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+            logger.info(f'Started downloading {fname}')
+            with open(fpath, 'wb') as f:
                 for chunk in res.iter_content(chunk_size=8192):
-                    size = f.write(chunk)
-                    bar.update(size)
+                    f.write(chunk)
+            
+            logger.info(f'Finished downloading {fname}')
+                    
 
