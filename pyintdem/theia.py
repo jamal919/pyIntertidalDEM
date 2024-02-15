@@ -89,7 +89,7 @@ class TheiaAPI:
         tiles, 
         startDate='2016-01-01', 
         completionDate='2023-01-01',
-        cloudCover='[0,3]',
+        cloudCover=3,
         productType='REFLECTANCE', 
         processingLevel='LEVEL2A',
         maxRecords=500,
@@ -100,7 +100,7 @@ class TheiaAPI:
             tiles (list): List of tiles. Can be generated from TheiaCoverage, with prefix 'T', e.g., 'TXXYYY' format.
             startDate (str, optional): Start date of the data. Defaults to '2016-01-01'.
             completionDate (str, optional): End date of the data. Defaults to '2023-01-01'.
-            cloudCover (str, optional): Cloud cover range, needs to be in string. Defaults to '[0,3]'.
+            cloudCover (float, optional): Maximum cloud cover. Defaults to 3.
             productType (str, optional): Product type. Defaults to 'REFLECTANCE' for SENTINEL-2.
             processingLevel (str, optional): Processing level. Defaults to 'LEVEL2A'.
             maxRecords (int, optional): Maximum number of records to query. Hard limit is 500, set by Theia.
@@ -128,7 +128,7 @@ class TheiaAPI:
         location='',
         startDate='2016-01-01', 
         completionDate='2023-01-01',
-        cloudCover='[0,3]',
+        cloudCover=3,
         productType='REFLECTANCE', 
         processingLevel='LEVEL2A',
         maxRecords=500,
@@ -140,13 +140,14 @@ class TheiaAPI:
             tiles (list): List of tiles. Can be generated from TheiaCoverage, with prefix 'T', e.g., 'TXXYYY' format.
             startDate (str, optional): Start date of the data. Defaults to '2016-01-01'.
             completionDate (str, optional): End date of the data. Defaults to '2023-01-01'.
-            cloudCover (str, optional): Cloud cover range, needs to be in string. Defaults to '[0,3]'.
+            cloudCover (float, optional): Maximum cloud cover, defauls to 3.
             productType (str, optional): Product type. Defaults to 'REFLECTANCE' for SENTINEL-2.
             processingLevel (str, optional): Processing level. Defaults to 'LEVEL2A'.
             maxRecords (int, optional): Maximum number of records to query. Hard limit is 500, set by Theia.
         """
 
         user_params = locals()
+        user_params['cloudCover'] = f"[0,{user_params['cloudCover']}]"
         request_params = {}
 
         for kwarg in user_params:
