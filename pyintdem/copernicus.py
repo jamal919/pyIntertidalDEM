@@ -420,7 +420,7 @@ class CopernicusAPI:
 
         self.results = res_data
 
-    def download(self, savedir):
+    def download(self, savedir, ext='zip'):
         """Download the current search result to the `savedir` directory
 
         The routine will automatically create folder for each individual tile
@@ -438,7 +438,7 @@ class CopernicusAPI:
         logger.info('Downloading only online features')
         logger.info('Use CopernicusAPI.split_online() to get [online, offline]')
 
-        for tile in tqdm(online.results, desc='Copernicus'):
+        for tile in tqdm(online.results, desc='Downloading Copernicus'):
             tiledir = savedir / tile
             
             if not tiledir.exists():
@@ -446,7 +446,7 @@ class CopernicusAPI:
 
             for feature in tqdm(self.results[tile], desc=tile):
                 token = self.token # Creating a token before each file download
-                download(feature, tiledir, token=token, server=self.data_url)
+                download(feature, tiledir, ext=ext, token=token, server=self.data_url)
 
 
     def __repr__(self):
@@ -506,7 +506,7 @@ def less_than(result, name, target):
 
     return is_less_than
 
-def download(feature, savedir, token, server="https://zipper.dataspace.copernicus.eu/odata/v1/Products"):
+def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products"):
     """Download a Copernicus data record `feature`
 
     Download URL has the final form: `f"{server}({featureid})/$value"`
@@ -520,21 +520,27 @@ def download(feature, savedir, token, server="https://zipper.dataspace.copernicu
     featureid = feature['Id']
     url = f"{server}({featureid})/$value"
     header = {"Authorization": f"Bearer {token}"}
-    fname = Path(savedir) / feature['Name']
+    fname = feature['Name'].split('.')[0] + '.' + ext # assuming the name does not contain any other '.'
+    fpath = Path(savedir) / fname
 
     with requests.get(url=url, headers=header, stream=True) as res:
-        logger.info(fname)
+        logger.info(fpath)
         logger.info(url)
-        total_size = int(res.headers.get('content-length', 0))
-        logger.info(f'total_size {total_size} bytes')
+        
+        try:
+            total_size = res.headers.get('content-length')
+            logger.info(f'Size of the file {total_size} bytes')
+        except:
+            total_size = 0
+            logger.info(f'No Size info received, progress bar will not be shown')
             
         res.raise_for_status()
         
         # Check existing file and if download is needed or not
         download_needed = True
-        if fname.exists():
+        if fpath.exists():
             logger.info('File already exists')
-            if fname.stat().st_size == total_size:
+            if fpath.stat().st_size == total_size:
                 download_needed = False
                 logger.info(f'Full file already downloaded')
             else:
@@ -542,7 +548,7 @@ def download(feature, savedir, token, server="https://zipper.dataspace.copernicu
 
         # Actual download
         if download_needed:
-            with open(fname, 'wb') as f, tqdm(total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
                 for chunk in res.iter_content(chunk_size=8192):
                     size = f.write(chunk)
                     bar.update(size)
