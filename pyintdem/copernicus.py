@@ -118,7 +118,7 @@ class CopernicusAPI:
         tiles = np.atleast_1d(tiles)
         results = {}
 
-        for tile in tqdm(tiles):
+        for tile in tqdm(tiles, desc='Searching Copernicus'):
             result = self._search(
                 location=tile,
                 startDate=startDate,
@@ -438,13 +438,13 @@ class CopernicusAPI:
         logger.info('Downloading only online features')
         logger.info('Use CopernicusAPI.split_online() to get [online, offline]')
 
-        for tile in online.results:
+        for tile in tqdm(online.results, desc='Copernicus'):
             tiledir = savedir / tile
             
             if not tiledir.exists():
                 tiledir.mkdir()
 
-            for feature in self.results[tile]:
+            for feature in tqdm(self.results[tile], desc=tile):
                 token = self.token # Creating a token before each file download
                 download(feature, tiledir, token=token, server=self.data_url)
 
@@ -528,6 +528,8 @@ def download(feature, savedir, token, server="https://zipper.dataspace.copernicu
         total_size = int(res.headers.get('content-length', 0))
         logger.info(f'total_size {total_size} bytes')
             
+        res.raise_for_status()
+        
         # Check existing file and if download is needed or not
         download_needed = True
         if fname.exists():
@@ -540,13 +542,8 @@ def download(feature, savedir, token, server="https://zipper.dataspace.copernicu
 
         # Actual download
         if download_needed:
-            progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
-            with open(fname, 'wb') as f:
-                for chunk in tqdm(res.iter_content(chunk_size=8192)):
-                    progress_bar.update(len(chunk))
-                    f.write(chunk)
-                
-                progress_bar.close()
-
-        res.raise_for_status()
+            with open(fname, 'wb') as f, tqdm(total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+                for chunk in res.iter_content(chunk_size=8192):
+                    size = f.write(chunk)
+                    bar.update(size)
 

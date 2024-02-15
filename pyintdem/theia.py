@@ -108,7 +108,7 @@ class TheiaAPI:
         tiles = np.atleast_1d(tiles)
         results = {}
 
-        for tile in tqdm(tiles):
+        for tile in tqdm(tiles, desc='Searching Theia'):
             result = self._search(
                 location=tile,
                 startDate=startDate,
@@ -391,13 +391,13 @@ class TheiaAPI:
             savedir (str): Path to directory where the files will be saved
         """
         savedir = Path(savedir)
-        for tile in self.results:
+        for tile in tqdm(self.results, desc='Theia'):
             tiledir = savedir / tile
             
             if not tiledir.exists():
                 tiledir.mkdir()
 
-            for feature in self.results[tile]:
+            for feature in tqdm(self.results[tile], desc=tile):
                 token = self.token # Creating a token before each file download
                 download(feature, tiledir, token=token, server=self.server, collection=self.collection)
 
@@ -474,6 +474,8 @@ def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", 
         logger.info(url)
         total_size = int(res.headers.get('content-length', 0))
         logger.info(f'total_size {total_size} bytes')
+
+        res.raise_for_status()
         
         # Check existing file and if download is needed or not
         download_needed = True
@@ -487,13 +489,9 @@ def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", 
 
         # Actual download
         if download_needed:
-            progress_bar = tqdm(total=total_size, unit='iB', unit_scale=True)
-            with open(fname, 'wb') as f:
-                for chunk in tqdm(res.iter_content(chunk_size=8192)):
-                    progress_bar.update(len(chunk))
-                    f.write(chunk)
-                
-                progress_bar.close()
+            with open(fname, 'wb') as f, tqdm(total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+                for chunk in res.iter_content(chunk_size=8192):
+                    size = f.write(chunk)
+                    bar.update(size)
 
-        res.raise_for_status()
 
