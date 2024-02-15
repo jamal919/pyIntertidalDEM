@@ -93,7 +93,7 @@ class CopernicusAPI:
         try:
             return res.json()['access_token']
         except:
-            logging.debug("Wrong response from authenticate service, check user/pass")
+            logger.debug("Wrong response from authenticate service, check user/pass")
             raise Exception(f'Could not get access token! Exiting.')
 
     def search(self,
@@ -131,6 +131,12 @@ class CopernicusAPI:
             results[tile] = result
 
         self.results = results
+
+        summary = self.summary
+        logger.info(f'Search done for {len(tiles)} tiles')
+        logger.info(f'{np.sum(summary.online)} online and {np.sum(summary.offline)} offline results found.')
+        logger.info('Offline data can be ordered online, and then download later')
+        logger.info('Online and offline data can be separated using [online, offline] = CopernicusAPI.split_online() method')
 
     def _search(
             self,
@@ -426,8 +432,8 @@ class CopernicusAPI:
 
         # split online/offline
         online, _ = self.split_online()
-        logging.info('Downloading only online features')
-        logging.info('Use CopernicusAPI.split_online() to get [online, offline]')
+        logger.info('Downloading only online features')
+        logger.info('Use CopernicusAPI.split_online() to get [online, offline]')
 
         for tile in online.results:
             tiledir = savedir / tile
@@ -514,10 +520,10 @@ def download(feature, savedir, token, server="https://zipper.dataspace.copernicu
     fname = Path(savedir) / feature['Name']
 
     with requests.get(url=url, headers=header, stream=True) as res:
-            logging.info(fname)
-            logging.info(url)
+            logger.info(fname)
+            logger.info(url)
             total_size = int(res.headers.get('content-length', 0))
-            logging.info(f'total_size {total_size} bytes')
+            logger.info(f'total_size {total_size} bytes')
             
             res.raise_for_status()
             
@@ -530,4 +536,3 @@ def download(feature, savedir, token, server="https://zipper.dataspace.copernicu
                 
                 progress_bar.close()
 
-                
