@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Polygon, shape
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,7 @@ class CopernicusAPI:
             f"Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'tileId' and att/OData.CSC.StringAttribute/Value eq '{location}')"
             ]
 
-        url = self.search_url + "?$filter=" + " and ".join(filters) + f'&$top={maxRecords}' 
+        url = self.search_url + "?$filter=" + " and ".join(filters) + f'&$top={maxRecords}' + f'&$orderby=ContentDate/Start asc'
         results = requests.get(url=url).json()['value']
 
         return results
@@ -439,13 +440,13 @@ class CopernicusAPI:
         logger.info('Downloading only online features')
         logger.info('Use CopernicusAPI.split_online() to get [online, offline]')
 
-        for tile in online.results:
+        for tile in tqdm(online.results, desc='Tiles'):
             tiledir = savedir / tile
             
             if not tiledir.exists():
                 tiledir.mkdir()
 
-            for feature in self.results[tile]:
+            for feature in tqdm(self.results[tile], desc=f'Features in {tile}'):
                 token = self.token # Creating a token before each file download
                 download(feature, tiledir, ext=ext, token=token, server=self.data_url)
 
@@ -529,31 +530,33 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
         logger.info(url)
 
         try:
-            total_size = res.headers.get('content-length')
+            total_size = int(res.headers.get('content-length'))
             logger.info(f'Size of the file {total_size} bytes')
         except:
             total_size = 0
             logger.info(f'No Size info received, progress bar will not be shown')
-            
+
         res.raise_for_status()
         
         # Check existing file and if download is needed or not
         download_needed = True
         if fpath.exists():
-            logger.info('File already exists')
-            if fpath.stat().st_size == total_size:
+            logger.info(f'File {fname} already exists')
+            fpath_size = fpath.stat().st_size
+
+            if fpath_size == total_size:
                 download_needed = False
                 logger.info(f'Full file already downloaded')
             else:
-                logger.info(f'Partial file, will be redownloaded')
+                logger.info(f'Partial file {fname} found')
+                logger.info(f'Online size {total_size} vs local size {fpath_size}')
+                logger.info(f'{fname} will be redownloaded')
 
         # Actual download
         if download_needed:
-            logger.info(f'Started downloading {fname}')
-            with open(fpath, 'wb') as f:
+            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
                 for chunk in res.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            
-            logger.info(f'Finished downloading {fname}')
+                    size = f.write(chunk)
+                    bar.update(size)
                     
 
