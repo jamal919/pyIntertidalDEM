@@ -382,7 +382,7 @@ class TheiaAPI:
 
         self.results = res_data
 
-    def download(self, savedir):
+    def download(self, savedir, ext='zip'):
         """Download the current search result to the `savedir` directory
 
         The routine will automatically create folder for each individual tile
@@ -399,7 +399,7 @@ class TheiaAPI:
 
             for feature in tqdm(self.results[tile], desc=tile):
                 token = self.token # Creating a token before each file download
-                download(feature, tiledir, token=token, server=self.server, collection=self.collection)
+                download(feature, tiledir, token=token, ext=ext, server=self.server, collection=self.collection)
 
 
     def __repr__(self):
@@ -452,7 +452,7 @@ def less_than(result, name, target):
 
     return is_less_than
 
-def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2'):
+def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2'):
     """Download a THEIA data record `feature`
 
     Args:
@@ -463,8 +463,9 @@ def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", 
         collection (str, optional): Collection to download. Defaults to 'SENTINEL2'.
     """
     featureid = feature['id'] # to download
-    productid = feature['properties']['productIdentifier'] # to save to file
-    fname = Path(savedir)/f'{productid}.zip'
+    productid = feature['properties']['productIdentifier']
+    fname = f'{productid}.{ext}'
+    fpath = Path(savedir)/ fname
     url=f'{server}/resto2/collections/{collection}/{featureid}/download/'
     header = { 'Authorization':f'Bearer {token}' }
     params = { 'issuerId':'theia' }
@@ -472,8 +473,13 @@ def download(feature, savedir, token, server="https://theia.cnes.fr/atdistrib", 
     with requests.get(url=url, headers=header, params=params, stream=True) as res:
         logger.info(fname)
         logger.info(url)
-        total_size = int(res.headers.get('content-length', 0))
-        logger.info(f'total_size {total_size} bytes')
+
+        try:
+            total_size = res.headers.get('content-length')
+            logger.info(f'Size of the file {total_size} bytes')
+        except:
+            total_size = 0
+            logger.info(f'No Size info received, progress bar will not be shown')
 
         res.raise_for_status()
         
