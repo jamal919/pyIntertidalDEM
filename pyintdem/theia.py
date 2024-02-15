@@ -357,15 +357,18 @@ class TheiaAPI:
 
         return ax
 
-    def save(self, fname):
-        """Save search result to file `fname`
+    def save(self, fname, summary=False):
+        """Save search result to file `fname` if `summary=False`, or save the summary to `file` 
 
         Args:
-            fname (str): Path to file
+            fname (str): Path to file, can be geojson for full result, or geojson/shapefile for summary
         """
-        with open(fname, 'w') as f:
-            res_str = json.dumps(self.results)
-            f.write(res_str)
+        if summary:
+            self.summary.to_file(fname)
+        else:
+            with open(fname, 'w') as f:
+                res_str = json.dumps(self.results)
+                f.write(res_str)
 
     def load(self, fname):
         """Load search result from file `fname`
