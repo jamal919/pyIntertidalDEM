@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Polygon, shape
-from tqdm.auto import tqdm
+from tqdm.autonotebook import tqdm
 
 logger = logging.getLogger(__name__)
 
