@@ -5,11 +5,14 @@ import zipfile
 import time
 from glob import glob
 import os
+import numpy as np
+from .core import Band
+from .data import Database, DataFile
 
 import logging
 logger = logging.getLogger(__name__)
 
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 class Extractor(object):
     def __init__(self, input_dir, output_dir):
@@ -91,3 +94,23 @@ class Extractor(object):
                     file_name=os.path.basename(fname),
                     te=str(time.time()-start_time)
                 ))
+
+
+def create_mask(database, maskdir, nmask=0.5, ext='tif', band='B11'):
+    for tile in database:
+        fname = maskdir / f'{tile}.{ext}'
+        datafiles = database[tile]
+        for i, datafile in enumerate(datafiles):
+            if i == 0:
+                mask = datafile.get_band(band, preprocess=True)
+                count_band = np.logical_not(np.isnan(mask.data)).astype(int)
+            else:
+                other = datafile.get_band(band, preprocess=True)
+                count_band = count_band + np.logical_not(np.isnan(other.data)).astype(int)
+                mask = mask.nan_sum(other)
+
+        count_band = Band(data=count_band, geotransform=mask.geotransform, projection=mask.projection)
+        mask = mask / count_band
+        mask = mask < nmask * mask.std
+        mask.to_geotiff(fname=fname.as_posix())
+
