@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Polygon, shape
-from tqdm.auto import tqdm
+from tqdm.autonotebook import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class TheiaAPI:
         self.server = server
         self.collection = collection
         self.results = {}
+        self.proxies = proxies
 
     @property
     def token(self):
@@ -70,7 +71,8 @@ class TheiaAPI:
         try:
             res = requests.post(
                 url=f'{self.server}/services/authenticate/', 
-                data={'ident':user, 'pass':password})
+                data={'ident':user, 'pass':password},
+                proxies=self.proxies)
             
             res.raise_for_status()
         except Exception as e:
@@ -470,7 +472,8 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
     """
     featureid = feature['id'] # to download
     productid = feature['properties']['productIdentifier']
-    fname = f'{productid}.{ext}'
+    version = feature['properties']['version']
+    fname = f'{productid}_V{version}.{ext}'
     fpath = Path(savedir)/ fname
     url=f'{server}/resto2/collections/{collection}/{featureid}/download/'
     header = { 'Authorization':f'Bearer {token}' }
