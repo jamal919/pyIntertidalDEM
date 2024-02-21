@@ -4,12 +4,14 @@
 import numpy as np
 from scipy import signal as sps
 from scipy.ndimage import measurements as scm
+from scipy.interpolate import RegularGridInterpolator
 from osgeo import osr, gdal
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcl
 from netCDF4 import Dataset
 import copy
 import warnings
+from pathlib import Path
 
 gdal.UseExceptions()
 
@@ -81,8 +83,7 @@ class Band(object):
                 Method to be used for interpolation. Currently only nearest
                 neighbour is available.
         '''
-        if method=='nearest':
-            self.geotransform = (
+        self.geotransform = (
                 self.geotransform[0],
                 self.geotransform[1]/float(factor),
                 self.geotransform[2],
@@ -90,8 +91,26 @@ class Band(object):
                 self.geotransform[4],
                 self.geotransform[5]//float(factor)
             )
+        if method=='nearest':
             self.data = np.array(self.data.repeat(factor, axis=0).repeat(factor, axis=1))
             return(True)
+        elif method=='linear':
+            nrows, ncols = self.data.shape
+            
+            # for original data
+            orig_r = np.linspace(0, nrows-1, nrows)
+            orig_c = np.linspace(0, ncols, ncols)
+
+            f = RegularGridInterpolator((orig_r, orig_c), self.data)
+
+            # for upscaled data
+            upscale_r = np.linspace(0, nrows-1, nrows*factor)
+            upscale_c = np.linspace(0, ncols-1, ncols*factor)
+
+            upscale_data = f(np.meshgrid(upscale_r, upscale_c))
+
+            self.data = upscale_data
+            return True
         else:
             raise NotImplementedError
 
@@ -325,7 +344,7 @@ class Band(object):
                     fmt='%f', 
                     delimiter=',',
                     comments='',
-                    header='lon,lat'
+                    header='lat,lon'
                 )
 
     def clean(self, npixel, fillvalue, background=False):
@@ -760,6 +779,7 @@ class Band(object):
                 original projection. Default `auto`
 
         '''
+        fname = Path(fname).as_posix()
         row, col = self.data.shape
         
         if epsg=='auto':
@@ -897,17 +917,6 @@ class Band(object):
         finally:
             nc.sync()
             nc.close()
-
-    def to_csv(self, to, crs='auto', drop_nan=False):
-        '''
-        Save band data to csv file
-
-        Arguments:
-            to: string, save location
-            crs: integer, crs id
-            drop_nan: boolean, if the nan_values should be removed from the csv
-        '''
-        raise NotImplementedError()
 
     def plot(self, title='Band', cmap='binary', saveto=None):
         '''
@@ -1110,6 +1119,7 @@ class RGB(object):
                 original projection. Default `auto` (only option)
 
         '''
+        fname = Path(fname).as_posix()
         row, col, nband = self.rgb.shape
         
         if epsg=='auto':
