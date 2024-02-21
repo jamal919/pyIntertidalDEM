@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Polygon, shape
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,8 @@ class CopernicusAPI:
             collection='SENTINEL-2', 
             token_url="https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token",
             search_url="https://catalogue.dataspace.copernicus.eu/odata/v1/Products",
-            data_url="https://zipper.dataspace.copernicus.eu/odata/v1/Products"
+            data_url="https://zipper.dataspace.copernicus.eu/odata/v1/Products",
+            proxies={}
             ):
         """A simple API to query and download the SENTINEL-2 collection from Copernicus server
 
@@ -39,6 +40,7 @@ class CopernicusAPI:
         self.data_url = data_url
         self.collection = collection
         self.results = {}
+        self.proxies = proxies
 
     @property
     def token(self):
@@ -84,7 +86,8 @@ class CopernicusAPI:
                     'client_id':'cdse-public',
                     'username':'jamal919@gmail.com',
                     'password':'Great12Wall@#',
-                    'grant_type':'password'}
+                    'grant_type':'password'},
+                proxies=self.proxies
                     )
             res.raise_for_status()
         except Exception as e:
@@ -183,7 +186,7 @@ class CopernicusAPI:
             ]
 
         url = self.search_url + "?$filter=" + " and ".join(filters) + f'&$top={maxRecords}' + f'&$orderby=ContentDate/Start asc'
-        results = requests.get(url=url).json()['value']
+        results = requests.get(url=url, proxies=self.proxies).json()['value']
 
         return results
 
@@ -449,7 +452,7 @@ class CopernicusAPI:
 
             for feature in tqdm(online.results[tile], desc=f'Features in {tile}'):
                 token = self.token # Creating a token before each file download
-                download(feature, tiledir, ext=ext, token=token, server=self.data_url)
+                download(feature, tiledir, ext=ext, token=token, server=self.data_url, proxies=self.proxies)
 
 
     def __repr__(self):
@@ -509,7 +512,7 @@ def less_than(result, name, target):
 
     return is_less_than
 
-def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products"):
+def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products", proxies={}):
     """Download a Copernicus data record `feature`
 
     Download URL has the final form: `f"{server}({featureid})/$value"`
@@ -526,7 +529,7 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
     fname = feature['Name'].split('.')[0] + '.' + ext # assuming the name does not contain any other '.'
     fpath = Path(savedir) / fname
 
-    with requests.get(url=url, headers=header, stream=True) as res:
+    with requests.get(url=url, headers=header, stream=True, proxies=proxies) as res:
         logger.info(fpath)
         logger.info(url)
 
