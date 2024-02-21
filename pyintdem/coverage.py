@@ -37,7 +37,8 @@ class Coverage:
             bbox=[-180, 180, -90, 90],
             shoreline=False,
             source='Theia',
-            cachedir='./cache'):
+            cachedir='./cache',
+            proxies={}):
         """Filter list of tiles for a target `bbox`, over `shoreline` if needed
 
         Args:
@@ -52,7 +53,8 @@ class Coverage:
         
         self.fname = self.cachedir / data_source[source]['fname']
         self.url = data_source[source]['url']
-        self.coverage = get_coverage_from_geojson(url=self.url, fname=self.fname)
+        self.proxies = proxies
+        self.coverage = get_coverage_from_geojson(url=self.url, fname=self.fname, proxies=self.proxies)
         
 
         logger.info(f'Get the {source} Sentinel-2 coverage at {self.url}')
@@ -172,7 +174,7 @@ class Coverage:
         
         return ax
 
-def get_coverage_from_geojson(url, fname, kw_map={'name':'name', 'features':'features'}):
+def get_coverage_from_geojson(url, fname, kw_map={'name':'name', 'features':'features'}, proxies={}):
     """Get a geodataframe from a online geojson dataset
 
     Args:
@@ -191,7 +193,7 @@ def get_coverage_from_geojson(url, fname, kw_map={'name':'name', 'features':'fea
             geojson = json.load(f)
     else:
         logger.info('Loading Sentinel-2 tiles from the url')
-        res = requests.get(url)
+        res = requests.get(url, proxies=proxies)
         geojson = res.json()
 
         with open(fname, 'w') as f:

@@ -5,11 +5,8 @@ import configparser
 import copy
 import json
 import logging
-import os
-import warnings
 from pathlib import Path
 
-import cartopy
 import cartopy.crs as ccrs
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -17,12 +14,12 @@ import numpy as np
 import pandas as pd
 import requests
 from shapely.geometry import Polygon, shape
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 logger = logging.getLogger(__name__)
 
 class TheiaAPI:
-    def __init__(self, collection='SENTINEL2', server="https://theia.cnes.fr/atdistrib"):
+    def __init__(self, collection='SENTINEL2', server="https://theia.cnes.fr/atdistrib", proxies={}):
         """A simple API to query and download the SENTINEL2 collection from Theia server
 
         Args:
@@ -162,7 +159,8 @@ class TheiaAPI:
         logger.debug('Querying search api')
         res = requests.get(
             url=f'{self.server}/resto2/api/collections/{self.collection}/search.json', 
-            params=request_params
+            params=request_params,
+            proxies=self.proxies
         )
 
         if res.ok:
@@ -404,7 +402,10 @@ class TheiaAPI:
 
             for feature in tqdm(self.results[tile], desc=f'Features in {tile}'):
                 token = self.token # Creating a token before each file download
-                download(feature, tiledir, token=token, ext=ext, server=self.server, collection=self.collection)
+                download(feature, tiledir, token=token, ext=ext, 
+                         server=self.server, 
+                         collection=self.collection, 
+                         proxies=self.proxies)
 
 
     def __repr__(self):
@@ -457,7 +458,7 @@ def less_than(result, name, target):
 
     return is_less_than
 
-def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2'):
+def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2', proxies={}):
     """Download a THEIA data record `feature`
 
     Args:
@@ -475,7 +476,7 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
     header = { 'Authorization':f'Bearer {token}' }
     params = { 'issuerId':'theia' }
 
-    with requests.get(url=url, headers=header, params=params, stream=True) as res:
+    with requests.get(url=url, headers=header, params=params, stream=True, proxies=proxies) as res:
         logger.info(fpath)
         logger.info(url)
 
