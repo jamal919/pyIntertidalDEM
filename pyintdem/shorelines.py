@@ -34,12 +34,16 @@ class Shorelines:
     def reference(self, ds):
         add_reference(shorelines=self.shorelines, ds=ds)
 
-    def combine(self, fname=None):
+    def combine(self, fname=None, elev=True):
+        if elev:
+            varnames = ['lon', 'lat', 'elev']
+        else:
+            varnames = ['lon', 'lat']
         df_combined = pd.DataFrame()
         for shoreline in self.shorelines:
             df = read_shoreline(shoreline=shoreline)
             df_combined = pd.concat(
-                [df_combined, df.loc[:, ['lon', 'lat', 'elev']]], 
+                [df_combined, df.loc[:, varnames]], 
                 axis=0, 
                 ignore_index=True)
             
