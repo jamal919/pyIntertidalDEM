@@ -160,6 +160,5 @@ dependencies:
   - pip:
     - cmocean==2.0
     - georaster==1.25
-    - utide==0.2.6
-    - git+https://github.com/jamal919/pyIntertidalDEM.git
+    - utide==0.2.6 
 prefix: pyintdem

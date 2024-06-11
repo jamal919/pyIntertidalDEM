@@ -26,12 +26,16 @@ dependencies = [
     "rioxarray",
     "tqdm",
     "pyproj",
-    "ipykernel"
+    "ipykernel",
+    "cartopy",
+    "shapely",
+    "geopandas",
+    "pandas"
 ]
 
 [project.urls]
-Home = "https://jamalkhan.me/softwares/pyintertidaldem"
+Home = "https://jamal919.github.io/softwares/pyintertidaldem"
 Repo = "https://github.com/jamal919/pyIntertidalDEM"
 
 [tool.flit.sdist]
-exclude = ["docs", "examples", "notebooks", "scripts", "Dockerfile", "environment_*.yml", ".gitignore"]
+exclude = ["docs", "examples", "notebooks", "scripts", "Dockerfile", "environment*.yml", ".gitignore"]
