@@ -18,14 +18,18 @@ from tqdm.autonotebook import tqdm
 
 logger = logging.getLogger(__name__)
 
+
 class TheiaAPI:
-    def __init__(self, collection='SENTINEL2', server="https://theia.cnes.fr/atdistrib", proxies={}):
+    def __init__(self, collection='SENTINEL2', server="https://theia.cnes.fr/atdistrib", proxies=None):
         """A simple API to query and download the SENTINEL2 collection from Theia server
 
         Args:
             collection (str, optional): Theia collection name. For now only SENTINEL2 is tested. Defaults to 'SENTINEL2'.
             server (str, optional): Server url of the Theia Distribution center. Defaults to "https://theia.cnes.fr/atdistrib".
+            proxies (dict, optional): Dictionary of proxies. Defaults to None.
         """
+        if proxies is None:
+            proxies = {}
         self.server = server
         self.collection = collection
         self.results = {}
@@ -49,7 +53,7 @@ class TheiaAPI:
         config = configparser.ConfigParser()
 
         secret_file = Path.home() / '.pyintdemsecrets'
-        
+
         if secret_file.exists():
             logger.info('.pyintdemsecrets found!')
         else:
@@ -70,29 +74,29 @@ class TheiaAPI:
 
         try:
             res = requests.post(
-                url=f'{self.server}/services/authenticate/', 
-                data={'ident':user, 'pass':password},
+                url=f'{self.server}/services/authenticate/',
+                data={'ident': user, 'pass': password},
                 proxies=self.proxies)
-            
+
             res.raise_for_status()
         except Exception as e:
             raise Exception(f'Access token creation failed. Reponse from the server was: {res.json()}')
-        
+
         if len(res.text) == 36:
-            return(res.text)
+            return res.text
         else:
             logger.debug("Wrong response from authenticate service, check user/pass")
             raise Exception(f'Got wrong token! Exiting.')
 
     def search(self,
-        tiles, 
-        startDate='2016-01-01', 
-        completionDate='2023-01-01',
-        cloudCover=3,
-        productType='REFLECTANCE', 
-        processingLevel='LEVEL2A',
-        maxRecords=500,
-        **kwargs):
+               tiles,
+               startDate='2016-01-01',
+               completionDate='2023-01-01',
+               cloudCover=3,
+               productType='REFLECTANCE',
+               processingLevel='LEVEL2A',
+               maxRecords=500,
+               **kwargs):
         """Search in the THEIA repository for a list of tiles
 
         Args:
@@ -124,16 +128,16 @@ class TheiaAPI:
 
         self.results = results
 
-    def _search(self, 
-        location='',
-        startDate='2016-01-01', 
-        completionDate='2023-01-01',
-        cloudCover=3,
-        productType='REFLECTANCE', 
-        processingLevel='LEVEL2A',
-        maxRecords=500,
-        **kwargs
-        ):
+    def _search(self,
+                location='',
+                startDate='2016-01-01',
+                completionDate='2023-01-01',
+                cloudCover=3,
+                productType='REFLECTANCE',
+                processingLevel='LEVEL2A',
+                maxRecords=500,
+                **kwargs
+                ):
         """Search in the THEIA repository for a list of tiles
 
         Args:
@@ -160,7 +164,7 @@ class TheiaAPI:
 
         logger.debug('Querying search api')
         res = requests.get(
-            url=f'{self.server}/resto2/api/collections/{self.collection}/search.json', 
+            url=f'{self.server}/resto2/api/collections/{self.collection}/search.json',
             params=request_params,
             proxies=self.proxies
         )
@@ -176,8 +180,7 @@ class TheiaAPI:
             logger.info('Non 200 response received, returning empty list')
             res_features = []
 
-
-        return(res_features)
+        return res_features
 
     @property
     def summary(self):
@@ -198,7 +201,7 @@ class TheiaAPI:
             else:
                 geometry.append(Polygon())
 
-            summary[tile] = {'count':ntile}
+            summary[tile] = {'count': ntile}
 
         df = pd.DataFrame(summary).T
         gdf = gpd.GeoDataFrame(df, geometry=geometry)
@@ -241,7 +244,7 @@ class TheiaAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return(self_object)
+        return self_object
 
     def tail(self, count=10):
         """Returns a subset of selection with `count` number of acquisitions for each tile from the bottom of the list
@@ -259,7 +262,7 @@ class TheiaAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return(self_object)
+        return self_object
 
     def drop_empty(self):
         """Drop tiles that does not have any acquisions
@@ -296,7 +299,7 @@ class TheiaAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return(self_object)
+        return self_object
 
     def filter_date_range(self, start_date, end_date):
         """Filter the search result with a date range from `start_date` to `end_date`
@@ -307,8 +310,8 @@ class TheiaAPI:
         """
         filter_func = lambda result: is_within_date_range(result, start_date=start_date, end_date=end_date)
         filtered_object = self.filter(filter_func)
-        
-        return(filtered_object)
+
+        return filtered_object
 
     def filter_less_than(self, property_name, target_value):
         """Filter with arbitrary `property_name` from the data record when the value is less than `target_value`
@@ -319,14 +322,15 @@ class TheiaAPI:
         """
         filter_func = lambda result: less_than(result, name=property_name, target=target_value)
         filtered_object = self.filter(filter_func)
-        
-        return(filtered_object)
 
-    def plot(self, 
-        ax=None, 
-        coastline=True,
-        geom_kw={'facecolor':'red', 'edgecolor':'black', 'alpha':0.5, }, 
-        text_kw={'ha':'center', 'color':'black', 'bbox':{'facecolor':'white', 'edgecolor':'black', 'alpha':0.75}}):
+        return filtered_object
+
+    def plot(self,
+             ax=None,
+             coastline=True,
+             geom_kw={'facecolor': 'red', 'edgecolor': 'black', 'alpha': 0.5, },
+             text_kw={'ha': 'center', 'color': 'black',
+                      'bbox': {'facecolor': 'white', 'edgecolor': 'black', 'alpha': 0.75}}):
         """Plot the current search result summary
 
         Args:
@@ -340,11 +344,11 @@ class TheiaAPI:
         Returns:
             cartopy.GeoAxes: Axes with plots of the selected tiles
         """
-        
+
         summary = self.summary
 
         if ax is None:
-            fig, ax = plt.subplots(figsize=(5, 8), subplot_kw={'projection':ccrs.PlateCarree()})
+            fig, ax = plt.subplots(figsize=(5, 8), subplot_kw={'projection': ccrs.PlateCarree()})
         else:
             pass
 
@@ -358,7 +362,7 @@ class TheiaAPI:
 
         if coastline:
             ax.coastlines()
-        
+
         ax.set_extent(self.extent)
 
         return ax
@@ -367,6 +371,7 @@ class TheiaAPI:
         """Save search result to file `fname` if `summary=False`, or save the summary to `file` 
 
         Args:
+            summary (bool): If true, only summary is saved
             fname (str): Path to file, can be geojson for full result, or geojson/shapefile for summary
         """
         if summary:
@@ -398,20 +403,20 @@ class TheiaAPI:
         savedir = Path(savedir)
         for tile in tqdm(self.results, desc='Tiles'):
             tiledir = savedir / tile
-            
+
             if not tiledir.exists():
                 tiledir.mkdir()
 
             for feature in tqdm(self.results[tile], desc=f'Features in {tile}'):
-                token = self.token # Creating a token before each file download
-                download(feature, tiledir, token=token, ext=ext, 
-                         server=self.server, 
-                         collection=self.collection, 
+                token = self.token  # Creating a token before each file download
+                download(feature, tiledir, token=token, ext=ext,
+                         server=self.server,
+                         collection=self.collection,
                          proxies=self.proxies)
-
 
     def __repr__(self):
         return str(self.summary)
+
 
 def is_within_date_range(result, start_date, end_date):
     """Test if the date in the `result` is within the `start_date` and `end_date`
@@ -435,6 +440,7 @@ def is_within_date_range(result, start_date, end_date):
 
     return within
 
+
 def less_than(result, name, target):
     """Test if the property with `name` is less than `target` value
 
@@ -447,12 +453,12 @@ def less_than(result, name, target):
         array: Boolean array
     """
     target_type = type(target)
-    
-    try: 
+
+    try:
         property_value = result['properties'][name]
     except KeyError:
         available_keys = result['properties'].keys()
-        raise(f'Property {name} not found in {available_keys}')
+        raise (f'Property {name} not found in {available_keys}')
     else:
         property_value = target_type(property_value)
     finally:
@@ -460,7 +466,9 @@ def less_than(result, name, target):
 
     return is_less_than
 
-def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2', proxies={}):
+
+def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/atdistrib", collection='SENTINEL2',
+             proxies=None):
     """Download a THEIA data record `feature`
 
     Args:
@@ -469,15 +477,18 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
         token (str): Server token, see TheiaAPI().token
         server (str, optional): Theia server. Defaults to "https://theia.cnes.fr/atdistrib".
         collection (str, optional): Collection to download. Defaults to 'SENTINEL2'.
+        proxies (dict): Dictionary of proxy
     """
-    featureid = feature['id'] # to download
+    if proxies is None:
+        proxies = {}
+    featureid = feature['id']  # to download
     productid = feature['properties']['productIdentifier']
     version = feature['properties']['version']
     fname = f'{productid}_V{version}.{ext}'
-    fpath = Path(savedir)/ fname
-    url=f'{server}/resto2/collections/{collection}/{featureid}/download/'
-    header = { 'Authorization':f'Bearer {token}' }
-    params = { 'issuerId':'theia' }
+    fpath = Path(savedir) / fname
+    url = f'{server}/resto2/collections/{collection}/{featureid}/download/'
+    header = {'Authorization': f'Bearer {token}'}
+    params = {'issuerId': 'theia'}
 
     with requests.get(url=url, headers=header, params=params, stream=True, proxies=proxies) as res:
         logger.info(fpath)
@@ -491,13 +502,13 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
             logger.info(f'No Size info received, progress bar will not be shown')
 
         res.raise_for_status()
-        
+
         # Check existing file and if download is needed or not
         download_needed = True
         if fpath.exists():
             logger.info(f'File {fname} already exists')
             fpath_size = fpath.stat().st_size
-            
+
             if fpath_size == total_size:
                 download_needed = False
                 logger.info(f'Full file {fname} already downloaded')
@@ -508,9 +519,8 @@ def download(feature, savedir, token, ext='zip', server="https://theia.cnes.fr/a
 
         # Actual download
         if download_needed:
-            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True,
+                                              unit_divisor=1024) as bar:
                 for chunk in res.iter_content(chunk_size=8192):
                     size = f.write(chunk)
                     bar.update(size)
-
-

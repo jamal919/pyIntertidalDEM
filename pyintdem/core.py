@@ -17,8 +17,8 @@ gdal.UseExceptions()
 
 class Band(object):
     def __init__(self, data=None, geotransform=None, projection=None, **kwargs):
-        '''
-        Band data class contains the information needed for a GeoTiff file. 
+        """
+        Band data class contains the information needed for a GeoTiff file.
 
         arguments:
             data: array like
@@ -30,14 +30,14 @@ class Band(object):
 
         returns:
             Band data: Band
-        '''
+        """
         self.data = data
         self.geotransform = geotransform
         self.projection = projection
         self.attrs = kwargs
 
     def read(self, fname, band=1):
-        '''
+        """
         Read band data from a file.
 
         arguments:
@@ -46,7 +46,7 @@ class Band(object):
 
         Raise an exception if data can not be read.
 
-        '''
+        """
 
         gdal.UseExceptions()
         try:
@@ -58,7 +58,7 @@ class Band(object):
             raise Exception('Band: read error!')
 
     def set_missing(self, value, to=np.nan):
-        '''
+        """
         set the missing value in data from value 
 
         argument:
@@ -66,14 +66,14 @@ class Band(object):
                 Value to be replaced
             to: float like
                 Values replaced by to
-        '''
+        """
         if np.isnan(value):
             self.data[np.isnan(self.data)] = to
         else:
             self.data[self.data == value] = to
 
     def upscale(self, factor, method='nearest'):
-        '''
+        """
         increase the resolution with a factor.
 
         argument:
@@ -82,7 +82,7 @@ class Band(object):
             method: string
                 Method to be used for interpolation. Currently only nearest
                 neighbour is available.
-        '''
+        """
         self.geotransform = (
                 self.geotransform[0],
                 self.geotransform[1]/float(factor),
@@ -115,7 +115,7 @@ class Band(object):
             raise NotImplementedError
 
     def normalize(self, method='minmax', std_factor=0.5, std_correction='high', perc_threshold=95):
-        '''
+        """
         normalize the data using a given method.
 
         argument:
@@ -133,7 +133,7 @@ class Band(object):
                     high - higher tail
             perc_threshold: float
                 perc_threshold to be used for `perc` method
-        '''
+        """
         if method=='minmax':
             self.data = (self.data - np.nanmin(self.data))/(np.nanmax(self.data)-np.nanmin(self.data))
             return(True)
@@ -162,7 +162,7 @@ class Band(object):
             raise NotImplementedError
 
     def mask(self, by, inverse=False):
-        '''
+        """
         Apply a mask 'by' on the band data - keeping the values presented by 1
         in mask 'by'. Set inverse to True for inversing masking.
 
@@ -173,7 +173,7 @@ class Band(object):
                 Inverse masking
 
         TODO: size check
-        '''
+        """
         _data = copy.deepcopy(self.data)
         if isinstance(by, Band):
             if inverse:
@@ -196,37 +196,37 @@ class Band(object):
 
     @property
     def min(self):
-        '''
+        """
         Minimum value of the band data
-        '''
+        """
         return(np.nanmin(self.data))
 
     @property
     def max(self):
-        '''
+        """
         Maximum value of the band data
-        '''
+        """
         return(np.nanmax(self.data))
 
     @property
     def mean(self):
-        '''
+        """
         Mean value of the band data
-        '''
+        """
         return(np.nanmean(self.data))
 
     @property
     def std(self):
-        '''
+        """
         Standard deviation of the band data
-        '''
+        """
         return(np.nanstd(self.data))
 
     @property
     def median(self):
-        '''
+        """
         Median of the band data
-        '''
+        """
         return(np.nanmedian(self.data))
 
     def convolute(
@@ -237,7 +237,7 @@ class Band(object):
         fillvalue=0, 
         nanmask=True,
         cleanedge=True):
-        '''
+        """
         Convolute the data with the given kernel.
         
         arguments:
@@ -260,7 +260,7 @@ class Band(object):
 
         returns:
             Convoluted band: Band
-        '''
+        """
         kernel = np.array(kernel)
 
         if replacenan:
@@ -289,7 +289,7 @@ class Band(object):
         )
 
     def position(self, xyloc, epsg=4326, center=True, saveto=None):
-        '''
+        """
         Return the position of the given pixel location by array of x,y in xyloc
         lon lat position.
 
@@ -299,7 +299,7 @@ class Band(object):
         In the image sense, xyloc is actually switched position in the geographic
         sense, i.e., xyloc is in row, column model, where as geographic coordinate
         is in column row model.
-        '''
+        """
         # Switching from matrix to geograpic location
         yi = np.array(xyloc[0]) # row location
         xi = np.array(xyloc[1]) # column location
@@ -348,7 +348,7 @@ class Band(object):
                 )
 
     def clean(self, npixel, fillvalue, background=False):
-        '''
+        """
         Clean the image below given pixel blob size (number of pixels) grouped
         together. If background, the data will be reversed in first step.
         Finally it returns a clean band.
@@ -361,7 +361,7 @@ class Band(object):
             background: boolean
                 if background=True, the data will be reversed at the first step
                 before applying the npixel blobs and then filled with fillvalue
-        '''
+        """
         inan = np.isnan(self.data)
         if background:
             data = np.zeros(shape=self.data.shape)
@@ -388,16 +388,16 @@ class Band(object):
         )
 
     def __repr__(self):
-        '''
+        """
         Print representation
-        '''
+        """
         return('{:d} - {:d}'.format(self.data.shape[0], self.data.shape[1]))
 
     def __add__(self, other):
-        '''
+        """
         Return a modified band with another band data or value added to the
         current band data.
-        '''
+        """
         if isinstance(other, (int, float)):
             return(
                 Band(
@@ -423,20 +423,20 @@ class Band(object):
             raise NotImplementedError('In Band add: other datatype not implemented')
 
     def __radd__(self, other):
-        '''
+        """
         Return a modified band with another band data or value added to the
         current band data.
-        '''
+        """
         if isinstance(other, (int, float)):
             return(Band.__add__(self, other))
         else:
             raise NotImplementedError('In Band radd: only int and float is implemented')
 
     def __sub__(self, other):
-        '''
+        """
         Return a modified band with another band data or value subtracted from
         the current band data.
-        '''
+        """
         if isinstance(other, (int, float)):
             return(
                 Band(
@@ -462,20 +462,20 @@ class Band(object):
             raise NotImplementedError('In Band sub: other datatype not implemented')
 
     def __rsub__(self, other):
-        '''
+        """
         Return a modified band with another band data or value subtracted from
         the current band data.
-        '''
+        """
         if isinstance(other, (int, float)):
             return(Band.__sub__(self, other))
         else:
             raise NotImplementedError('In Band rsub: only int and float is implemented')
     
     def __mul__(self, other):
-        '''
+        """
         Return a modified band with another band data or value multiplied to the
         current band data.
-        '''
+        """
         if isinstance(other, (int, float)):
             return(
                 Band(
@@ -501,10 +501,10 @@ class Band(object):
             raise NotImplementedError('In Band mul: other datatype not implemented')
 
     def __truediv__(self, other):
-        '''
+        """
         Return a modified band with another band data or value dividing the
         current band data.
-        '''
+        """
         if isinstance(other, (int, float)):
             return(
                 Band(
@@ -530,10 +530,10 @@ class Band(object):
             raise NotImplementedError('In Band div: other datatype not implemented')
 
     def __gt__(self, other):
-        '''
+        """
         Return a modified logical band which is true if the values are greater
         than the other and false if otherwise.
-        '''
+        """
         if isinstance(other, (int, float)):
             _data = self.data>float(other)
             _data = _data.astype(float)
@@ -565,10 +565,10 @@ class Band(object):
             raise NotImplementedError('In Band gt: other datatype not implemented')
 
     def __ge__(self, other):
-        '''
+        """
         Return a binary band which is true if the values are greater
         than the other and false if otherwise.
-        '''
+        """
         if isinstance(other, (int, float)):
             _data = self.data>=float(other)
             _data = _data.astype(float)
@@ -600,10 +600,10 @@ class Band(object):
             raise NotImplementedError('In Band ge: other datatype not implemented')
 
     def __lt__(self, other):
-        '''
+        """
         Return a binary band which is true if the values are greater
         than the other and false if otherwise.
-        '''
+        """
         if isinstance(other, (int, float)):
             _data = self.data<float(other)
             _data = _data.astype(float)
@@ -635,10 +635,10 @@ class Band(object):
             raise NotImplementedError('In Band lt: other datatype not implemented')
 
     def __le__(self, other):
-        '''
+        """
         Return a modified logical band which is true if the values are greater
         than the other and false if otherwise.
-        '''
+        """
         if isinstance(other, (int, float)):
             data = self.data<=float(other)
             data[np.isnan(self.data)] = np.nan
@@ -668,9 +668,9 @@ class Band(object):
             raise NotImplementedError('In Band le: other datatype not implemented')
 
     def logical_and(self, other):
-        '''
+        """
         Logical and connection of two Band data
-        '''
+        """
         if isinstance(other, Band):
             _data = np.logical_and(self.data, other.data)
             _data = _data.astype(float)
@@ -686,9 +686,9 @@ class Band(object):
             raise NotImplementedError('In Band logical_and: only Band data in implemented')
 
     def logical_or(self, other):
-        '''
+        """
         Logical or of two Band data
-        '''
+        """
         if isinstance(other, Band):
             _data = np.logical_or(self.data, other.data)
             _data = _data.astype(float)
@@ -704,9 +704,9 @@ class Band(object):
             raise NotImplementedError('In Band logical_or: only Band data is implemented')
     
     def logical_not(self):
-        '''
+        """
         Logical not of a Band
-        '''
+        """
         _data = np.logical_not(self.data)
         _data = _data.astype(float)
         _data[np.isnan(self.data)] = np.nan
@@ -719,9 +719,9 @@ class Band(object):
         )
 
     def nan_avg(self, other):
-        '''
+        """
         Do a nan average with other.
-        '''
+        """
         if isinstance(other, Band):
             _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=float)
             _data[:, :, 0] = self.data
@@ -742,9 +742,9 @@ class Band(object):
             raise NotImplementedError('In Band nan_avg: only Band data is implemented')
     
     def nan_sum(self, other):
-        '''
+        """
         Do a nan sum with other.
-        '''
+        """
         if isinstance(other, Band):
             _data = np.empty((self.data.shape[0], self.data.shape[1], 2), dtype=float)
             _data[:, :, 0] = self.data
@@ -765,7 +765,7 @@ class Band(object):
             raise NotImplementedError('In Band nan_avg: only Band data is implemented')
 
     def to_geotiff(self, fname, dtype=gdal.GDT_Float32, epsg='auto'):
-        '''
+        """
         Save band data to geotiff to location passed by `to` with datatype
         defined by `dtype`
 
@@ -778,7 +778,7 @@ class Band(object):
                 epsg code to reproject the data. `auto` saves the data to
                 original projection. Default `auto`
 
-        '''
+        """
         fname = Path(fname).as_posix()
         row, col = self.data.shape
         
@@ -845,7 +845,7 @@ class Band(object):
                 del gtiff, src
 
     def to_netcdf(self, fname, epsg=4326):
-        '''
+        """
         Save band data to netCDF4 file to location passed by `to`.
 
         argument:
@@ -853,7 +853,7 @@ class Band(object):
                 filename to be used
             epsg: epsg code
                 epsg code to reproject the data
-        '''
+        """
         row, col = self.data.shape
 
         # Setting up coordinate transformation
@@ -919,7 +919,7 @@ class Band(object):
             nc.close()
 
     def plot(self, title='Band', cmap='binary', saveto=None):
-        '''
+        """
         Plotting function with given title, cmap
 
         argument:
@@ -929,7 +929,7 @@ class Band(object):
                 colormap name
             saveto: string
                 saving location
-        '''
+        """
         plt.figure()
         plt.imshow(self.data, cmap=cmap)
         plt.colorbar()
@@ -942,7 +942,7 @@ class Band(object):
 
 class RGB(object):
     def __init__(self, red, green, blue):
-        '''
+        """
         RGB band using band using in the red-green-blue band.
 
         argument:
@@ -952,7 +952,7 @@ class RGB(object):
                 Green band to construct RGB
             blue: Band
                 Blue band to construct RGB
-        '''
+        """
         try:
             # Type checking
             assert np.all(
@@ -988,7 +988,7 @@ class RGB(object):
 
     @staticmethod
     def rgb2hsv(r, g, b):
-        '''
+        """
         Local Implementation of RGB to HSV.
         Arguments:
             r: double, red value
@@ -997,7 +997,7 @@ class RGB(object):
             
         returns:
             (hue, saturation, value)
-        '''
+        """
         if np.any([np.isnan(r), np.isnan(g), np.isnan(b)]):
             h = np.nan
             s = np.nan
@@ -1028,7 +1028,7 @@ class RGB(object):
         return(h, s, v)
 
     def to_hsv(self, method='matplotlib'):
-        '''
+        """
         Convert the red-green-blue space to hue-saturation-value space and 
         return the individual bands.
 
@@ -1038,7 +1038,7 @@ class RGB(object):
                     `matplotlib` uses the matplotlib routines
                     `local` uses the local routine
                 default is `matplotlib` and the fastest option
-        '''
+        """
         if method=='matplotlib':
             # TODO rgb values must be normalized
             inan = np.where(np.isnan(self.rgb[:, :, 0]))
@@ -1073,10 +1073,10 @@ class RGB(object):
         return(hue, saturation, value)
 
     def to_value(self):
-        '''
+        """
         Return the value part of the hue-saturation-value composition. Value is 
         simply the maximum of the red-green-blue component.
-        '''
+        """
         value = Band(
             data=np.nanmax(self.rgb, axis=2),
             geotransform=self.geotransform,
@@ -1085,7 +1085,7 @@ class RGB(object):
         return(value)
 
     def plot(self, title='RGB', saveto=None):
-        '''
+        """
         Plot RGB data using title and saveto a locaiton
 
         argument:
@@ -1093,7 +1093,7 @@ class RGB(object):
                 The title to be used in plotting
             saveto: string
                 Save to the locaiton
-        '''
+        """
         plt.figure()
         plt.imshow(self.rgb)
         plt.colorbar()
@@ -1105,7 +1105,7 @@ class RGB(object):
             plt.close()
 
     def to_geotiff(self, fname, dtype=gdal.GDT_Float32, epsg='auto'):
-        '''
+        """
         Save band data to geotiff to location passed by `to` with datatype
         defined by `dtype`
 
@@ -1118,7 +1118,7 @@ class RGB(object):
                 epsg code to reproject the data. `auto` saves the data to
                 original projection. Default `auto` (only option)
 
-        '''
+        """
         fname = Path(fname).as_posix()
         row, col, nband = self.rgb.shape
         

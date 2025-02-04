@@ -117,9 +117,14 @@ class Coverage:
         """
         goems_shorelines = self._shorelines_within_bbox()
 
-        does_intersects = np.any(
-            [[geom.intersects(shoreline) for shoreline in goems_shorelines.geometry] for geom in self.coverage.geometry],
-            axis=1)
+        does_intersects = np.array(
+            [
+                [
+                    geom.intersects(shoreline) for shoreline in goems_shorelines.geometry
+                ] for geom in self.coverage.geometry
+            ]
+        )
+        does_intersects = np.any(does_intersects, axis=1)
 
         self.coverage = self.coverage.loc[does_intersects]
 
@@ -173,6 +178,9 @@ class Coverage:
             ax.coastlines()
         
         return ax
+
+    def __repr__(self):
+        return self.coverage
 
 def get_coverage_from_geojson(url, fname, kw_map={'name':'name', 'features':'features'}, proxies={}):
     """Get a geodataframe from a online geojson dataset

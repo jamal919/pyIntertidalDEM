@@ -22,6 +22,7 @@ import numpy as np
 import json
 from zipfile import ZipFile
 
+
 class Sentinel2(object):
     def __init__(self, loc, datefmt='%Y%m%d-%H%M%S-%f'):
         '''
@@ -47,7 +48,7 @@ class Sentinel2(object):
             self.files[fname] = floc
 
         for subdir in glob(os.path.join(self.loc, '*/')):
-            subdir_name = os.path.basename(subdir[:-1]) # Avoiding trailing sep
+            subdir_name = os.path.basename(subdir[:-1])  # Avoiding trailing sep
             self.files[subdir_name] = dict()
             for floc in glob(os.path.join(subdir, '*.*')):
                 fname = os.path.basename(floc)
@@ -55,14 +56,14 @@ class Sentinel2(object):
                 self.files[subdir_name][fname] = floc
 
         self.info = dict(
-            dir = self.loc,
-            file_prefix = self.file_prefix,
-            satellite = _metadata[0],
-            date_time = datetime.strptime(_metadata[1], datefmt),
-            level = _metadata[2],
-            zone = _metadata[3],
-            meta = _metadata[4],
-            version = _metadata[5]
+            dir=self.loc,
+            file_prefix=self.file_prefix,
+            satellite=_metadata[0],
+            date_time=datetime.strptime(_metadata[1], datefmt),
+            level=_metadata[2],
+            zone=_metadata[3],
+            meta=_metadata[4],
+            version=_metadata[5]
         )
 
     def watermask(self, loc, id=['zone'], fmt='tif'):
@@ -91,20 +92,21 @@ class Sentinel2(object):
             _maskfile = os.path.join(_maskfile, '{:s}.{:s}'.format(self.info[id[-1]], fmt))
         elif len(id) == 1:
             _maskfile = os.path.join(loc, '{:s}.{:s}'.format(self.info[id[0]], fmt))
-        
-        return(_maskfile)
+
+        return (_maskfile)
 
     def __repr__(self):
-        return(''.join('{:<15s} : {:s}\n'.format(i, self.info[i].__repr__()) for i in self.info))
+        return (''.join('{:<15s} : {:s}\n'.format(i, self.info[i].__repr__()) for i in self.info))
 
 
 def format_band_name(band_name):
-    band_number = re.findall('\d+', band_name)
+    band_number = re.findall(r'\d+', band_name)
 
     if len(band_number) == 1:
         band_name = band_name.replace(band_number[0], str(int(band_number[0])))
 
     return band_name
+
 
 def parse_copernicus(fpath):
     """Reads the Sentinel2 filename from theia and extract the relevant information
@@ -140,14 +142,15 @@ def parse_copernicus(fpath):
     mission, product, sensing_date, baseline, relative_orbit, tileid, version = fname.split('_')
 
     return {
-        'filetype':'copernicus',
-        'fpath':fpath,
+        'filetype': 'copernicus',
+        'fpath': fpath,
         'mission': mission,
         'product': product,
         'version': version,
         'time': pd.to_datetime(sensing_date, format='%Y%m%dT%H%M%S'),
-        'tile':tileid
+        'tile': tileid
     }
+
 
 def parse_theia(fpath):
     """Reads the Sentinel2 filename from theia and extract the relevant information
@@ -171,14 +174,15 @@ def parse_theia(fpath):
     mission, sensing_date, product, tile, meta_version, version = fname.split('_')
 
     return {
-        'filetype':'theia',
-        'fpath':fpath.absolute().as_posix(),
+        'filetype': 'theia',
+        'fpath': fpath.absolute().as_posix(),
         'mission': mission,
         'product': product,
         'version': version,
         'time': pd.to_datetime(sensing_date, format='%Y%m%d-%H%M%S-%f'),
-        'tile':tile
+        'tile': tile
     }
+
 
 def map_theia_bands(fpath):
     fpath = Path(fpath)
@@ -191,6 +195,7 @@ def map_theia_bands(fpath):
             ds[band] = bandpath
 
     return ds
+
 
 def map_copernicus_bands(fpath):
     ds = {}
@@ -209,33 +214,37 @@ def map_copernicus_bands(fpath):
 def preprocess_none(band):
     return band
 
+
 def preprocess_theia(band):
     band.set_missing(-10000)
-    band = band/10000
+    band = band / 10000
     return band
+
 
 def preprocess_copernicus(band):
     band.set_missing(0)
-    band = band/10000
+    band = band / 10000
     return band
+
 
 available_parsers = [parse_theia, parse_copernicus]
 
 data_mappers = {
-    'theia':map_theia_bands,
-    'copernicus':map_copernicus_bands
+    'theia': map_theia_bands,
+    'copernicus': map_copernicus_bands
 }
 
 band_preprocessors = {
-    'theia':preprocess_theia,
-    'copernicus':preprocess_copernicus
+    'theia': preprocess_theia,
+    'copernicus': preprocess_copernicus
 }
+
 
 class DataFile(dict):
     def __init__(self, mapper=None, **kwargs):
         super().__init__(self)
         self.update(kwargs)
-        
+
         self['bands'] = map_bands(self, mapper=mapper)
 
     def get_band(self, name, number=1, preprocess=True):
@@ -253,10 +262,10 @@ class DataFile(dict):
             data=ds.read(number).astype(float),
             geotransform=ds.get_transform(),
             projection=ds.crs.to_wkt()
-            )
-        
-        return(preprocessor(band))
-    
+        )
+
+        return (preprocessor(band))
+
     def get_mask(self, mask_dir, ext='.tif'):
         mask_dir = Path(mask_dir)
         tile_name = self['tile']
@@ -268,8 +277,8 @@ class DataFile(dict):
             geotransform=ds.get_transform(),
             projection=ds.crs.to_wkt()
         )
-        return(band)
-        
+        return (band)
+
 
 def map_bands(datafile, mapper=None):
     if mapper is None:
@@ -281,9 +290,10 @@ def map_bands(datafile, mapper=None):
             assert callable(mapper)
         except:
             raise Exception('mapper must be a callable which can map the internal file structure')
-        
+
     ds = mapper(datafile['fpath'])
     return ds
+
 
 class Database(dict):
     def __init__(self, fdir, patterns=['*/*.zip*', '*/*.SAFE'], nameparsers=available_parsers):
@@ -299,13 +309,13 @@ class Database(dict):
 
         # convert to DataFile from dictionary
         self.datafiles = [DataFile(**datafile) for datafile in self.datafiles]
-        
+
         self.update(sort_datafiles_by_tiles(self.datafiles))
 
     @property
     def tiles(self):
         return list(self.keys())
-    
+
     def to_file(self, fname):
         # serialize the time
         database = self.copy()
@@ -332,21 +342,22 @@ class Database(dict):
 
 def listfiles(fdir, patterns=['*/*.zip', '*/*.SAFE']):
     filelist = []
-    
+
     if isinstance(patterns, list):
         patterns = patterns
     elif isinstance(patterns, str):
         patterns = [patterns]
     else:
         raise Exception('patterns must be a list of string or a string')
-    
+
     fdir = Path(fdir)
-    
+
     for pattern in patterns:
         for afile in fdir.glob(pattern=pattern):
             filelist.append(afile)
-    
+
     return filelist
+
 
 def parse_file(fname, parsers=[parse_theia, parse_copernicus]):
     if callable(parsers):
@@ -374,7 +385,8 @@ def parse_file(fname, parsers=[parse_theia, parse_copernicus]):
             is_parseable = True
             break
 
-    return(is_parseable, info)
+    return (is_parseable, info)
+
 
 def list_datafiles(fnames, parsers=[parse_theia, parse_copernicus]):
     parsed_files = []
@@ -383,7 +395,8 @@ def list_datafiles(fnames, parsers=[parse_theia, parse_copernicus]):
         if is_parseable:
             parsed_files.append(info)
 
-    return(parsed_files)
+    return (parsed_files)
+
 
 def sort_datafiles_by_tiles(datafiles):
     database = {}

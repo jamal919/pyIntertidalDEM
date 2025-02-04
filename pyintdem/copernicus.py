@@ -18,15 +18,16 @@ from tqdm.autonotebook import tqdm
 
 logger = logging.getLogger(__name__)
 
+
 class CopernicusAPI:
     def __init__(
-            self, 
-            collection='SENTINEL-2', 
+            self,
+            collection='SENTINEL-2',
             token_url="https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token",
             search_url="https://catalogue.dataspace.copernicus.eu/odata/v1/Products",
             data_url="https://zipper.dataspace.copernicus.eu/odata/v1/Products",
-            proxies={}
-            ):
+            proxies=None
+    ):
         """A simple API to query and download the SENTINEL-2 collection from Copernicus server
 
         Args:
@@ -35,6 +36,8 @@ class CopernicusAPI:
             search_url (str, optional): URL to search. Defaults to "https://catalogue.dataspace.copernicus.eu/odata/v1/Products".
             data_url (str, optional): URL to data download. Defaults to "https://zipper.dataspace.copernicus.eu/odata/v1/Products".
         """
+        if proxies is None:
+            proxies = {}
         self.token_url = token_url
         self.search_url = search_url
         self.data_url = data_url
@@ -60,7 +63,7 @@ class CopernicusAPI:
         config = ConfigParser()
 
         secret_file = Path.home() / '.pyintdemsecrets'
-        
+
         if secret_file.exists():
             logger.info('.pyintdemsecrets found!')
         else:
@@ -81,19 +84,18 @@ class CopernicusAPI:
 
         try:
             res = requests.post(
-                url=self.token_url, 
+                url=self.token_url,
                 data={
-                    'client_id':'cdse-public',
-                    'username':user,
-                    'password':password,
-                    'grant_type':'password'},
+                    'client_id': 'cdse-public',
+                    'username': user,
+                    'password': password,
+                    'grant_type': 'password'},
                 proxies=self.proxies
-                    )
+            )
             res.raise_for_status()
         except Exception as e:
             raise Exception(f'Access token creation failed. Reponse from the server was: {res.json()}')
-        
-        
+
         try:
             return res.json()['access_token']
         except:
@@ -101,13 +103,13 @@ class CopernicusAPI:
             raise Exception(f'Could not get access token! Exiting.')
 
     def search(self,
-        tiles, 
-        startDate='2016-01-01', 
-        completionDate='2023-01-01',
-        cloudCover=3,
-        productType='S2MSI2A',
-        maxRecords=1000
-        ):
+               tiles,
+               startDate='2016-01-01',
+               completionDate='2023-01-01',
+               cloudCover=3,
+               productType='S2MSI2A',
+               maxRecords=1000
+               ):
         """Search in the Copernicus repository for a list of tiles
 
         Args:
@@ -141,15 +143,16 @@ class CopernicusAPI:
         logger.info(f'Search done for {len(tiles)} tiles')
         logger.info(f'{np.sum(summary.online)} online and {np.sum(summary.offline)} offline results found.')
         logger.info('Offline data can be ordered online, and then download later')
-        logger.info('Online and offline data can be separated using [online, offline] = CopernicusAPI.split_online() method')
+        logger.info(
+            'Online and offline data can be separated using [online, offline] = CopernicusAPI.split_online() method')
 
     def _search(
             self,
-            location, 
-            startDate="2016-01-01", 
-            completionDate="2023-12-31", 
-            cloudCover=3, 
-            productType='S2MSI2A', 
+            location,
+            startDate="2016-01-01",
+            completionDate="2023-12-31",
+            cloudCover=3,
+            productType='S2MSI2A',
             maxRecords=1000):
         """Search for a single tile of Sentinel-2 in from Copernicus
 
@@ -169,12 +172,12 @@ class CopernicusAPI:
             location = location[1:]
         else:
             location = location
-        
+
         # Processing dates
         startDate = pd.to_datetime(startDate).strftime('%Y-%m-%d')
         completionDate = pd.to_datetime(completionDate).strftime('%Y-%m-%d')
-        
-        collection = self.collection # "SENTINEL-2" in copernicus
+
+        collection = self.collection  # "SENTINEL-2" in copernicus
 
         filters = [
             f"Collection/Name eq '{collection}'",
@@ -183,9 +186,10 @@ class CopernicusAPI:
             f"Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value le {cloudCover:0.2f})",
             f"Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'productType' and att/OData.CSC.StringAttribute/Value eq '{productType}')",
             f"Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'tileId' and att/OData.CSC.StringAttribute/Value eq '{location}')"
-            ]
+        ]
 
-        url = self.search_url + "?$filter=" + " and ".join(filters) + f'&$top={maxRecords}' + f'&$orderby=ContentDate/Start asc'
+        url = self.search_url + "?$filter=" + " and ".join(
+            filters) + f'&$top={maxRecords}' + f'&$orderby=ContentDate/Start asc'
         results = requests.get(url=url, proxies=self.proxies).json()['value']
 
         return results
@@ -207,8 +211,8 @@ class CopernicusAPI:
             nonline = len([record for record in non_empty_tiles.results[tile] if record['Online']])
             noffline = ntile - nonline
             tile_geom = get_overall_footprint(non_empty_tiles.results[tile])
-            
-            summary[tile] = {'count':ntile, 'online':nonline, 'offline':noffline}
+
+            summary[tile] = {'count': ntile, 'online': nonline, 'offline': noffline}
             geometry.append(tile_geom)
 
         df = pd.DataFrame(summary).T
@@ -252,7 +256,7 @@ class CopernicusAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return(self_object)
+        return (self_object)
 
     def tail(self, count=10):
         """Returns a subset of selection with `count` number of acquisitions for each tile from the bottom of the list
@@ -270,7 +274,7 @@ class CopernicusAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return(self_object)
+        return (self_object)
 
     def drop_empty(self):
         """Drop tiles that does not have any acquisions
@@ -291,7 +295,7 @@ class CopernicusAPI:
         self_object.results = results
 
         return self_object, dropped
-    
+
     def split_online(self):
         """Drop tiles that are currently offline
         """
@@ -307,7 +311,7 @@ class CopernicusAPI:
                     online_record.append(record)
                 else:
                     offline_record.append(record)
-            
+
             online_results[tile] = online_record
             offline_results[tile] = offline_record
 
@@ -317,7 +321,7 @@ class CopernicusAPI:
         offline_object = self.copy()
         offline_object.results = offline_results
 
-        return(online_object, offline_object)
+        return (online_object, offline_object)
 
     def filter(self, filter_func):
         """Filter using the `filter_func`
@@ -334,7 +338,7 @@ class CopernicusAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return(self_object)
+        return (self_object)
 
     def filter_date_range(self, start_date, end_date):
         """Filter the search result with a date range from `start_date` to `end_date`
@@ -345,8 +349,8 @@ class CopernicusAPI:
         """
         filter_func = lambda result: is_within_date_range(result, start_date=start_date, end_date=end_date)
         filtered_object = self.filter(filter_func)
-        
-        return(filtered_object)
+
+        return filtered_object
 
     def filter_less_than(self, property_name, target_value):
         """Filter with arbitrary `property_name` from the data record when the value is less than `target_value`
@@ -357,14 +361,15 @@ class CopernicusAPI:
         """
         filter_func = lambda result: less_than(result, name=property_name, target=target_value)
         filtered_object = self.filter(filter_func)
-        
-        return(filtered_object)
 
-    def plot(self, 
-        ax=None, 
-        coastline=True,
-        geom_kw={'facecolor':'red', 'edgecolor':'black', 'alpha':0.5, }, 
-        text_kw={'ha':'center', 'color':'black', 'bbox':{'facecolor':'white', 'edgecolor':'black', 'alpha':0.75}}):
+        return filtered_object
+
+    def plot(self,
+             ax=None,
+             coastline=True,
+             geom_kw={'facecolor': 'red', 'edgecolor': 'black', 'alpha': 0.5, },
+             text_kw={'ha': 'center', 'color': 'black',
+                      'bbox': {'facecolor': 'white', 'edgecolor': 'black', 'alpha': 0.75}}):
         """Plot the current search result summary
 
         Args:
@@ -378,11 +383,11 @@ class CopernicusAPI:
         Returns:
             cartopy.GeoAxes: Axes with plots of the selected tiles
         """
-        
+
         summary = self.summary
 
         if ax is None:
-            fig, ax = plt.subplots(figsize=(5, 8), subplot_kw={'projection':ccrs.PlateCarree()})
+            fig, ax = plt.subplots(figsize=(5, 8), subplot_kw={'projection': ccrs.PlateCarree()})
         else:
             pass
 
@@ -396,7 +401,7 @@ class CopernicusAPI:
 
         if coastline:
             ax.coastlines()
-        
+
         ax.set_extent(self.extent)
 
         return ax
@@ -406,6 +411,7 @@ class CopernicusAPI:
 
         Args:
             fname (str): Path to file, can be geojson for full result, or geojson/shapefile for summary
+            summary (bool): Returns summary instead of the search result
         """
         if summary:
             self.summary.to_file(fname)
@@ -446,24 +452,25 @@ class CopernicusAPI:
 
         for tile in tqdm(online.results, desc='Tiles'):
             tiledir = savedir / tile
-            
+
             if not tiledir.exists():
                 tiledir.mkdir()
 
             for feature in tqdm(online.results[tile], desc=f'Features in {tile}'):
-                token = self.token # Creating a token before each file download
+                token = self.token  # Creating a token before each file download
                 download(feature, tiledir, ext=ext, token=token, server=self.data_url, proxies=self.proxies)
-
 
     def __repr__(self):
         return str(self.summary)
-    
+
+
 def get_overall_footprint(results):
     footprint = Polygon()
     for result in results:
         footprint = footprint.union(shape(result['GeoFootprint']))
 
     return footprint
+
 
 def is_within_date_range(result, start_date, end_date):
     """Test if the date in the `result` is within the `start_date` and `end_date`
@@ -487,6 +494,7 @@ def is_within_date_range(result, start_date, end_date):
 
     return within
 
+
 def less_than(result, name, target):
     """Test if the property with `name` is less than `target` value
 
@@ -499,12 +507,12 @@ def less_than(result, name, target):
         array: Boolean array
     """
     target_type = type(target)
-    
-    try: 
+
+    try:
         property_value = result['properties'][name]
     except KeyError:
         available_keys = result['properties'].keys()
-        raise(f'Property {name} not found in {available_keys}')
+        raise (f'Property {name} not found in {available_keys}')
     else:
         property_value = target_type(property_value)
     finally:
@@ -512,7 +520,9 @@ def less_than(result, name, target):
 
     return is_less_than
 
-def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products", proxies={}):
+
+def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products",
+             proxies=None):
     """Download a Copernicus data record `feature`
 
     Download URL has the final form: `f"{server}({featureid})/$value"`
@@ -522,11 +532,14 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
         savedir (str): Path of directory where the file will be saved
         token (str): Server token, see CopernicusAPI().token
         server (str, optional): Copernicus server. Defaults to "https://zipper.dataspace.copernicus.eu/odata/v1/Products".
+        proxies (dict, optional): Proxies to use for requests. Defaults to None.:
     """
+    if proxies is None:
+        proxies = {}
     featureid = feature['Id']
     url = f"{server}({featureid})/$value"
     header = {"Authorization": f"Bearer {token}"}
-    fname = feature['Name'].split('.')[0] + '.' + ext # assuming the name does not contain any other '.'
+    fname = feature['Name'].split('.')[0] + '.' + ext  # assuming the name does not contain any other '.'
     fpath = Path(savedir) / fname
 
     with requests.get(url=url, headers=header, stream=True, proxies=proxies) as res:
@@ -541,7 +554,7 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
             logger.info(f'No Size info received, progress bar will not be shown')
 
         res.raise_for_status()
-        
+
         # Check existing file and if download is needed or not
         download_needed = True
         if fpath.exists():
@@ -558,9 +571,8 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
 
         # Actual download
         if download_needed:
-            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True, unit_divisor=1024) as bar:
+            with open(fpath, 'wb') as f, tqdm(desc=fname, total=total_size, unit='iB', unit_scale=True,
+                                              unit_divisor=1024) as bar:
                 for chunk in res.iter_content(chunk_size=8192):
                     size = f.write(chunk)
                     bar.update(size)
-                    
-
