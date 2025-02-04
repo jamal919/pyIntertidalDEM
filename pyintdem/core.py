@@ -784,7 +784,7 @@ class Band(object):
         
         if epsg=='auto':
             driver = gdal.GetDriverByName('GTiff')
-            gtiff = driver.Create(fname, row, col, 1, dtype)
+            gtiff = driver.Create(fname, col, row, 1, dtype)
             gtiff.GetRasterBand(1).WriteArray(self.data)
             gtiff.SetGeoTransform(self.geotransform)
             gtiff.SetProjection(self.projection)
