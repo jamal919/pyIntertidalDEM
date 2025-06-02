@@ -104,6 +104,7 @@ venv.bak/
 .mypy_cache/
 
 # folder_log
+.idea/
 .vscode/
 /__pycache__/*
 
