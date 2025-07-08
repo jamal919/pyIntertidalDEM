@@ -10,7 +10,7 @@ like pip or conda. Below is how you can install the package. It is highly recomm
 environment, and install other dependencies from conda-forge.
 
 ```shell
-$ conda create -c conda-forge -n pyintdem python=3.11 numpy scipy pandas xarray dask netCDF4 rasterio rioxarray matplotlib cartopy cmocean gdal shapely geopandas ipykernel notebook tqdm utide
+$ conda create -c conda-forge -n pyintdem python=3.11 numpy scipy pandas xarray dask netCDF4 rasterio rioxarray matplotlib cartopy cmocean gdal libgdal-jp2openjpeg shapely geopandas ipykernel notebook tqdm utide
 $ conda activate pyintdem
 $ git clone https://github.com/jamal919/pyIntertidalDEM
 $ pip install -e . # -e allows for linking

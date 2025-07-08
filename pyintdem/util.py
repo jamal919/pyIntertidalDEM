@@ -8,6 +8,7 @@ import os
 import numpy as np
 import tqdm
 import logging
+from rioxarray.exceptions import NoDataInBounds
 
 from .core import Band
 
@@ -96,12 +97,39 @@ class Extractor(object):
                 ))
 
 
-def create_mask(database, maskdir, nmask=0.5, ext='tif', band='B11', normalize=True):
+def create_mask(database, maskdir, nmask=0.5, ext='tif', band='B11', normalize=True, clip_kw=None):
+    """
+
+    Args:
+        database: Database of Sentinel-2 files
+        maskdir: Location of the mask directory
+        nmask: Thresholding values, typically 0.5 to 0.75
+        ext: Extension for the saved mask file
+        band: The band to use for thresholding, B11
+        normalize: To normalize or not, normally True
+        clip_kw: A dictionary of one or all components {'bbox', 'geoms'} for clipping
+
+    Returns: None
+
+    """
+
+    to_clip = False
+    if clip_kw is not None:
+        print("The images will be clipped")
+        to_clip = True
+
     for tile in database:
         fname = maskdir / f'{tile}.{ext}'
         datafiles = database[tile]
         for i, datafile in enumerate(datafiles):
             img_band = datafile.get_band(band, preprocess=True)
+
+            if to_clip:
+                try:
+                    img_band = img_band.clip(**clip_kw)
+                except NoDataInBounds:
+                    print("Data not found for the clipped zone")
+
 
             if normalize:
                 img_band.normalize(method='std', std_factor=1, std_correction='high')

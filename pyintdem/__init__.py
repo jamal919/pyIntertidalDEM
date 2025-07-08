@@ -4,8 +4,8 @@
 """pyIntertidalDEM Sentinel-2 Processing toolbox
 
 pyIntertidalDEM is a set of libraries and procedures written in python to extract 
-shorelines from spectral images using  a ophisticated shoreline extraction algorithm. 
+shorelines from spectral images using  a sophisticated shoreline extraction algorithm.
 These modules are developed in Python v3 environment.
 """
 
-__version__ = '1.2'
+__version__ = '1.3'

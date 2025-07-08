@@ -6,12 +6,17 @@ from scipy import signal as sps
 from scipy.ndimage import measurements as scm
 from scipy.interpolate import RegularGridInterpolator
 from osgeo import osr, gdal
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcl
 from netCDF4 import Dataset
 import copy
 import warnings
 from pathlib import Path
+import xarray as xr
+import rioxarray
+
+from pyintdem.geometry import extent2geometries
 
 gdal.UseExceptions()
 
@@ -45,7 +50,6 @@ class Band(object):
             band: integer, band number
 
         Raise an exception if data can not be read.
-
         """
 
         gdal.UseExceptions()
@@ -160,6 +164,48 @@ class Band(object):
             self.data = (self.data - np.nanmin(self.data))/(np.nanmax(self.data)-np.nanmin(self.data))
         else:
             raise NotImplementedError
+
+    def clip(self, bbox=None, geoms=None):
+        """
+        Args:
+            bbox: bounding box as [e, w, s, n] in lon-lat cooordinates; epsg:4326
+            geoms: a list of geometries, e.g., from geopandas.geometry; epsg:4326
+
+        Returns: clipped Band
+        """
+        clip_geom = np.array([])
+
+        if bbox is not None:
+            bbox = extent2geometries(bbox)
+            clip_geom = np.append(clip_geom, bbox)
+
+        if geoms is not None:
+            geoms = np.atleast_1d(geoms)
+            clip_geom = np.append(clip_geom, geoms)
+
+        if len(clip_geom) == 0:
+            print("Neither bbox nor geom is given, returning the original Band")
+            return copy.deepcopy(self)
+
+        gdf_clip = gpd.GeoDataFrame(geometry=clip_geom, crs=4326)
+        clip_geom_projected = gdf_clip.to_crs(self.projection)
+
+
+        x_start, dx, _, y_start, _, dy = self.geotransform
+        ny, nx = self.data.shape
+        x = np.arange(x_start + dx / 2, x_start + (nx + 0.5) * dx, dx)
+        y = np.arange(y_start + dy / 2, y_start + (ny + 0.5) * dy, dy)
+        ds = xr.DataArray(self.data, dims=('y', 'x'), coords={'x': x, 'y': y})
+        ds.rio.write_crs(self.projection, inplace=True)
+        ds_clipped = ds.rio.clip(clip_geom_projected.geometry, all_touched=True)
+
+        band_clipped = Band(
+            data=ds_clipped.values,
+            geotransform=ds_clipped.rio.transform().to_gdal(),
+            projection=ds_clipped.rio.crs.to_wkt()
+        )
+
+        return band_clipped
 
     def mask(self, by, inverse=False):
         """
