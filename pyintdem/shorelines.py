@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-DEM generation using Shoreline and Water Level
 
-Author: khan
-Email: jamal.khan@legos.obs-mip.fr
-'''
 import numpy as np
 import pandas as pd
 from pathlib import Path

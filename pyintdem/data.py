@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 Data and Metadata holder for different satellites
+"""
+import copy
 
-TODO: 
-    * merge extraction facility for individual satellite
-    * streamline the file data extraction
-
-Author: khan
-Email: jamal.khan@legos.obs-mip.fr
-'''
 import rasterio
 from datetime import datetime
 from glob import glob
@@ -25,7 +20,7 @@ from zipfile import ZipFile
 
 class Sentinel2(object):
     def __init__(self, loc, datefmt='%Y%m%d-%H%M%S-%f'):
-        '''
+        """
         File information holder for unpacked Sentinel-2 images.
 
         arguments:
@@ -36,7 +31,7 @@ class Sentinel2(object):
 
         returns:
             object: Sentinel2
-        '''
+        """
         self.loc = loc
         self.file_prefix = os.path.basename(self.loc)
         _metadata = self.file_prefix.split('_')
@@ -67,8 +62,8 @@ class Sentinel2(object):
         )
 
     def watermask(self, loc, id=['zone'], fmt='tif'):
-        '''
-        Return the location of the water mask based on the id and format fmt. 
+        """
+        Return the location of the water mask based on the id and format fmt.
         The id can be nested for a nested setup. The last element of the id will
         be used to infer the name of the file itself.
 
@@ -79,11 +74,11 @@ class Sentinel2(object):
                 organization of the mask file in folders. id[-1] is the name of
                 the mask file.
             fmt: string
-                file format extension without preceeding dot
+                file format extension without preceding dot
 
         returns:
             Mask file location: string
-        '''
+        """
         _maskfile = loc
         if len(id) > 1:
             for i in id[:-1]:
@@ -93,10 +88,11 @@ class Sentinel2(object):
         elif len(id) == 1:
             _maskfile = os.path.join(loc, '{:s}.{:s}'.format(self.info[id[0]], fmt))
 
-        return (_maskfile)
+        return _maskfile
 
     def __repr__(self):
-        return (''.join('{:<15s} : {:s}\n'.format(i, self.info[i].__repr__()) for i in self.info))
+        repr_str = ''.join('{:<15s} : {:s}\n'.format(i, self.info[i].__repr__()) for i in self.info)
+        return repr_str
 
 
 def format_band_name(band_name):
@@ -264,7 +260,7 @@ class DataFile(dict):
             projection=ds.crs.to_wkt()
         )
 
-        return (preprocessor(band))
+        return preprocessor(band)
 
     def get_mask(self, mask_dir, ext='.tif'):
         mask_dir = Path(mask_dir)
@@ -277,7 +273,7 @@ class DataFile(dict):
             geotransform=ds.get_transform(),
             projection=ds.crs.to_wkt()
         )
-        return (band)
+        return band
 
 
 def map_bands(datafile, mapper=None):
@@ -315,6 +311,15 @@ class Database(dict):
     @property
     def tiles(self):
         return list(self.keys())
+
+    def sel(self, tiles):
+        # Keep only the selected tiles
+        self_copy = copy.deepcopy(self)
+        for tile in self_copy:
+            if tile not in tiles:
+                self_copy.pop(tile)
+
+        return
 
     def to_file(self, fname):
         # serialize the time
@@ -385,7 +390,7 @@ def parse_file(fname, parsers=[parse_theia, parse_copernicus]):
             is_parseable = True
             break
 
-    return (is_parseable, info)
+    return is_parseable, info
 
 
 def list_datafiles(fnames, parsers=[parse_theia, parse_copernicus]):
@@ -395,7 +400,7 @@ def list_datafiles(fnames, parsers=[parse_theia, parse_copernicus]):
         if is_parseable:
             parsed_files.append(info)
 
-    return (parsed_files)
+    return parsed_files
 
 
 def sort_datafiles_by_tiles(datafiles):

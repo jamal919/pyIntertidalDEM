@@ -190,35 +190,37 @@ class Band(object):
         gdf_clip = gpd.GeoDataFrame(geometry=clip_geom, crs=4326)
         clip_geom_projected = gdf_clip.to_crs(self.projection)
 
-
-        x_start, dx, _, y_start, _, dy = self.geotransform
-        ny, nx = self.data.shape
-        x = np.arange(x_start + dx / 2, x_start + (nx + 0.5) * dx, dx)
-        y = np.arange(y_start + dy / 2, y_start + (ny + 0.5) * dy, dy)
-        ds = xr.DataArray(self.data, dims=('y', 'x'), coords={'x': x, 'y': y})
-        ds.rio.write_crs(self.projection, inplace=True)
-        ds_clipped = ds.rio.clip(clip_geom_projected.geometry, all_touched=True)
-
-        band_clipped = Band(
-            data=ds_clipped.values,
-            geotransform=ds_clipped.rio.transform().to_gdal(),
-            projection=ds_clipped.rio.crs.to_wkt()
-        )
+        da = band_to_rio(self)
+        da_clipped = da.rio.clip(clip_geom_projected.geometry, all_touched=True, drop=True)
+        band_clipped = rio_to_band(da_clipped)
 
         return band_clipped
+
+    def reproject_match(self, to_band):
+        """
+        Reproject a band object to match the resolution, projection, and region of another band object.
+        Args:
+            to_band: band of the target resolution and projection
+
+        Returns: new band object reprojected to match the to_band
+        """
+        da_self = band_to_rio(self)
+        da_to_band = band_to_rio(to_band)
+
+        da_self_matched = da_self.rio.reproject_match(da_to_band)
+        band_self_matched = rio_to_band(da_self_matched)
+        return band_self_matched
 
     def mask(self, by, inverse=False):
         """
         Apply a mask 'by' on the band data - keeping the values presented by 1
-        in mask 'by'. Set inverse to True for inversing masking.
+        in mask 'by'. Set inverse to True for inverse masking.
 
         argument:
             by: Band
                 Mask band
             inverse: boolean
                 Inverse masking
-
-        TODO: size check
         """
         _data = copy.deepcopy(self.data)
         if isinstance(by, Band):
@@ -245,35 +247,35 @@ class Band(object):
         """
         Minimum value of the band data
         """
-        return(np.nanmin(self.data))
+        return np.nanmin(self.data)
 
     @property
     def max(self):
         """
         Maximum value of the band data
         """
-        return(np.nanmax(self.data))
+        return np.nanmax(self.data)
 
     @property
     def mean(self):
         """
         Mean value of the band data
         """
-        return(np.nanmean(self.data))
+        return np.nanmean(self.data)
 
     @property
     def std(self):
         """
         Standard deviation of the band data
         """
-        return(np.nanstd(self.data))
+        return np.nanstd(self.data)
 
     @property
     def median(self):
         """
         Median of the band data
         """
-        return(np.nanmedian(self.data))
+        return np.nanmedian(self.data)
 
     def convolute(
         self, 
@@ -397,7 +399,7 @@ class Band(object):
         """
         Clean the image below given pixel blob size (number of pixels) grouped
         together. If background, the data will be reversed in first step.
-        Finally it returns a clean band.
+        Finally, it returns a clean band.
 
         argument:
             npixel: int like
@@ -437,7 +439,7 @@ class Band(object):
         """
         Print representation
         """
-        return('{:d} - {:d}'.format(self.data.shape[0], self.data.shape[1]))
+        return '{:d} - {:d}'.format(self.data.shape[0], self.data.shape[1])
 
     def __add__(self, other):
         """
@@ -474,7 +476,7 @@ class Band(object):
         current band data.
         """
         if isinstance(other, (int, float)):
-            return(Band.__add__(self, other))
+            return Band.__add__(self, other)
         else:
             raise NotImplementedError('In Band radd: only int and float is implemented')
 
@@ -513,7 +515,7 @@ class Band(object):
         the current band data.
         """
         if isinstance(other, (int, float)):
-            return(Band.__sub__(self, other))
+            return Band.__sub__(self, other)
         else:
             raise NotImplementedError('In Band rsub: only int and float is implemented')
     
@@ -810,159 +812,42 @@ class Band(object):
         else:
             raise NotImplementedError('In Band nan_avg: only Band data is implemented')
 
-    def to_geotiff(self, fname, dtype=gdal.GDT_Float32, epsg='auto'):
+    def to_geotiff(self, fname, epsg=None):
         """
-        Save band data to geotiff to location passed by `to` with datatype
-        defined by `dtype`
+        Save band data to geotiff to location passed by `fname` with `epsg`.
 
         argument:
             fname: string
                 The filename to be saved
-            dtype: gdal data type
-                Gdal datatype to be used for saving, default `gdal.GDT_Float32`
             epsg: epsg code
-                epsg code to reproject the data. `auto` saves the data to
-                original projection. Default `auto`
+                epsg code to reproject the data. `None` saves the data to
+                original projection. Default `None`
 
         """
         fname = Path(fname).as_posix()
-        row, col = self.data.shape
-        
-        if epsg=='auto':
-            driver = gdal.GetDriverByName('GTiff')
-            gtiff = driver.Create(fname, col, row, 1, dtype)
-            gtiff.GetRasterBand(1).WriteArray(self.data)
-            gtiff.SetGeoTransform(self.geotransform)
-            gtiff.SetProjection(self.projection)
-            gtiff.FlushCache()
-            gtiff = None
-        else:
-            try:
-                in_proj = osr.SpatialReference()
-                in_proj.ImportFromWkt(self.projection)
-                out_proj = osr.SpatialReference()
-                out_proj.ImportFromEPSG(epsg)
-            except:
-                raise Exception('Problem with EPSG code!')
-            else:
-                mdriver = gdal.GetDriverByName('MEM')
-                fdriver = gdal.GetDriverByName('GTiff')
-                src = mdriver.Create('Memory', row, col, 1, dtype)
-                src.SetGeoTransform(self.geotransform)
-                src.SetProjection(self.projection)
-                src.GetRasterBand(1).WriteArray(self.data)
-                trans_coord = osr.CoordinateTransformation(
-                    in_proj, 
-                    out_proj
-                )
-                print(self.geotransform)
-                (ulx, uly, _) = trans_coord.TransformPoint(
-                    self.geotransform[0], 
-                    self.geotransform[3]
-                )
-                (lrx, lry, _) = trans_coord.TransformPoint(
-                    self.geotransform[0]+self.geotransform[1]*row,
-                    self.geotransform[3]+self.geotransform[5]*col
-                )
-                pixelx, pixely, _ = np.array(trans_coord.TransformPoint(
-                    self.geotransform[0]+self.geotransform[1],
-                    self.geotransform[3]+self.geotransform[5]
-                ))- np.array(trans_coord.TransformPoint(
-                    self.geotransform[0],
-                    self.geotransform[3]
-                ))
-                xsize = int(np.abs((ulx-lrx)//pixelx))
-                ysize = int(np.abs((uly-lry)//pixely))
-                geotransform = (ulx, pixelx, self.geotransform[2], uly, self.geotransform[4], pixely)
+        da_self = band_to_rio(self)
 
-                gtiff = fdriver.Create(fname, xsize, ysize, 1, dtype)
-                gtiff.SetGeoTransform(geotransform)
-                gtiff.SetProjection(out_proj.ExportToWkt())
-                gdal.ReprojectImage(
-                    src, 
-                    gtiff, 
-                    self.projection, 
-                    out_proj.ExportToWkt(), 
-                    gdal.GRA_Bilinear
-                )
-                gtiff.FlushCache()
-                gtiff = None
-                src = None
-                del gtiff, src
+        if epsg is not None:
+            da_self = da_self.reproject(epsg=epsg)
 
-    def to_netcdf(self, fname, epsg=4326):
+        da_self.to_raster(fname)
+
+    def to_netcdf(self, fname, epsg=None):
         """
-        Save band data to netCDF4 file to location passed by `to`.
+        Save band data to netCDF4 file to location passed by `fname`.
 
         argument:
             fname: string
                 filename to be used
             epsg: epsg code
-                epsg code to reproject the data
+                epsg code to reproject the data, default None
         """
-        row, col = self.data.shape
+        fname = Path(fname).as_posix()
+        da_self = band_to_rio(self)
+        if epsg is not None:
+            da_self = da_self.reproject(epsg=epsg)
 
-        # Setting up coordinate transformation
-        try:
-            in_proj = osr.SpatialReference()
-            in_proj.ImportFromWkt(self.projection)
-            out_proj = osr.SpatialReference()
-            out_proj.ImportFromEPSG(epsg)
-        except:
-            raise Exception('Problem with EPSG code!')
-        else:
-            trans_coord = osr.CoordinateTransformation(in_proj, out_proj)
-            x = np.array([self.geotransform[0]+i*self.geotransform[1] for i in np.arange(row)])
-            y = np.array([self.geotransform[3]+i*self.geotransform[5] for i in np.arange(col)])
-
-            meshx, meshy = np.meshgrid(x, y)
-            meshxy = zip(meshx.flatten(), meshy.flatten())
-            lonlat = np.array([trans_coord.TransformPoint(xy[0], xy[1])[0:2] for xy in meshxy])
-            lon = np.reshape(lonlat[:, 0], meshx.shape)
-            lat = np.reshape(lonlat[:, 1], meshx.shape)
-            del lonlat, meshxy, meshx, meshy
-            
-        try:
-            nc = Dataset(
-                filename=fname, 
-                mode='w', 
-                clobber=True,
-                format='NETCDF4_CLASSIC'
-            )
-        except:
-            raise Exception('netCDF Error!')
-        else:
-            # Dimensitons
-            dx = nc.createDimension(dimname='x', size=len(x))
-            dy = nc.createDimension(dimname='y', size=len(y))
-
-            # Variables
-            vx = nc.createVariable(varname='x', datatype=float, dimensions=(dx))
-            vx.long_name = 'x coordinate'
-            vx.wkt = self.projection
-            vx[:] = x
-
-            vy = nc.createVariable(varname='y', datatype=float, dimensions=(dy))
-            vy.long_name = 'y coordinate'
-            vy.wkt = self.projection
-            vy[:] = y
-
-            lon = nc.createVariable(varname='lon', datatype=float, dimensions=(dx, dy))
-            lon.long_name = 'Longitude'
-            lon.units = 'degrees_east'
-            lon[:] = lon
-
-            lat = nc.createVariable(varname='lat', datatype=float, dimensions=(dx, dy))
-            lat.long_name = 'Latitude'
-            lat.units = 'degrees_north'
-            lat[:] = lat
-
-            value = nc.createVariable(varname='value', datatype=float, dimensions=(dx, dy))
-            value.long_name = 'Pixel value'
-            value[:] = self.data
-        finally:
-            nc.sync()
-            nc.close()
+        da_self.to_netcdf(fname)
 
     def plot(self, title='Band', cmap='binary', saveto=None):
         """
@@ -986,10 +871,45 @@ class Band(object):
             plt.savefig(saveto, dpi=300)
             plt.close()
 
+def band_to_rio(band: Band) -> xr.DataArray:
+    """
+    Convert a band to a rioxarray DataArray
+    Args:
+        band: A core.Band dataset
+
+    Returns: xr.DataArray
+
+    """
+    x_start, dx, _, y_start, _, dy = band.geotransform
+    ny, nx = band.data.shape
+    x = np.arange(x_start + dx / 2, x_start + (nx + 0.5) * dx, dx)
+    y = np.arange(y_start + dy / 2, y_start + (ny + 0.5) * dy, dy)
+    ds = xr.DataArray(band.data, dims=('y', 'x'), coords={'x': x, 'y': y})
+    ds.rio.write_crs(band.projection, inplace=True)
+
+    return ds
+
+def rio_to_band(da: xr.DataArray) -> Band:
+    """
+    Convert a rioxarray DataArray to band data
+    Args:
+        da: xr.DataArray with rioxarray projection
+
+    Returns: xr.DataArray
+
+    """
+    band = Band(
+        data=da.values,
+        geotransform=da.rio.transform().to_gdal(),
+        projection=da.rio.crs.to_wkt()
+    )
+
+    return band
+
 class RGB(object):
     def __init__(self, red, green, blue):
         """
-        RGB band using band using in the red-green-blue band.
+        RGB band using in the red-green-blue band.
 
         argument:
             red: Band
@@ -1071,7 +991,7 @@ class RGB(object):
 
             v = mx
 
-        return(h, s, v)
+        return h, s, v
 
     def to_hsv(self, method='matplotlib'):
         """
@@ -1116,7 +1036,7 @@ class RGB(object):
         )
 
         # And
-        return(hue, saturation, value)
+        return hue, saturation, value
 
     def to_value(self):
         """
@@ -1128,7 +1048,7 @@ class RGB(object):
             geotransform=self.geotransform,
             projection=self.projection
         )
-        return(value)
+        return value
 
     def plot(self, title='RGB', saveto=None):
         """

@@ -94,7 +94,7 @@ class CopernicusAPI:
             )
             res.raise_for_status()
         except Exception as e:
-            raise Exception(f'Access token creation failed. Reponse from the server was: {res.json()}')
+            raise Exception(f'Access token creation failed. Response from the server was: {res.json()}')
 
         try:
             return res.json()['access_token']
@@ -143,8 +143,7 @@ class CopernicusAPI:
         logger.info(f'Search done for {len(tiles)} tiles')
         logger.info(f'{np.sum(summary.online)} online and {np.sum(summary.offline)} offline results found.')
         logger.info('Offline data can be ordered online, and then download later')
-        logger.info(
-            'Online and offline data can be separated using [online, offline] = CopernicusAPI.split_online() method')
+        logger.info('Separate them using [online, offline] = CopernicusAPI.split_online() method')
 
     def _search(
             self,
@@ -256,7 +255,7 @@ class CopernicusAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return (self_object)
+        return self_object
 
     def tail(self, count=10):
         """Returns a subset of selection with `count` number of acquisitions for each tile from the bottom of the list
@@ -274,7 +273,7 @@ class CopernicusAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return (self_object)
+        return self_object
 
     def drop_empty(self):
         """Drop tiles that does not have any acquisions
@@ -321,7 +320,7 @@ class CopernicusAPI:
         offline_object = self.copy()
         offline_object.results = offline_results
 
-        return (online_object, offline_object)
+        return online_object, offline_object
 
     def filter(self, filter_func):
         """Filter using the `filter_func`
@@ -338,7 +337,7 @@ class CopernicusAPI:
         self_object = self.copy()
         self_object.results = results
 
-        return (self_object)
+        return self_object
 
     def filter_date_range(self, start_date, end_date):
         """Filter the search result with a date range from `start_date` to `end_date`
@@ -367,9 +366,8 @@ class CopernicusAPI:
     def plot(self,
              ax=None,
              coastline=True,
-             geom_kw={'facecolor': 'red', 'edgecolor': 'black', 'alpha': 0.5, },
-             text_kw={'ha': 'center', 'color': 'black',
-                      'bbox': {'facecolor': 'white', 'edgecolor': 'black', 'alpha': 0.75}}):
+             geom_kw=None,
+             text_kw=None):
         """Plot the current search result summary
 
         Args:
@@ -383,6 +381,12 @@ class CopernicusAPI:
         Returns:
             cartopy.GeoAxes: Axes with plots of the selected tiles
         """
+
+        if text_kw is None:
+            text_kw = {'ha': 'center', 'color': 'black',
+                       'bbox': {'facecolor': 'white', 'edgecolor': 'black', 'alpha': 0.75}}
+        if geom_kw is None:
+            geom_kw = {'facecolor': 'red', 'edgecolor': 'black', 'alpha': 0.5, }
 
         summary = self.summary
 
@@ -438,6 +442,7 @@ class CopernicusAPI:
 
         Args:
             savedir (str): Path to directory where the files will be saved
+            ext (str, optional): Extension of the files. Defaults to 'zip'.
         """
         savedir = Path(savedir)
 
@@ -531,6 +536,7 @@ def download(feature, savedir, token, ext='zip', server="https://zipper.dataspac
         feature (datarecord): Copernicus datarecord
         savedir (str): Path of directory where the file will be saved
         token (str): Server token, see CopernicusAPI().token
+        ext (str, optional): Extension of the file. Defaults to 'zip'.
         server (str, optional): Copernicus server. Defaults to "https://zipper.dataspace.copernicus.eu/odata/v1/Products".
         proxies (dict, optional): Proxies to use for requests. Defaults to None.:
     """

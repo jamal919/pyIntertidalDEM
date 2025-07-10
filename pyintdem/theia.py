@@ -35,6 +35,8 @@ class TheiaAPI:
         self.results = {}
         self.proxies = proxies
 
+        UserWarning("Theia portal for Sentinel-2 is now transitioned to Geodes, use GeodesAPI instead.")
+
     @property
     def token(self):
         """Returns the token from the server given the username and password

@@ -34,11 +34,11 @@ data_source = {
 class Coverage:
     def __init__(
             self,
-            bbox=[-180, 180, -90, 90],
+            bbox=None,
             shoreline=False,
             source='Theia',
             cachedir='./cache',
-            proxies={}):
+            proxies=None):
         """Filter list of tiles for a target `bbox`, over `shoreline` if needed
 
         Args:
@@ -46,6 +46,11 @@ class Coverage:
             shoreline (bool, optional): Keep only the tiles crossing GSHHG shoreline. Defaults to False.
             source (str, optional): Choose either 'Theia' or 'Copernicus'
         """
+        if proxies is None:
+            proxies = {}
+        if bbox is None:
+            bbox = [-180, 180, -90, 90]
+
         self.source = source
         self.cachedir = Path(cachedir)
         if not self.cachedir.exists():
@@ -239,4 +244,4 @@ def bbox2polygon(bbox):
 
     polygon = Polygon(points)
 
-    return(polygon)
+    return polygon
