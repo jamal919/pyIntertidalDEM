@@ -5,6 +5,7 @@ import configparser
 import copy
 import json
 import logging
+import warnings
 from pathlib import Path
 
 import cartopy.crs as ccrs
@@ -35,7 +36,7 @@ class TheiaAPI:
         self.results = {}
         self.proxies = proxies
 
-        UserWarning("Theia portal for Sentinel-2 is now transitioned to Geodes, use GeodesAPI instead.")
+        warnings.warn("Theia portal for Sentinel-2 is now transitioned to Geodes, use GeodesAPI instead.", UserWarning)
 
     @property
     def token(self):
