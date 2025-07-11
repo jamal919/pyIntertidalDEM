@@ -6,6 +6,7 @@ import json
 import logging
 from configparser import ConfigParser
 from pathlib import Path
+import time
 
 import cartopy.crs as ccrs
 import geopandas as gpd
@@ -44,9 +45,10 @@ class CopernicusAPI:
         self.collection = collection
         self.results = {}
         self.proxies = proxies
+        self.token = self.get_token()
+    
 
-    @property
-    def token(self):
+    def get_token(self):
         """Returns the token from the server given the username and password
 
         The username and password is stored at `home`/.pyintdemsecrets. 
@@ -462,8 +464,32 @@ class CopernicusAPI:
                 tiledir.mkdir()
 
             for feature in tqdm(online.results[tile], desc=f'Features in {tile}'):
-                token = self.token  # Creating a token before each file download
-                download(feature, tiledir, ext=ext, token=token, server=self.data_url, proxies=self.proxies)
+                logger.info('Sleeping for 10 sec to avoid getting banned...')
+                time.sleep(10)
+
+                try:
+                    download_func = lambda: download(
+                        feature, 
+                        tiledir, 
+                        ext=ext, 
+                        token=self.token, 
+                        server=self.data_url, 
+                        proxies=self.proxies)
+                    retry(download_func, retries=1)
+                    logger.info(f"Download done for {feature['Name']}")
+                except requests.exceptions.HTTPError as err:
+                    logger.error(f"Error: {err}")
+                    self.token = self.get_token()
+                    download_func = lambda: download(
+                        feature, 
+                        tiledir, 
+                        ext=ext, 
+                        token=self.token, 
+                        server=self.data_url, 
+                        proxies=self.proxies)
+                    retry(download_func, retries=3)
+                except Exception as e:
+                    logger.error(f"Raised exception: {e}")
 
     def __repr__(self):
         return str(self.summary)
@@ -525,9 +551,22 @@ def less_than(result, name, target):
 
     return is_less_than
 
+def retry(func, retries=3, delay=1, exceptions=(Exception, ), logger=None):
+    if logger is None:
+        logger = logging.getLogger("retry")
+    else:
+        logger = logger
+        
+    for attempt in range(1, retries + 1):
+        try:
+            return func()
+        except exceptions as e:
+                logger.info(f"Attempt {attempt} failed: {e}")
+                if attempt == retries:
+                    raise
+                time.sleep(delay)
 
-def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products",
-             proxies=None):
+def download(feature, savedir, token, ext='zip', server="https://zipper.dataspace.copernicus.eu/odata/v1/Products", proxies={}):
     """Download a Copernicus data record `feature`
 
     Download URL has the final form: `f"{server}({featureid})/$value"`
