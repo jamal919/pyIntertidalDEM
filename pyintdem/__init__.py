@@ -7,6 +7,7 @@ pyIntertidalDEM is a set of libraries and procedures written in python to extrac
 shorelines from spectral images using  a sophisticated shoreline extraction algorithm.
 These modules are developed in Python v3 environment.
 """
+from pathlib import Path
 from pyintdem.core import Band
 
 __version__ = '1.5'
@@ -22,6 +23,7 @@ def read_file(fn, band=1) -> Band:
     Returns: Band object
 
     """
+    fn = Path(fn).as_posix()
     da_band = Band()
     da_band.read(fname=fn, band=band)
     return da_band
