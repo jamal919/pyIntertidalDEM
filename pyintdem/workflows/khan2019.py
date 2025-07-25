@@ -31,6 +31,10 @@ def create_mask(database, maskdir,
 
     """
 
+    maskdir = Path(maskdir)
+    if not maskdir.exists():
+        maskdir.mkdir(parents=True)
+
     to_clip = False
     if clip_kw is not None:
         print("The images will be clipped")

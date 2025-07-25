@@ -9,7 +9,7 @@ These modules are developed in Python v3 environment.
 """
 from pyintdem.core import Band
 
-__version__ = '1.4'
+__version__ = '1.5'
 
 
 def read_file(fn, band=1) -> Band:

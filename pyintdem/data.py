@@ -292,7 +292,7 @@ def map_bands(datafile, mapper=None):
 
 
 class Database(dict):
-    def __init__(self, fdir, patterns=['*/*.zip*', '*/*.SAFE'], nameparsers=available_parsers):
+    def __init__(self, fdir, patterns=['**/*.zip*', '**/*.SAFE'], nameparsers=available_parsers):
 
         super().__init__(self)
 

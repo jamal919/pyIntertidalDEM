@@ -341,7 +341,7 @@ class Band(object):
         Return the position of the given pixel location by array of x,y in xyloc
         lon lat position.
 
-        The reason xyloc is selected is to able to use the np.where functionality
+        The reason xyloc is selected is to be able to use the np.where functionality
         to output the location directly without any further modification.
 
         In the image sense, xyloc is actually switched position in the geographic
@@ -830,7 +830,7 @@ class Band(object):
         if epsg is not None:
             da_self = da_self.reproject(epsg=epsg)
 
-        da_self.to_raster(fname)
+        da_self.rio.to_raster(fname)
 
     def to_netcdf(self, fname, epsg=None):
         """
