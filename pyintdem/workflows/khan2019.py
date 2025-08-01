@@ -40,7 +40,7 @@ def create_mask(database, maskdir,
         print("The images will be clipped")
         to_clip = True
 
-    for tile in database:
+    for tile in tqdm(database):
         fname = maskdir / f'{tile}.{ext}'
         datafiles = database[tile]
         for i, datafile in enumerate(datafiles):
