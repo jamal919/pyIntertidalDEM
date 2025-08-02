@@ -10,6 +10,7 @@ from tqdm.autonotebook import tqdm
 from pyintdem import read_file
 from pyintdem.core import Band, RGB
 
+logger = logging.getLogger(__name__)
 
 def create_mask(database, maskdir,
                 nmask=0.5,
@@ -335,15 +336,21 @@ def process_database(database, out_dir, mask_dir,
 
         for datafile in tqdm(database[tile], desc=tile):
             datafile_dir = tile_dir / datafile['time'].strftime('%Y%m%d%H%M%S')
+            logger.info(f"Tile: {tile} for {datafile_dir.name} now processing")
             if not datafile_dir.exists():
                 datafile_dir.mkdir()
 
-            extract_shoreline(datafile=datafile,
-                              datafiledir=datafile_dir,
-                              maskdir=mask_dir,
-                              nhue=nhue, nvalue=nvalue,
-                              waterblob=waterblob, landblob=landblob,
-                              savetifs=savetifs, saveplots=saveplots,
-                              clip_kw=clip_kw, recompute=recompute)
+            try:
+                extract_shoreline(
+                    datafile=datafile,
+                    datafiledir=datafile_dir,
+                    maskdir=mask_dir,
+                    nhue=nhue, nvalue=nvalue,
+                    waterblob=waterblob, landblob=landblob,
+                    savetifs=savetifs, saveplots=saveplots,
+                    clip_kw=clip_kw, recompute=recompute)
+                logger.info(f"Tile: {tile} for {datafile_dir.name} is processed")
+            except Exception as e:
+                logger.error(f"{type(e).__name__} was raised: {e}")
 
             gc.collect()
