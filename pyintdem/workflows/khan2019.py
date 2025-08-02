@@ -345,3 +345,5 @@ def process_database(database, out_dir, mask_dir,
                               waterblob=waterblob, landblob=landblob,
                               savetifs=savetifs, saveplots=saveplots,
                               clip_kw=clip_kw, recompute=recompute)
+
+            gc.collect()

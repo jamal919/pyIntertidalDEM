@@ -15,6 +15,7 @@ import warnings
 from pathlib import Path
 import xarray as xr
 import rioxarray
+import gc
 
 from pyintdem.geometry import extent2geometries
 
@@ -435,6 +436,37 @@ class Band(object):
             )
         )
 
+    def isnan(self):
+        """
+        Tests if there are nan data using numpy.isnan() function.
+
+        Returns:
+            Band data with test for NaN values.
+        """
+        return Band(
+            data=np.isnan(self.data),
+            geotransform=self.geotransform,
+            projection=self.projection
+        )
+
+    def astype(self, dtype):
+        """
+        Casts dtype to the original band data
+
+        Args:
+            dtype: dtype to cast, could be python dtype or numpy dtypes
+
+        Returns:
+            Band data with casting applied.
+
+        """
+
+        return Band(
+            data=self.data.astype(dtype),
+            geotransform=self.geotransform,
+            projection=self.projection
+        )
+
     def __repr__(self):
         """
         Print representation
@@ -812,7 +844,7 @@ class Band(object):
         else:
             raise NotImplementedError('In Band nan_avg: only Band data is implemented')
 
-    def to_geotiff(self, fname, epsg=None):
+    def to_geotiff(self, fname, epsg=None, dtype='float32'):
         """
         Save band data to geotiff to location passed by `fname` with `epsg`.
 
@@ -830,7 +862,7 @@ class Band(object):
         if epsg is not None:
             da_self = da_self.reproject(epsg=epsg)
 
-        da_self.rio.to_raster(fname)
+        da_self.rio.to_raster(fname, dtype=dtype)
 
     def to_netcdf(self, fname, epsg=None):
         """
@@ -861,15 +893,19 @@ class Band(object):
             saveto: string
                 saving location
         """
-        plt.figure()
-        plt.imshow(self.data, cmap=cmap)
-        plt.colorbar()
+        fig, ax = plt.subplots()
+        im = ax.imshow(self.data, cmap=cmap)
+        plt.colorbar(im)
         plt.title(title)
         if saveto is None:
             plt.show()
         else:
             plt.savefig(saveto, dpi=300)
             plt.close()
+
+        del fig, ax
+        gc.collect()
+
 
 def band_to_rio(band: Band) -> xr.DataArray:
     """
