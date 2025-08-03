@@ -351,6 +351,6 @@ def process_database(database, out_dir, mask_dir,
                     clip_kw=clip_kw, recompute=recompute)
                 logger.info(f"Tile: {tile} for {datafile_dir.name} is processed")
             except Exception as e:
-                logger.error(f"{type(e).__name__} was raised: {e}")
+                logger.error(f"Tile: {tile} for {datafile_dir.name} error: {e}")
 
             gc.collect()
