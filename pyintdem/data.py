@@ -275,6 +275,18 @@ class DataFile(dict):
         )
         return band
 
+    @property
+    def computed(self):
+        pyintdem = self.get('pyintdem', None)
+
+        if pyintdem is None:
+            return False
+
+        computed_state = pyintdem.get('computed', None)
+        if computed_state is None:
+            return False
+        else:
+            return computed_state
 
 def map_bands(datafile, mapper=None):
     if mapper is None:
@@ -300,13 +312,14 @@ class Database(dict):
         self.patterns = patterns
         self.nameparsers = nameparsers
 
-        self.files = listfiles(self.fdir, patterns=self.patterns)
-        self.datafiles = list_datafiles(fnames=self.files, parsers=self.nameparsers)
+        _datafiles = list_datafiles(
+            fnames=listfiles(self.fdir, patterns=self.patterns),
+            parsers=self.nameparsers)
 
         # convert to DataFile from dictionary
-        self.datafiles = [DataFile(**datafile) for datafile in self.datafiles]
+        _datafiles = [DataFile(**datafile) for datafile in _datafiles]
 
-        self.update(sort_datafiles_by_tiles(self.datafiles))
+        self.update(sort_datafiles_by_tiles(_datafiles))
 
     @property
     def tiles(self):
@@ -319,7 +332,7 @@ class Database(dict):
             if tile not in tiles:
                 self_copy.pop(tile)
 
-        return
+        return self_copy
 
     def to_file(self, fname):
         # serialize the time
@@ -344,6 +357,52 @@ class Database(dict):
         for key in self:
             self.pop(key)
 
+    def map_output(self, fdir):
+        checker = get_output_checker(fdir)
+        for tile in self:
+            self[tile] = list(map(checker, self[tile]))
+
+    def split_by_compute_status(self):
+        return self.filter_out_noncomputed(), self.filter_out_computed()
+
+    def filter_out_noncomputed(self):
+        self_copy = copy.deepcopy(self)
+        for tile in self_copy:
+            self_copy[tile] = list(filter(lambda data: data.computed, self_copy[tile]))
+
+        return self_copy
+
+    def filter_out_computed(self):
+        self_copy = copy.deepcopy(self)
+        for tile in self_copy:
+            self_copy[tile] = list(filter(lambda data: not data.computed, self_copy[tile]))
+
+        return self_copy
+
+    @property
+    def ntiles(self):
+        return len(self)
+
+    def tabulate(self):
+        df = {}
+        for tile in self:
+            nimage = len(self[tile])
+            ncomputed = np.sum([image.computed for image in self[tile]])
+            df[tile] = {
+                'nimage':nimage,
+                'ncomputed':ncomputed
+            }
+
+        df = pd.DataFrame(df).T
+
+        return df
+
+    def __repr__(self):
+        df = self.tabulate()
+        nimage = df.nimage.sum()
+        ncomputed = df.ncomputed.sum()
+
+        return f"Database: {self.ntiles:0.0f} tiles, {nimage:0.0f} images, {ncomputed:0.0f} computed"
 
 def listfiles(fdir, patterns=['*/*.zip', '*/*.SAFE']):
     filelist = []
@@ -413,3 +472,21 @@ def sort_datafiles_by_tiles(datafiles):
             database[tile] = []
             database[tile].append(datafile)
     return database
+
+def get_output_checker(output_dir):
+    output_dir = Path(output_dir)
+
+    def checker(data):
+        acqisition_time = data['time']
+        tile_id = data['tile']
+        image_dir_name = acqisition_time.strftime("%Y%m%d%H%M%S")
+        image_dir_path = output_dir / tile_id / image_dir_name
+        output_exists = image_dir_path.exists() and len(list(image_dir_path.glob("shoreline_*.csv"))) > 0
+        data_updated = copy.deepcopy(data)
+        data_updated['pyintdem'] = {
+            'computed': output_exists,
+            'fpath': image_dir_path
+        }
+        return data_updated
+
+    return checker

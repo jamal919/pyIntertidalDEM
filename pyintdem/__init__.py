@@ -10,7 +10,7 @@ These modules are developed in Python v3 environment.
 from pathlib import Path
 from pyintdem.core import Band
 
-__version__ = '1.6'
+__version__ = '1.7'
 
 
 def read_file(fn, band=1) -> Band:
