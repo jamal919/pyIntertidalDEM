@@ -271,7 +271,7 @@ def extract_shoreline(datafile, datafiledir, maskdir,
     bw = value_bw.logical_and(hue_bw)
     del value_bw, hue_bw
     if saveplots:
-        bw.plot('BW', cmap='binary', saveto=datafiledir / f'bw_{nhue:.1f}_{value:.1f}.png')
+        bw.plot('BW', cmap='binary', saveto=datafiledir / f'bw_{nhue:.1f}_{nvalue:.1f}.png')
     if savetifs:
         bw.to_geotiff(fname=datafiledir / f'bw_{nhue:.1f}_{nvalue:.1f}.tif')
 
