@@ -256,31 +256,31 @@ def extract_shoreline(datafile, datafiledir, maskdir,
         )
     ).logical_not()
     if saveplots:
-        hue_bw.plot('Hue BW', saveto=datafiledir / 'hue_bw_{:.1f}.png'.format(nhue))
+        hue_bw.plot('Hue BW', saveto=datafiledir / f'hue_bw_{nhue:.1f}.png')
     if savetifs:
-        hue_bw.to_geotiff(fname=datafiledir / 'hue_bw_{:.1f}.tif'.format(nhue))
+        hue_bw.to_geotiff(fname=datafiledir / f'hue_bw_{nhue:.1f}.tif')
 
     value_bw = (value < (value_median + nvalue * value_std)).logical_and(
         value > (value_median - nvalue * value_std)
     )
     if saveplots:
-        value_bw.plot('Value BW', saveto=datafiledir / 'value_bw_{:.1f}.png'.format(nvalue))
+        value_bw.plot('Value BW', saveto=datafiledir / f'value_bw_{nvalue:.1f}.png')
     if savetifs:
-        value_bw.to_geotiff(fname=datafiledir / 'value_bw_{:.1f}.tif'.format(nvalue))
+        value_bw.to_geotiff(fname=datafiledir / f'value_bw_{nvalue:.1f}.tif')
 
     bw = value_bw.logical_and(hue_bw)
     del value_bw, hue_bw
     if saveplots:
-        bw.plot('BW', cmap='binary', saveto=datafiledir / 'bw_{:.1f}_{:.1f}.png'.format(nhue, nvalue))
+        bw.plot('BW', cmap='binary', saveto=datafiledir / f'bw_{nhue:.1f}_{value:.1f}.png')
     if savetifs:
-        bw.to_geotiff(fname=datafiledir / 'bw_{:.1f}_{:.1f}.tif'.format(nhue, nvalue))
+        bw.to_geotiff(fname=datafiledir / f'bw_{nhue:.1f}_{nvalue:.1f}.tif')
 
     bw = bw.clean(npixel=waterblob, fillvalue=0, background=False)  # Water
     bw = bw.clean(npixel=landblob, fillvalue=1, background=True)  # Land
     if saveplots:
-        bw.plot('BW Clean', cmap='binary', saveto=datafiledir / 'bw_clean_{:.1f}_{:.1f}.png'.format(nhue, nvalue))
-    if savetifs:
-        bw.to_geotiff(fname=datafiledir / 'bw_clean_{:.1f}_{:.1f}.tif'.format(nhue, nvalue))
+        bw.plot('BW Clean', cmap='binary', saveto=datafiledir / f'bw_clean_{nhue:.1f}_{nvalue:.1f}.png')
+
+    bw.to_geotiff(fname=datafiledir / f'bw_clean_{nhue:.1f}_{nvalue:.1f}.tif')
 
     # Shoreline mapping
     shoreline = bw.convolute(
@@ -295,7 +295,7 @@ def extract_shoreline(datafile, datafiledir, maskdir,
         xyloc=np.where(shoreline.data == 1),
         epsg=4326,
         center=True,
-        saveto=datafiledir / 'shoreline_{:.1f}_{:.1f}.csv'.format(nhue, nvalue)
+        saveto=datafiledir / f'shoreline_{nhue:.1f}_{nvalue:.1f}.csv'
     )
 
     del bw
