@@ -357,8 +357,10 @@ class Database(dict):
         for key in self:
             self.pop(key)
 
-    def map_output(self, fdir):
-        checker = get_output_checker(fdir)
+    def map_output(self, fdir, checker=None):
+        if checker is None:
+            checker = get_output_checker(fdir)
+
         for tile in self:
             self[tile] = list(map(checker, self[tile]))
 
@@ -474,12 +476,28 @@ def sort_datafiles_by_tiles(datafiles):
     return database
 
 def get_output_checker(output_dir):
+    """
+    Generator for output checker
+    Args:
+        output_dir: directory to check
+
+    Returns:
+
+    """
     output_dir = Path(output_dir)
 
     def checker(data):
-        acqisition_time = data['time']
+        """
+        Function to check if a tile is computed or not.
+        Args:
+            data: Dict describing an acquisition of a tile
+
+        Returns: Updated dict
+
+        """
+        acquisition_time = data['time']
         tile_id = data['tile']
-        image_dir_name = acqisition_time.strftime("%Y%m%d%H%M%S")
+        image_dir_name = acquisition_time.strftime("%Y%m%d%H%M%S")
         image_dir_path = output_dir / tile_id / image_dir_name
         output_exists = image_dir_path.exists() and len(list(image_dir_path.glob("shoreline_*.csv"))) > 0
         data_updated = copy.deepcopy(data)
