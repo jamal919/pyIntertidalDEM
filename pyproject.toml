@@ -30,7 +30,8 @@ dependencies = [
     "cartopy",
     "shapely",
     "geopandas",
-    "pandas"
+    "pandas",
+    "scikit-image"
 ]
 
 [project.urls]

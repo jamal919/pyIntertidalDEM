@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """pyIntertidalDEM Processing toolbox
@@ -8,7 +7,7 @@ shorelines from spectral images using  a sophisticated shoreline extraction algo
 These modules are developed in Python v3 environment.
 """
 from pathlib import Path
-from pyintdem.core import Band
+from pyintdem.models.band import Band
 
 __version__ = '1.8'
 

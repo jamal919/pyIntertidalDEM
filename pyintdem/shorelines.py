@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import numpy as np
@@ -74,6 +73,7 @@ def read_shoreline(shoreline):
     return df
 
 def get_extent(shorelines):
+    extent = [0, 0, 0, 0]
     for i, shoreline in enumerate(shorelines):
         df = read_shoreline(shoreline)
         if i == 0:

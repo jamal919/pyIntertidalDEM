@@ -1,12 +1,11 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import copy
 import json
 import logging
+import time
 from configparser import ConfigParser
 from pathlib import Path
-import time
 
 import cartopy.crs as ccrs
 import geopandas as gpd

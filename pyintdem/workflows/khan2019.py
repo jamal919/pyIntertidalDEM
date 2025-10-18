@@ -4,13 +4,23 @@ import logging
 from pathlib import Path
 
 import numpy as np
+from skimage import measure
+import geopandas as gpd
+from shapely import LineString
 from rioxarray.exceptions import NoDataInBounds
 from tqdm.autonotebook import tqdm
 
 from pyintdem import read_file
-from pyintdem.core import Band, RGB
+from pyintdem.models.band import Band, RGB
 
 logger = logging.getLogger(__name__)
+
+KERNEL_LAPLACE = np.array(
+    [
+        [0, -1, 0],
+        [-1, 4, -1],
+        [0, -1, 0]
+    ])
 
 def create_mask(database, maskdir,
                 nmask=0.5,
@@ -108,8 +118,11 @@ def prepare_bands(datafile, clip_kw=None):
 
     return red, green, blue, alpha
 
+def prepare_mask(datafile: pyintdem.Data.DataFile, clip_kw=None):
+    pass
 
-def create_synthetic_rgb(red, green, blue, alpha):
+
+def create_synthetic_rgb(red: Band, green: Band, blue:Band, alpha:Band) -> [Band, Band, Band]:
     """
     Create synthetic red, green and blue bands using the alpha bands
 
@@ -121,6 +134,8 @@ def create_synthetic_rgb(red, green, blue, alpha):
     blue = (alpha * -1 + 1) + (blue * alpha)
 
     return red, green, blue
+
+
 
 
 def compute_hue_value(datafile, datafiledir,
@@ -181,6 +196,49 @@ def compute_hue_value(datafile, datafiledir,
 
     return hue, value
 
+def apply_thresholding_hue(ds: Band, mask: Band, nhue:float=0.5) -> Band:
+    pass
+
+def apply_thresholding_value(ds: Band, mask: Band, nvalue:float=3.0) -> Band:
+    pass
+
+def apply_cleaning(ds: Band, waterblob=10000, landblob=1000) -> Band:
+    pass
+
+def extract_waterline_points_with_kernel(
+        ds: Band,
+        kernel: np.ndarray = KERNEL_LAPLACE,
+        replacenan:bool=False,
+        replacevalue:float=4,
+        fillvalue:float=4,
+        nanmask:bool=True,
+        cleanedge:bool=True):
+    pass
+
+def extract_waterlines(ds: Band, level:float=0.5, epsg:int=4326) -> gpd.GeoDataFrame:
+    """
+    Extract waterline linestring from the sagmented band dataset
+
+    Args:
+        ds: binary sagmented water/land dataset
+        level: default to 0.5, i.e., the line will be extracted at the middle
+        epsg: target projection, default to 4326 (lon-lat)
+
+    Returns: GeoDataFrame
+
+    """
+    contours = measure.find_contours(ds.data, level=level)
+    contours_latlon = [ds.position(contour.T, epsg=epsg, center=True) for contour in contours]
+    linestrings_contours_latlon = [LineString(contour[:, [1, 0]]) for contour in contours_latlon]
+    gdf_shorelines = gpd.GeoDataFrame(geometry=linestrings_contours_latlon)
+    gdf_shorelines = gdf_shorelines.set_crs(epsg=epsg)
+
+    return gdf_shorelines
+
+def get_waterline_points(method="marching_square", kernel_kw=None) -> gpd.GeoDataFrame:
+    # method: kernel
+    # method: marching_square
+    pass
 
 def extract_shoreline(datafile, datafiledir, maskdir,
                       nhue=0.5, nvalue=3.0,
