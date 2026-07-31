@@ -10,6 +10,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+import rioxarray
 from osgeo import osr, gdal
 from scipy import signal as sps
 from scipy.interpolate import RegularGridInterpolator
